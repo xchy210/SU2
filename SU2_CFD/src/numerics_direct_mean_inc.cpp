@@ -85,9 +85,12 @@ CUpwFDSInc_Flow::~CUpwFDSInc_Flow(void) {
 
 void CUpwFDSInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config) {
   
+  su2double U_i[5] = {0.0,0.0,0.0,0.0,0.0}, U_j[5] = {0.0,0.0,0.0,0.0,0.0};
+  su2double ProjGridVel = 0.0;
+
   AD::StartPreacc();
   AD::SetPreaccIn(V_i, nDim+9); AD::SetPreaccIn(V_j, nDim+9); AD::SetPreaccIn(Normal, nDim);
-
+  
   /*--- Face area (norm or the normal vector) ---*/
   
   Area = 0.0;
@@ -150,6 +153,16 @@ void CUpwFDSInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_J
   /*--- Compute ProjFlux_j ---*/
 
   GetInviscidIncProjFlux(&DensityInc_j, Velocity_j, &Pressure_j, &BetaInc2_j, &Enthalpy_j, Normal, ProjFlux_j);
+
+  /*--- Projected velocity adjustment due to mesh motion ---*/
+  
+  if (grid_movement) {
+    ProjGridVel = 0.0;
+    for (iDim = 0; iDim < nDim; iDim++) {
+      ProjGridVel   += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*UnitNormal[iDim];
+    }
+    ProjVelocity   -= ProjGridVel;
+  }
 
   /*--- Eigenvalues of the preconditioned system ---*/
   
@@ -226,6 +239,32 @@ void CUpwFDSInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_J
     }
   }
 
+  /*--- Jacobian contributions due to grid motion ---*/
+  
+  if (grid_movement) {
+
+    /*--- Recompute conservative variables ---*/
+  
+    U_i[0] = Density_i; U_j[0] = Density_j;
+    for (iDim = 0; iDim < nDim; iDim++) {
+      U_i[iDim+1] = Density_i*Velocity_i[iDim]; U_j[iDim+1] = Density_j*Velocity_j[iDim];
+    }
+    U_i[nDim+1] = Density_i*Enthalpy_i; U_j[nDim+1] = Density_j*Enthalpy_j;
+
+    ProjVelocity = 0.0;
+    for (iDim = 0; iDim < nDim; iDim++)
+      ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
+    for (iVar = 0; iVar < nVar; iVar++) {
+      val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
+      
+      /*--- Implicit terms ---*/
+      /*if (implicit) {
+        val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
+        val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
+      }*/
+    }
+  }
+
   AD::SetPreaccOut(val_residual, nVar);
   AD::EndPreacc();
 }
@@ -274,6 +313,9 @@ CCentJSTInc_Flow::~CCentJSTInc_Flow(void) {
 }
 
 void CCentJSTInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config) {
+  
+  su2double U_i[5] = {0.0,0.0,0.0,0.0,0.0}, U_j[5] = {0.0,0.0,0.0,0.0,0.0};
+  su2double ProjGridVel = 0.0, ProjVelocity = 0.0;
 
   /*--- Primitive variables at point i and j ---*/
   
@@ -335,6 +377,30 @@ void CCentJSTInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_
     }
   }
   
+  /*--- Adjustment due to grid motion ---*/
+  
+  if (grid_movement) {
+
+    /*--- Recompute conservative variables ---*/
+  
+    U_i[0] = Density_i; U_j[0] = Density_j;
+    for (iDim = 0; iDim < nDim; iDim++) {
+      U_i[iDim+1] = Density_i*Velocity_i[iDim]; U_j[iDim+1] = Density_j*Velocity_j[iDim];
+    }
+    U_i[nDim+1] = Density_i*Enthalpy_i; U_j[nDim+1] = Density_j*Enthalpy_j;
+
+    ProjVelocity = 0.0;
+    for (iDim = 0; iDim < nDim; iDim++)
+      ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
+    for (iVar = 0; iVar < nVar; iVar++) {
+      val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar] + U_j[iVar]);
+      /*if (implicit) {
+        val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
+        val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
+      }*/
+    }
+  }
+
   /*--- Computes differences between Laplacians and conservative variables ---*/
   
   for (iVar = 0; iVar < nVar; iVar++) {
@@ -352,6 +418,16 @@ void CCentJSTInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_
   SoundSpeed_i = sqrt(BetaInc2_i*Area*Area);
   SoundSpeed_j = sqrt(BetaInc2_j*Area*Area);
   
+  /*--- Adjustment due to mesh motion ---*/
+  
+  if (grid_movement) {
+    ProjGridVel = 0.0;
+    for (iDim = 0; iDim < nDim; iDim++)
+      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
+    ProjVelocity_i -= ProjGridVel;
+    ProjVelocity_j -= ProjGridVel;
+  }
+
   Local_Lambda_i = fabs(ProjVelocity_i)+SoundSpeed_i;
   Local_Lambda_j = fabs(ProjVelocity_j)+SoundSpeed_j;
 
@@ -439,6 +515,9 @@ CCentLaxInc_Flow::~CCentLaxInc_Flow(void) {
 
 void CCentLaxInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config) {
 
+  su2double U_i[5] = {0.0,0.0,0.0,0.0,0.0}, U_j[5] = {0.0,0.0,0.0,0.0,0.0};
+  su2double ProjGridVel = 0.0, ProjVelocity = 0.0;
+
   /*--- Primitive variables at point i and j ---*/
   
   Pressure_i    = V_i[0];             Pressure_j    = V_j[0];
@@ -501,6 +580,30 @@ void CCentLaxInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_
     }
   }
   
+  /*--- Adjustment due to grid motion ---*/
+  
+  if (grid_movement) {
+
+    /*--- Recompute conservative variables ---*/
+  
+    U_i[0] = Density_i; U_j[0] = Density_j;
+    for (iDim = 0; iDim < nDim; iDim++) {
+      U_i[iDim+1] = Density_i*Velocity_i[iDim]; U_j[iDim+1] = Density_j*Velocity_j[iDim];
+    }
+    U_i[nDim+1] = Density_i*Enthalpy_i; U_j[nDim+1] = Density_j*Enthalpy_j;
+
+    ProjVelocity = 0.0;
+    for (iDim = 0; iDim < nDim; iDim++)
+      ProjVelocity += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
+    for (iVar = 0; iVar < nVar; iVar++) {
+      val_residual[iVar] -= ProjVelocity * 0.5*(U_i[iVar]+U_j[iVar]);
+      /*if (implicit) {
+        val_Jacobian_i[iVar][iVar] -= 0.5*ProjVelocity;
+        val_Jacobian_j[iVar][iVar] -= 0.5*ProjVelocity;
+      }*/
+    }
+  }
+
   /*--- Computes differences btw. conservative variables ---*/
   
   for (iVar = 0; iVar < nVar; iVar++)
@@ -515,6 +618,15 @@ void CCentLaxInc_Flow::ComputeResidual(su2double *val_residual, su2double **val_
 
   SoundSpeed_i = sqrt(BetaInc2_i*Area*Area);
   SoundSpeed_j = sqrt(BetaInc2_j*Area*Area);
+
+  /*--- Adjustment due to grid motion ---*/
+  if (grid_movement) {
+    ProjGridVel = 0.0;
+    for (iDim = 0; iDim < nDim; iDim++)
+      ProjGridVel += 0.5*(GridVel_i[iDim]+GridVel_j[iDim])*Normal[iDim];
+    ProjVelocity_i -= ProjGridVel;
+    ProjVelocity_j -= ProjGridVel;
+  }
 
   Local_Lambda_i = fabs(ProjVelocity_i)+SoundSpeed_i;
   Local_Lambda_j = fabs(ProjVelocity_j)+SoundSpeed_j;

@@ -5957,7 +5957,7 @@ void CIncEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
       }
       U_time_n[nDim+1] = Density*Cp*V_time_n[nDim+1];
       
-      for (iVar = 1; iVar < nVar; iVar++)
+      for (iVar = 0; iVar < nVar; iVar++)
         Residual[iVar] = U_time_n[iVar]*Residual_GCL;
       LinSysRes.AddBlock(iPoint, Residual);
       
@@ -5971,7 +5971,7 @@ void CIncEulerSolver::SetResidual_DualTime(CGeometry *geometry, CSolver **solver
       }
       U_time_n[nDim+1] = Density*Cp*V_time_n[nDim+1];
       
-      for (iVar = 1; iVar < nVar; iVar++)
+      for (iVar = 0; iVar < nVar; iVar++)
         Residual[iVar] = U_time_n[iVar]*Residual_GCL;
       LinSysRes.SubtractBlock(jPoint, Residual);
       
