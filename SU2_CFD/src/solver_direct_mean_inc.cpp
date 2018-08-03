@@ -2921,10 +2921,14 @@ void CIncEulerSolver::Source_Residual(CGeometry *geometry, CSolver **solver_cont
     
     for (iPoint = 0; iPoint < nPointDomain; iPoint++) {
       
-      /*--- Load the conservative variables ---*/
+      /*--- Load the primitive variables ---*/
       
-      numerics->SetConservative(node[iPoint]->GetSolution(),
-                                node[iPoint]->GetSolution());
+      numerics->SetPrimitive(node[iPoint]->GetPrimitive(), NULL);
+
+      /*--- Set incompressible density  ---*/
+
+      numerics->SetDensity(node[iPoint]->GetDensity(),
+                            node[iPoint]->GetDensity());
       
       /*--- Load the volume of the dual mesh cell ---*/
       
