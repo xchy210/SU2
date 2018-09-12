@@ -300,7 +300,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
 
   /*--- Define a number of dummy variables, such that the general functions
         to compute the gradients of the basis functions can be used. ---*/
-  vector<su2double> rDOFsDummy, sDOFsDummy, tDOFsDummy, matVandermondeInvDummy, lagBasisPointsDummy;
+  vector<su2double> rDOFsDummy, sDOFsDummy, tDOFsDummy, matVandermondeDummy, matVandermondeInvDummy, lagBasisPointsDummy;
 
   /*--- Determine the type of the face. ---*/
   switch( VTK_Type ) {
@@ -321,6 +321,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
           LagrangianBasisFunctionAndDerivativesTriangle(nPolyElem,  rIntegration,
                                                         sInt,       nDOFsElem,
                                                         rDOFsDummy, sDOFsDummy,
+                                                        matVandermondeDummy,
                                                         matVandermondeInvDummy,
                                                         lagBasisPointsDummy,
                                                         drLagBasisIntegration,
@@ -331,6 +332,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
           LagrangianBasisFunctionAndDerivativesQuadrilateral(nPolyElem,  rIntegration,
                                                              sInt,       nDOFsElem,
                                                              rDOFsDummy, sDOFsDummy,
+                                                             matVandermondeDummy,
                                                              matVandermondeInvDummy,
                                                              lagBasisPointsDummy,
                                                              drLagBasisIntegration,
@@ -362,6 +364,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
                                                            sIntegration, tInt,
                                                            nDOFsElem,    rDOFsDummy,
                                                            sDOFsDummy,   tDOFsDummy,
+                                                           matVandermondeDummy,
                                                            matVandermondeInvDummy,
                                                            lagBasisPointsDummy,
                                                            drLagBasisIntegration,
@@ -377,6 +380,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
                                                      sIntegration, tInt,
                                                      nDOFsElem,    rDOFsDummy,
                                                      sDOFsDummy,   tDOFsDummy,
+                                                     matVandermondeDummy,
                                                      matVandermondeInvDummy,
                                                      lagBasisPointsDummy,
                                                      drLagBasisIntegration,
@@ -406,6 +410,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
                                                        sInt,       tInt,
                                                        nDOFsElem,  rDOFsDummy,
                                                        sDOFsDummy, tDOFsDummy,
+                                                       matVandermondeDummy,
                                                        matVandermondeInvDummy,
                                                        lagBasisPointsDummy,
                                                        drLagBasisIntegration,
@@ -439,6 +444,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
                                                           sIntegration, tInt,
                                                           nDOFsElem,    rDOFsDummy,
                                                           sDOFsDummy,   tDOFsDummy,
+                                                          matVandermondeDummy,
                                                           matVandermondeInvDummy,
                                                           lagBasisPointsDummy,
                                                           drLagBasisIntegration,
@@ -457,6 +463,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
                                                      sInt,       tInt,
                                                      nDOFsElem,  rDOFsDummy,
                                                      sDOFsDummy, tDOFsDummy,
+                                                     matVandermondeDummy,
                                                      matVandermondeInvDummy,
                                                      lagBasisPointsDummy,
                                                      drLagBasisIntegration,
@@ -472,6 +479,7 @@ void FEMStandardElementBaseClass::DerivativesBasisFunctionsAdjacentElement(
                                                        sIntegration, tInt,
                                                        nDOFsElem,    rDOFsDummy,
                                                        sDOFsDummy,   tDOFsDummy,
+                                                       matVandermondeDummy,
                                                        matVandermondeInvDummy,
                                                        lagBasisPointsDummy,
                                                        drLagBasisIntegration,
@@ -491,6 +499,7 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesLine(
                                        const vector<su2double> &rPoints,
                                        unsigned short          &nDOFs,
                                        vector<su2double>       &rDOFs,
+                                       vector<su2double>       &matVandermonde,
                                        vector<su2double>       &matVandermondeInv,
                                        vector<su2double>       &lagBasisPoints,
                                        vector<su2double>       &drLagBasisPoints) {
@@ -510,11 +519,13 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesLine(
   /*--- Compute the inverse of the Vandermonde matrix in the DOFs and
         compute the Vandermonde matrix in the given points. ---*/
   vector<su2double> V(nDOFs*nPoints);
+  matVandermonde.resize(nDOFs*nDOFs);
   matVandermondeInv.resize(nDOFs*nDOFs);
 
   Vandermonde1D(nDOFs, rDOFs, matVandermondeInv);
   InverseMatrix(nDOFs, matVandermondeInv);
 
+  Vandermonde1D(nDOFs, rDOFs, matVandermonde);
   Vandermonde1D(nDOFs, rPoints, V);
 
   /*--- Allocate the memory for lagBasisPoints and determine its values.
@@ -547,6 +558,7 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesTriangle(
                                        unsigned short          &nDOFs,
                                        vector<su2double>       &rDOFs,
                                        vector<su2double>       &sDOFs,
+                                       vector<su2double>       &matVandermonde,
                                        vector<su2double>       &matVandermondeInv,
                                        vector<su2double>       &lagBasisPoints,
                                        vector<su2double>       &drLagBasisPoints,
@@ -577,11 +589,13 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesTriangle(
   /*--- Compute the inverse of the Vandermonde matrix in the DOFs and
         compute the Vandermonde matrix in the points. ---*/
   vector<su2double> V(nDOFs*nPoints);
+  matVandermonde.resize(nDOFs*nDOFs);
   matVandermondeInv.resize(nDOFs*nDOFs);
 
   Vandermonde2D_Triangle(nPoly, nDOFs, rDOFs, sDOFs, matVandermondeInv);
   InverseMatrix(nDOFs, matVandermondeInv);
 
+  Vandermonde2D_Triangle(nPoly, nDOFs, rDOFs, sDOFs, matVandermonde);
   Vandermonde2D_Triangle(nPoly, nDOFs, rPoints, sPoints, V);
 
   /*--- Allocate the memory for lagBasisPoints and determine its values.
@@ -616,6 +630,7 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesQuadrilat
                                        unsigned short          &nDOFs,
                                        vector<su2double>       &rDOFs,
                                        vector<su2double>       &sDOFs,
+                                       vector<su2double>       &matVandermonde,
                                        vector<su2double>       &matVandermondeInv,
                                        vector<su2double>       &lagBasisPoints,
                                        vector<su2double>       &drLagBasisPoints,
@@ -647,11 +662,13 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesQuadrilat
   /*--- Compute the inverse of the Vandermonde matrix in the DOFs and
         compute the Vandermonde matrix in the points. ---*/
   vector<su2double> V(nDOFs*nPoints);
+  matVandermonde.resize(nDOFs*nDOFs);
   matVandermondeInv.resize(nDOFs*nDOFs);
 
   Vandermonde2D_Quadrilateral(nPoly, nDOFs, rDOFs, sDOFs, matVandermondeInv);
   InverseMatrix(nDOFs, matVandermondeInv);
 
+  Vandermonde2D_Quadrilateral(nPoly, nDOFs, rDOFs, sDOFs, matVandermonde);
   Vandermonde2D_Quadrilateral(nPoly, nDOFs, rPoints, sPoints, V);
 
   /*--- Allocate the memory for lagBasisPoints and determine its values.
@@ -688,6 +705,7 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesTetrahedr
                                        vector<su2double>       &rDOFs,
                                        vector<su2double>       &sDOFs,
                                        vector<su2double>       &tDOFs,
+                                       vector<su2double>       &matVandermonde,
                                        vector<su2double>       &matVandermondeInv,
                                        vector<su2double>       &lagBasisPoints,
                                        vector<su2double>       &drLagBasisPoints,
@@ -725,11 +743,13 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesTetrahedr
   /*--- Compute the inverse of the Vandermonde matrix in the DOFs and
         compute the Vandermonde matrix in the points. ---*/
   vector<su2double> V(nDOFs*nPoints);
+  matVandermonde.resize(nDOFs*nDOFs);
   matVandermondeInv.resize(nDOFs*nDOFs);
 
-  Vandermonde3D_Tetrahedron(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermondeInv );
+  Vandermonde3D_Tetrahedron(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermondeInv);
   InverseMatrix(nDOFs, matVandermondeInv);
 
+  Vandermonde3D_Tetrahedron(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermonde);
   Vandermonde3D_Tetrahedron(nPoly, nDOFs, rPoints, sPoints, tPoints, V);
 
   /*--- Allocate the memory for lagBasisPoints and determine its values.
@@ -769,6 +789,7 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesPyramid(
                                        vector<su2double>       &rDOFs,
                                        vector<su2double>       &sDOFs,
                                        vector<su2double>       &tDOFs,
+                                       vector<su2double>       &matVandermonde,
                                        vector<su2double>       &matVandermondeInv,
                                        vector<su2double>       &lagBasisPoints,
                                        vector<su2double>       &drLagBasisPoints,
@@ -819,11 +840,13 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesPyramid(
   /*--- Compute the inverse of the Vandermonde matrix in the DOFs and
         compute the Vandermonde matrix in the points. ---*/
   vector<su2double> V(nDOFs*nPoints);
+  matVandermonde.resize(nDOFs*nDOFs);
   matVandermondeInv.resize(nDOFs*nDOFs);
 
   Vandermonde3D_Pyramid(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermondeInv);
   InverseMatrix(nDOFs, matVandermondeInv);
 
+  Vandermonde3D_Pyramid(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermonde);
   Vandermonde3D_Pyramid(nPoly, nDOFs, rPoints, sPoints, tPoints, V);
 
   /*--- Allocate the memory for lagBasisPoints and determine its values.
@@ -862,6 +885,7 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesPrism(
                                        vector<su2double>       &rDOFs,
                                        vector<su2double>       &sDOFs,
                                        vector<su2double>       &tDOFs,
+                                       vector<su2double>       &matVandermonde,
                                        vector<su2double>       &matVandermondeInv,
                                        vector<su2double>       &lagBasisPoints,
                                        vector<su2double>       &drLagBasisPoints,
@@ -901,11 +925,13 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesPrism(
   /*--- Compute the inverse of the Vandermonde matrix in the DOFs and
         compute the Vandermonde matrix in the points. ---*/
   vector<su2double> V(nDOFs*nPoints);
+  matVandermonde.resize(nDOFs*nDOFs);
   matVandermondeInv.resize(nDOFs*nDOFs);
 
   Vandermonde3D_Prism(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermondeInv);
   InverseMatrix(nDOFs, matVandermondeInv);
 
+  Vandermonde3D_Prism(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermonde);
   Vandermonde3D_Prism(nPoly, nDOFs, rPoints, sPoints, tPoints, V);
 
   /*--- Allocate the memory for lagBasisPoints and determine its values.
@@ -944,6 +970,7 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesHexahedro
                                        vector<su2double>       &rDOFs,
                                        vector<su2double>       &sDOFs,
                                        vector<su2double>       &tDOFs,
+                                       vector<su2double>       &matVandermonde,
                                        vector<su2double>       &matVandermondeInv,
                                        vector<su2double>       &lagBasisPoints,
                                        vector<su2double>       &drLagBasisPoints,
@@ -981,11 +1008,13 @@ void FEMStandardElementBaseClass::LagrangianBasisFunctionAndDerivativesHexahedro
   /*--- Compute the inverse of the Vandermonde matrix in the DOFs and
         compute the Vandermonde matrix in the points. ---*/
   vector<su2double> V(nDOFs*nPoints);
+  matVandermonde.resize(nDOFs*nDOFs);
   matVandermondeInv.resize(nDOFs*nDOFs);
 
   Vandermonde3D_Hexahedron(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermondeInv);
   InverseMatrix(nDOFs, matVandermondeInv);
 
+  Vandermonde3D_Hexahedron(nPoly, nDOFs, rDOFs, sDOFs, tDOFs, matVandermonde);
   Vandermonde3D_Hexahedron(nPoly, nDOFs, rPoints, sPoints, tPoints, V);
 
   /*--- Allocate the memory for lagBasisPoints and determine its values.
@@ -2024,7 +2053,8 @@ FEMStandardElementClass::FEMStandardElementClass(unsigned short          val_VTK
   /* Create the basis functions and the matrix to store the derivatives in
      the basis functions in the solution DOFs. */
   CreateBasisFunctionsAndMatrixDerivatives(rSolDOFs, sSolDOFs, tSolDOFs,
-                                           matVandermondeInv, lagBasisSolDOFs, matDerBasisSolDOFs);
+                                           matVandermonde, matVandermondeInv,
+                                           lagBasisSolDOFs, matDerBasisSolDOFs);
 
   /*--------------------------------------------------------------------------*/
   /*--- Create the data of the derivatives of the basis functions in the   ---*/
@@ -2034,9 +2064,11 @@ FEMStandardElementClass::FEMStandardElementClass(unsigned short          val_VTK
   /*--------------------------------------------------------------------------*/
 
   vector<su2double> dummyLagBasis;
+  vector<su2double> dummyMatVandermonde;
   vector<su2double> dummyMatVandermondeInv;
   CreateBasisFunctionsAndMatrixDerivatives(rDOFs, sDOFs, tDOFs,
-                                           dummyMatVandermondeInv, dummyLagBasis, matDerBasisOwnDOFs);
+                                           dummyMatVandermonde, dummyMatVandermondeInv,
+                                           dummyLagBasis, matDerBasisOwnDOFs);
 
   /*--------------------------------------------------------------------------*/
   /*--- Create the data of the second derivatives of the basis functions   ---*/
@@ -2261,6 +2293,7 @@ void FEMStandardElementClass::Copy(const FEMStandardElementClass &other) {
   subConn1ForPlotting = other.subConn1ForPlotting;
   subConn2ForPlotting = other.subConn2ForPlotting;
 
+  matVandermonde   = other.matVandermonde;
   matVandermondeInv   = other.matVandermondeInv;
   matBasisIntegration = other.matBasisIntegration;
   matDerBasisIntTrans = other.matDerBasisIntTrans;
@@ -2273,6 +2306,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
                                        const vector<su2double> &rLoc,
                                        const vector<su2double> &sLoc,
                                        const vector<su2double> &tLoc,
+                                             vector<su2double> &matVandermonde,
                                              vector<su2double> &matVandermondeInv,
                                              vector<su2double> &lagBasis,
                                              vector<su2double> &matDerBasis) {
@@ -2290,6 +2324,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
     case LINE:
       LagrangianBasisFunctionAndDerivativesLine(nPoly,      rLoc,
                                                 nDOFsDummy, rDOFsDummy,
+                                                matVandermonde,
                                                 matVandermondeInv,
                                                 lagBasis,   drLagBasisLoc);
       break;
@@ -2298,6 +2333,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
       LagrangianBasisFunctionAndDerivativesTriangle(nPoly,      rLoc,
                                                     sLoc,       nDOFsDummy,
                                                     rDOFsDummy, sDOFsDummy,
+                                                    matVandermonde,
                                                     matVandermondeInv,
                                                     lagBasis,   drLagBasisLoc,
                                                     dsLagBasisLoc);
@@ -2307,6 +2343,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
       LagrangianBasisFunctionAndDerivativesQuadrilateral(nPoly,      rLoc,
                                                          sLoc,       nDOFsDummy,
                                                          rDOFsDummy, sDOFsDummy,
+                                                         matVandermonde,
                                                          matVandermondeInv,
                                                          lagBasis,   drLagBasisLoc,
                                                          dsLagBasisLoc);
@@ -2317,6 +2354,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
                                                        sLoc,       tLoc,
                                                        nDOFsDummy, rDOFsDummy,
                                                        sDOFsDummy, tDOFsDummy,
+                                                       matVandermonde,
                                                        matVandermondeInv,
                                                        lagBasis,   drLagBasisLoc,
                                                        dsLagBasisLoc,
@@ -2328,6 +2366,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
                                                    sLoc,       tLoc,
                                                    nDOFsDummy, rDOFsDummy,
                                                    sDOFsDummy, tDOFsDummy,
+                                                   matVandermonde,
                                                    matVandermondeInv,
                                                    lagBasis,   drLagBasisLoc,
                                                    dsLagBasisLoc,
@@ -2339,6 +2378,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
                                                  sLoc,       tLoc,
                                                  nDOFsDummy, rDOFsDummy,
                                                  sDOFsDummy, tDOFsDummy,
+                                                 matVandermonde,
                                                  matVandermondeInv,
                                                  lagBasis,   drLagBasisLoc,
                                                  dsLagBasisLoc,
@@ -2350,6 +2390,7 @@ void FEMStandardElementClass::CreateBasisFunctionsAndMatrixDerivatives(
                                                       sLoc,       tLoc,
                                                       nDOFsDummy, rDOFsDummy,
                                                       sDOFsDummy, tDOFsDummy,
+                                                      matVandermonde,
                                                       matVandermondeInv,
                                                       lagBasis,   drLagBasisLoc,
                                                       dsLagBasisLoc,
@@ -2395,8 +2436,10 @@ void FEMStandardElementClass::DataStandardLine(void) {
 
   /*--- Determine the Lagrangian basis functions and its derivatives
         in the integration points. ---*/
+  vector<su2double> matVandermondeDummy;
   vector<su2double> matVandermondeInvDummy;
   LagrangianBasisFunctionAndDerivativesLine(nPoly, rIntegration, nDOFs, rDOFs,
+                                            matVandermondeDummy,
                                             matVandermondeInvDummy,
                                             lagBasisIntegration,
                                             drLagBasisIntegration);
@@ -2418,9 +2461,11 @@ void FEMStandardElementClass::DataStandardTriangle(void) {
 
   /*--- Determine the Lagrangian basis functions and its derivatives
         in the integration points. ---*/
+  vector<su2double> matVandermondeDummy;
   vector<su2double> matVandermondeInvDummy;
   LagrangianBasisFunctionAndDerivativesTriangle(nPoly, rIntegration, sIntegration,
                                                 nDOFs, rDOFs, sDOFs,
+                                                matVandermondeDummy,
                                                 matVandermondeInvDummy,
                                                 lagBasisIntegration,
                                                 drLagBasisIntegration,
@@ -2448,10 +2493,12 @@ void FEMStandardElementClass::DataStandardQuadrilateral(void) {
 
   /*--- Determine the Lagrangian basis functions and its derivatives
         in the integration points. ---*/
+  vector<su2double> matVandermondeDummy;
   vector<su2double> matVandermondeInvDummy;
   LagrangianBasisFunctionAndDerivativesQuadrilateral(nPoly, rIntegration,
                                                      sIntegration,
                                                      nDOFs, rDOFs, sDOFs,
+                                                     matVandermondeDummy,
                                                      matVandermondeInvDummy,
                                                      lagBasisIntegration,
                                                      drLagBasisIntegration,
@@ -2483,10 +2530,12 @@ void FEMStandardElementClass::DataStandardTetrahedron(void) {
 
   /*--- Determine the Lagrangian basis functions and its derivatives
         in the integration points. ---*/
-  vector<su2double> matVandermondeInvDummy;
+  vector<su2double> matVandermondeDummy;
+  vector<su2double> matVandermondeInvDummy;  
   LagrangianBasisFunctionAndDerivativesTetrahedron(nPoly, rIntegration,
                                                    sIntegration, tIntegration,
                                                    nDOFs, rDOFs, sDOFs, tDOFs,
+                                                   matVandermondeDummy,
                                                    matVandermondeInvDummy,
                                                    lagBasisIntegration,
                                                    drLagBasisIntegration,
@@ -2538,10 +2587,12 @@ void FEMStandardElementClass::DataStandardPyramid(void) {
 
   /*--- Determine the Lagrangian basis functions and its derivatives
         in the integration points. ---*/
+  vector<su2double> matVandermondeDummy;
   vector<su2double> matVandermondeInvDummy;
   LagrangianBasisFunctionAndDerivativesPyramid(nPoly, rIntegration,
                                                sIntegration, tIntegration,
                                                nDOFs, rDOFs, sDOFs, tDOFs,
+                                               matVandermondeDummy,
                                                matVandermondeInvDummy,
                                                lagBasisIntegration,
                                                drLagBasisIntegration,
@@ -2600,10 +2651,12 @@ void FEMStandardElementClass::DataStandardPrism(void) {
 
   /*--- Determine the Lagrangian basis functions and its derivatives
         in the integration points. ---*/
+  vector<su2double> matVandermondeDummy;
   vector<su2double> matVandermondeInvDummy;
   LagrangianBasisFunctionAndDerivativesPrism(nPoly, rIntegration,
                                              sIntegration, tIntegration,
                                              nDOFs, rDOFs, sDOFs, tDOFs,
+                                             matVandermondeDummy,
                                              matVandermondeInvDummy,
                                              lagBasisIntegration,
                                              drLagBasisIntegration,
@@ -2663,10 +2716,12 @@ void FEMStandardElementClass::DataStandardHexahedron(void) {
 
   /*--- Determine the Lagrangian basis functions and its derivatives
         in the integration points. ---*/
+  vector<su2double> matVandermondeDummy;
   vector<su2double> matVandermondeInvDummy;
   LagrangianBasisFunctionAndDerivativesHexahedron(nPoly, rIntegration,
                                                   sIntegration, tIntegration,
                                                   nDOFs, rDOFs, sDOFs, tDOFs,
+                                                  matVandermondeDummy,
                                                   matVandermondeInvDummy,
                                                   lagBasisIntegration,
                                                   drLagBasisIntegration,
@@ -3528,8 +3583,9 @@ FEMStandardInternalFaceClass::FEMStandardInternalFaceClass(unsigned short val_VT
   swapFaceInElementSide0 = val_swapFaceInElementSide0;
   swapFaceInElementSide1 = val_swapFaceInElementSide1;
 
-  /*--- Create dummy variable to store inverse of Vandermonde matrix temporarily. ---*/
-  vector<su2double> matVandermondeInvDummy;
+  /*--- Create dummy variable to store Vandermonde matrix and its inverse matrix temporarily. ---*/
+  vector<su2double> matVandermondeDummy;
+  vector<su2double> matVandermondeInvDummy;  
 
   /*--- Determine the constant in the penalty parameter in the viscous
         discretization. This constant depends on the element type on
@@ -3544,11 +3600,11 @@ FEMStandardInternalFaceClass::FEMStandardInternalFaceClass(unsigned short val_VT
   switch( VTK_Type ) {
     case LINE:
       LagrangianBasisFunctionAndDerivativesLine(nPolyElemSide0, rIntegration, nDOFsFaceSide0,
-                                                rDOFsFaceSide0, matVandermondeInvDummy,
+                                                rDOFsFaceSide0, matVandermondeDummy, matVandermondeInvDummy,
                                                 lagBasisFaceIntegrationSide0,
                                                 drLagBasisFaceIntegrationSide0);
       LagrangianBasisFunctionAndDerivativesLine(nPolyElemSide1, rIntegration, nDOFsFaceSide1,
-                                                rDOFsFaceSide1, matVandermondeInvDummy,
+                                                rDOFsFaceSide1, matVandermondeDummy, matVandermondeInvDummy,
                                                 lagBasisFaceIntegrationSide1,
                                                 drLagBasisFaceIntegrationSide1);
       break;
@@ -3557,6 +3613,7 @@ FEMStandardInternalFaceClass::FEMStandardInternalFaceClass(unsigned short val_VT
       LagrangianBasisFunctionAndDerivativesTriangle(nPolyElemSide0, rIntegration,
                                                     sIntegration,   nDOFsFaceSide0,
                                                     rDOFsFaceSide0, sDOFsFaceSide0,
+                                                    matVandermondeDummy,
                                                     matVandermondeInvDummy,
                                                     lagBasisFaceIntegrationSide0,
                                                     drLagBasisFaceIntegrationSide0,
@@ -3564,6 +3621,7 @@ FEMStandardInternalFaceClass::FEMStandardInternalFaceClass(unsigned short val_VT
       LagrangianBasisFunctionAndDerivativesTriangle(nPolyElemSide1, rIntegration,
                                                     sIntegration,   nDOFsFaceSide1,
                                                     rDOFsFaceSide1, sDOFsFaceSide1,
+                                                    matVandermondeDummy,
                                                     matVandermondeInvDummy,
                                                     lagBasisFaceIntegrationSide1,
                                                     drLagBasisFaceIntegrationSide1,
@@ -3574,6 +3632,7 @@ FEMStandardInternalFaceClass::FEMStandardInternalFaceClass(unsigned short val_VT
       LagrangianBasisFunctionAndDerivativesQuadrilateral(nPolyElemSide0, rIntegration,
                                                          sIntegration,   nDOFsFaceSide0,
                                                          rDOFsFaceSide0, sDOFsFaceSide0,
+                                                         matVandermondeDummy,
                                                          matVandermondeInvDummy,
                                                          lagBasisFaceIntegrationSide0,
                                                          drLagBasisFaceIntegrationSide0,
@@ -3581,6 +3640,7 @@ FEMStandardInternalFaceClass::FEMStandardInternalFaceClass(unsigned short val_VT
       LagrangianBasisFunctionAndDerivativesQuadrilateral(nPolyElemSide1, rIntegration,
                                                          sIntegration,   nDOFsFaceSide1,
                                                          rDOFsFaceSide0, sDOFsFaceSide1,
+                                                         matVandermondeDummy,
                                                          matVandermondeInvDummy,
                                                          lagBasisFaceIntegrationSide1,
                                                          drLagBasisFaceIntegrationSide1,
@@ -3821,7 +3881,8 @@ FEMStandardBoundaryFaceClass::FEMStandardBoundaryFaceClass(unsigned short val_VT
   VTK_TypeElem      = val_VTK_TypeElem;
   swapFaceInElement = val_swapFaceInElement;
 
-  /*--- Create dummy variable to store inverse of Vandermonde matrix temporarily. ---*/
+  /*--- Create dummy variable to store Vandermonde matrix and its inverse matrix temporarily. ---*/
+  vector<su2double> matVandermondeDummy;
   vector<su2double> matVandermondeInvDummy;
 
   /*--- Determine the constant in the penalty parameter in the viscous
@@ -3835,7 +3896,7 @@ FEMStandardBoundaryFaceClass::FEMStandardBoundaryFaceClass(unsigned short val_VT
   switch( VTK_Type ) {
     case LINE:
       LagrangianBasisFunctionAndDerivativesLine(nPolyElem, rIntegration, nDOFsFace,
-                                                rDOFsFace, matVandermondeInvDummy,
+                                                rDOFsFace, matVandermondeDummy, matVandermondeInvDummy,
                                                 lagBasisFaceIntegration,
                                                 drLagBasisFaceIntegration);
       SubConnForPlottingLine(nPolyElem, subConnForPlotting);
@@ -3845,6 +3906,7 @@ FEMStandardBoundaryFaceClass::FEMStandardBoundaryFaceClass(unsigned short val_VT
       LagrangianBasisFunctionAndDerivativesTriangle(nPolyElem,    rIntegration,
                                                     sIntegration, nDOFsFace,
                                                     rDOFsFace,    sDOFsFace,
+                                                    matVandermondeDummy,
                                                     matVandermondeInvDummy,
                                                     lagBasisFaceIntegration,
                                                     drLagBasisFaceIntegration,
@@ -3856,6 +3918,7 @@ FEMStandardBoundaryFaceClass::FEMStandardBoundaryFaceClass(unsigned short val_VT
       LagrangianBasisFunctionAndDerivativesQuadrilateral(nPolyElem,    rIntegration,
                                                          sIntegration, nDOFsFace,
                                                          rDOFsFace,    sDOFsFace,
+                                                         matVandermondeDummy,
                                                          matVandermondeInvDummy,
                                                          lagBasisFaceIntegration,
                                                          drLagBasisFaceIntegration,

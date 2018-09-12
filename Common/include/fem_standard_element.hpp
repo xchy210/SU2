@@ -328,6 +328,7 @@ protected:
                                    interpolation functions must be evaluated.
   * \param[out] nDOFs            - Number of DOFs of the line element.
   * \param[out] rDOFs            - r-coordinates of the DOFs of the line element.
+  * \param[out] matVandermonde   - Values of the Vandermonde matrix
   * \param[out] matVandermondeInv- Values of the inverse matrix of Vandermonde matrix
   * \param[out] lagBasisPoints   - Values of the Lagrangian interpolation
                                    functions in the given points.
@@ -338,6 +339,7 @@ protected:
                                                  const vector<su2double> &rPoints,
                                                  unsigned short          &nDOFs,
                                                  vector<su2double>       &rDOFs,
+                                                 vector<su2double>       &matVandermonde,
                                                  vector<su2double>       &matVandermondeInv,
                                                  vector<su2double>       &lagBasisPoints,
                                                  vector<su2double>       &drLagBasisPoints);
@@ -353,6 +355,7 @@ protected:
   * \param[out] nDOFs            - Number of DOFs of the triangle.
   * \param[out] rDOFs            - r-coordinates of the DOFs of the triangle.
   * \param[out] sDOFs            - s-coordinates of the DOFs of the triangle.
+  * \param[out] matVandermonde   - Values of the Vandermonde matrix
   * \param[out] matVandermondeInv- Values of the inverse matrix of Vandermonde matrix
   * \param[out] lagBasisPoints   - Values of the Lagrangian interpolation
                                    functions in the given points.
@@ -367,6 +370,7 @@ protected:
                                                      unsigned short          &nDOFs,
                                                      vector<su2double>       &rDOFs,
                                                      vector<su2double>       &sDOFs,
+                                                     vector<su2double>       &matVandermonde,
                                                      vector<su2double>       &matVandermondeInv,
                                                      vector<su2double>       &lagBasisPoints,
                                                      vector<su2double>       &drLagBasisPoints,
@@ -383,6 +387,7 @@ protected:
   * \param[out] nDOFs            - Number of DOFs of the quadrilateral.
   * \param[out] rDOFs            - r-coordinates of the DOFs of the quadrilateral.
   * \param[out] sDOFs            - s-coordinates of the DOFs of the quadrilateral.
+  * \param[out] matVandermonde   - Values of the Vandermonde matrix
   * \param[out] matVandermondeInv- Values of the inverse matrix of Vandermonde matrix
   * \param[out] lagBasisPoints   - Values of the Lagrangian interpolation
                                    functions in the given points.
@@ -397,6 +402,7 @@ protected:
                                                           unsigned short          &nDOFs,
                                                           vector<su2double>       &rDOFs,
                                                           vector<su2double>       &sDOFs,
+                                                          vector<su2double>       &matVandermonde,
                                                           vector<su2double>       &matVandermondeInv,
                                                           vector<su2double>       &lagBasisPoints,
                                                           vector<su2double>       &drLagBasisPoints,
@@ -416,6 +422,7 @@ protected:
   * \param[out] rDOFs            - r-coordinates of the DOFs of the tetrahedron.
   * \param[out] sDOFs            - s-coordinates of the DOFs of the tetrahedron.
   * \param[out] tDOFs            - t-coordinates of the DOFs of the tetrahedron.
+  * \param[out] matVandermonde   - Values of the Vandermonde matrix
   * \param[out] matVandermondeInv- Values of the inverse matrix of Vandermonde matrix
   * \param[out] lagBasisPoints   - Values of the Lagrangian interpolation
                                    functions in the given points.
@@ -434,6 +441,7 @@ protected:
                                                         vector<su2double>       &rDOFs,
                                                         vector<su2double>       &sDOFs,
                                                         vector<su2double>       &tDOFs,
+                                                        vector<su2double>       &matVandermonde,
                                                         vector<su2double>       &matVandermondeInv,
                                                         vector<su2double>       &lagBasisPoints,
                                                         vector<su2double>       &drLagBasisPoints,
@@ -454,6 +462,7 @@ protected:
   * \param[out] rDOFs            - r-coordinates of the DOFs of the pyramid.
   * \param[out] sDOFs            - s-coordinates of the DOFs of the pyramid.
   * \param[out] tDOFs            - t-coordinates of the DOFs of the pyramid.
+  * \param[out] matVandermonde   - Values of the Vandermonde matrix
   * \param[out] matVandermondeInv- Values of the inverse matrix of Vandermonde matrix
   * \param[out] lagBasisPoints   - Values of the Lagrangian interpolation
                                    functions in the given points.
@@ -472,6 +481,7 @@ protected:
                                                     vector<su2double>       &rDOFs,
                                                     vector<su2double>       &sDOFs,
                                                     vector<su2double>       &tDOFs,
+                                                    vector<su2double>       &matVandermonde,
                                                     vector<su2double>       &matVandermondeInv,
                                                     vector<su2double>       &lagBasisPoints,
                                                     vector<su2double>       &drLagBasisPoints,
@@ -492,6 +502,7 @@ protected:
   * \param[out] rDOFs            - r-coordinates of the DOFs of the prism.
   * \param[out] sDOFs            - s-coordinates of the DOFs of the prism.
   * \param[out] tDOFs            - t-coordinates of the DOFs of the prism.
+  * \param[out] matVandermonde   - Values of the Vandermonde matrix
   * \param[out] matVandermondeInv- Values of the inverse matrix of Vandermonde matrix
   * \param[out] lagBasisPoints   - Values of the Lagrangian interpolation
                                    functions in the given points.
@@ -510,6 +521,7 @@ protected:
                                                   vector<su2double>       &rDOFs,
                                                   vector<su2double>       &sDOFs,
                                                   vector<su2double>       &tDOFs,
+                                                  vector<su2double>       &matVandermonde,
                                                   vector<su2double>       &matVandermondeInv,
                                                   vector<su2double>       &lagBasisPoints,
                                                   vector<su2double>       &drLagBasisPoints,
@@ -530,6 +542,7 @@ protected:
   * \param[out] rDOFs            - r-coordinates of the DOFs of the hexahedron.
   * \param[out] sDOFs            - s-coordinates of the DOFs of the hexahedron.
   * \param[out] tDOFs            - t-coordinates of the DOFs of the hexahedron.
+  * \param[out] matVandermonde   - Values of the Vandermonde matrix
   * \param[out] matVandermondeInv- Values of the inverse matrix of Vandermonde matrix
   * \param[out] lagBasisPoints   - Values of the Lagrangian interpolation
                                    functions in the given points.
@@ -548,6 +561,7 @@ protected:
                                                        vector<su2double>       &rDOFs,
                                                        vector<su2double>       &sDOFs,
                                                        vector<su2double>       &tDOFs,
+                                                       vector<su2double>       &matVandermonde,
                                                        vector<su2double>       &matVandermondeInv,
                                                        vector<su2double>       &lagBasisPoints,
                                                        vector<su2double>       &drLagBasisPoints,
@@ -811,8 +825,10 @@ private:
   vector<su2double> dsLagBasisIntegration; /*!< \brief s-derivatives of the Lagrangian basis functions in the integration points. */
   vector<su2double> dtLagBasisIntegration; /*!< \brief t-derivatives of the Lagrangian basis functions in the integration points. */
 
+  vector<su2double> matVandermonde;       /*!< \brief Matrix of Vandermonde matrix in the DOFs for this standard element.
+                                                      This data is needed for the computation of shock capturing. */
   vector<su2double> matVandermondeInv;    /*!< \brief Inverse matrix of Vandermonde matrix in the DOFs for this standard element.
-                                                      This data is needed for the computation of shock sensing. */
+                                                      This data is needed for the computation of shock capturing. */
 
   vector<su2double> matBasisIntegration;  /*!< \brief Matrix of lagBasisIntegration, drLagBasisIntegration, dsLagBasisIntegration
                                                       and dtLagBasisIntegration combined for efficiency when using BLAS routines. */
@@ -950,6 +966,12 @@ public:
   * \return  The pointer to data, which stores the t-derivatives of the basis functions.
   */
   su2double *GetDtBasisFunctionsIntegration(void);
+
+  /*!
+  * \brief Function, which makes available the matrix storage of the Vandermonde matrix of solution DOFs.
+  * \return  The pointer to matVandermonde.
+  */
+  const su2double *GetMatVandermonde(void) const;
 
   /*!
   * \brief Function, which makes available the matrix storage of the inverse of Vandermonde matrix of solution DOFs.
@@ -1167,6 +1189,7 @@ private:
   void CreateBasisFunctionsAndMatrixDerivatives(const vector<su2double> &rLoc,
                                                 const vector<su2double> &sLoc,
                                                 const vector<su2double> &tLoc,
+                                                      vector<su2double> &matVandermonde,
                                                       vector<su2double> &matVandermondeInv,
                                                       vector<su2double> &lagBasis,
                                                       vector<su2double> &matDerBasis);
