@@ -3989,6 +3989,11 @@ public:
   /*!
    * \brief A virtual member.
    */
+  virtual su2double* GetVecSolAlpha(void);
+
+  /*!
+   * \brief A virtual member.
+   */
   virtual unsigned long GetnDOFsGlobal(void);
 
   /*!
@@ -4475,6 +4480,12 @@ public:
    * \return Pointer to the vector of the solution degrees of freedom.
    */
   su2double* GetVecSolDOFs(void);
+
+  /*!
+   * \brief Get a pointer to the vector of the filtering strength in degrees of freedom.
+   * \return Pointer to the vector of the filtering strength in degrees of freedom.
+   */
+  su2double* GetVecSolAlpha(void);
 
 };
 
@@ -13422,6 +13433,7 @@ protected:
   vector<su2double> VecSolDOFs;    /*!< \brief Vector, which stores the solution variables in the owned DOFs. */
   vector<su2double> VecSolDOFsNew; /*!< \brief Vector, which stores the new solution variables in the owned DOFs (needed for classical RK4 scheme). */
   vector<su2double> VecDeltaTime;  /*!< \brief Vector, which stores the time steps of the owned volume elements. */
+  vector<su2double> VecSolAlpha;    /*!< \brief Vector, which stores the filtering strength in the owned DOFs. */
 
   vector<su2double> VecSolDOFsPredictorADER; /*!< \brief Vector, which stores the ADER predictor solution in the owned
                                                          DOFs. These are both space and time DOFs. */
@@ -13553,6 +13565,12 @@ public:
    * \return Pointer to the vector of the solution degrees of freedom.
    */
   su2double* GetVecSolDOFs(void);
+
+  /*!
+   * \brief Get a pointer to the vector of the filtering strength in degrees of freedom.
+   * \return Pointer to the vector of the filtering strength in degrees of freedom.
+   */
+  su2double* GetVecSolAlpha(void);
 
   /*!
    * \brief Get the global number of solution degrees of freedom for the calculation.

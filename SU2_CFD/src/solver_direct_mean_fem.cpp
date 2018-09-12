@@ -336,6 +336,7 @@ CFEM_DG_EulerSolver::CFEM_DG_EulerSolver(CGeometry *geometry, CConfig *config, u
   for(unsigned long i=nVolElemOwned; i<nVolElemTot; ++i) nDOFsLocTot += volElem[i].nDOFsSol;
 
   VecSolDOFs.resize(nVar*nDOFsLocOwned);
+  VecSolAlpha.resize(nDOFsLocOwned);
 
   /*--- Allocate the memory for the working vectors for the solution variables
         for all the time levels used. ---*/

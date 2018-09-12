@@ -998,6 +998,8 @@ inline CFluidModel* CSolver::GetFluidModel(void) { return NULL;}
 
 inline su2double* CSolver::GetVecSolDOFs(void) {return NULL;}
 
+inline su2double* CSolver::GetVecSolAlpha(void) {return NULL;}
+
 inline unsigned long CSolver::GetnDOFsGlobal(void) {return 0;}
 
 inline void CSolver::Set_ReferenceGeometry(CGeometry *geometry, CConfig *config) { }
@@ -1065,6 +1067,8 @@ inline void CSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 inline void CSolver::SetFreeStream_Solution(CConfig *config){}
 
 inline su2double* CBaselineSolver_FEM::GetVecSolDOFs(void) {return VecSolDOFs.data();}
+
+inline su2double* CBaselineSolver_FEM::GetVecSolAlpha(void) {return VecSolDOFs.data();}
 
 inline void CSolver::SetTauWall_WF(CGeometry *geometry, CSolver** solver_container, CConfig* config){}
 
@@ -1748,6 +1752,8 @@ inline void CNSSolver::SetConjugateHeatVariable(unsigned short val_marker, unsig
 inline CFluidModel* CFEM_DG_EulerSolver::GetFluidModel(void) { return FluidModel;}
 
 inline su2double* CFEM_DG_EulerSolver::GetVecSolDOFs(void) {return VecSolDOFs.data();}
+
+inline su2double* CFEM_DG_EulerSolver::GetVecSolAlpha(void) {return VecSolAlpha.data();}
 
 inline unsigned long CFEM_DG_EulerSolver::GetnDOFsGlobal(void) {return nDOFsGlobal;}
 
