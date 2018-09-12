@@ -7352,20 +7352,399 @@ void CFEM_DG_EulerSolver::ClassicalRK4_Iteration(CGeometry *geometry, CSolver **
 void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
                                             const unsigned long elemEnd) {
 
-  /*--- Update the solution by looping over the given range
-        of volume elements. ---*/
-  for(unsigned long l=elemBeg; l<elemEnd; ++l) {
+  // Change following boolean to true if you want to use shock capturing.
+  bool isFilteringUsed = false;
 
-    /* Set the pointers for the residual and solution for this element. */
-    const unsigned long offset = nVar*volElem[l].offsetDOFsSolLocal;
-    su2double *res     = VecTotResDOFsADER.data() + offset;
-    su2double *solDOFs = VecSolDOFs.data()        + offset;
+  if(isFilteringUsed) {
+    bool isTrouble;
+    /*--- Loop over the given range of elements. If a shock exists,
+          use filtering method to resolve the shock. ---*/
+    for (unsigned long l=elemBeg; l<elemEnd; ++l) {
+      /*-----------------------------------------------------------------------*/
+      /*--- Step 1: Define necessary variables for filtering method         ---*/
+      /*---         for this element.                                       ---*/
+      /*-----------------------------------------------------------------------*/
 
-    /* Loop over the DOFs for this element and update the solution.
-       Initialize the residual to zero afterwards. */
-    for(unsigned short i=0; i<(nVar*volElem[l].nDOFsSol); ++i) {
-      solDOFs[i] -= VecDeltaTime[l]*res[i];
-      res[i]      = 0.0;
+      /* Get the data from the corresponding standard element. */
+      const unsigned short ind          = volElem[l].indStandardElement;
+      const unsigned short nDOFs        = volElem[l].nDOFsSol;
+      const unsigned short VTK_TypeElem = volElem[l].VTK_Type;
+      const unsigned short nPoly        = standardElementsSol[ind].GetNPoly();
+      const su2double *matVander        = standardElementsSol[ind].GetMatVandermonde();
+      const su2double *matVanderInv     = standardElementsSol[ind].GetMatVandermondeInv();
+
+      /* Set the pointers for the residual and solution for this element. */
+      const unsigned long offset = nVar*volElem[l].offsetDOFsSolLocal;
+      su2double *res     = VecTotResDOFsADER.data() + offset;
+      su2double *solDOFs = VecSolDOFs.data()        + offset;
+      su2double *solAlpha = VecSolAlpha.data()      + volElem[l].offsetDOFsSolLocal;
+
+      /* Initialize dummy variable for this volume element */
+      unsigned long cnt = 0;
+      unsigned short orderVal = 0;
+      vector<su2double> modalValOld(nDOFs, 0.0);
+      vector<su2double> modalValNew(nDOFs, 0.0);
+      vector<su2double> filterCoeff(nDOFs, 0.0);
+      vector<su2double> filterLocal(nDOFs*nDOFs, 0.0);
+      vector<su2double> consVarTemp(nVar*nDOFs, 0.0);
+      su2double pMin = 1.0e300;
+      su2double pMax = 0.0;
+      su2double machMin = 1.0e300;
+      su2double machMax = 0.0;
+      su2double machRatio = 1.2;
+      su2double DensityInv;
+      su2double Velocity2;
+      su2double Velocity2Rel;
+      su2double StaticEnergy;
+      su2double SoundSpeed2;
+      su2double phi_old = 0.0;
+      su2double phi_new = 0.0;
+      su2double phi_threshold_shock;
+      su2double alpha, alpha_strong_shock, alpha_offset_shock;
+
+      /*-----------------------------------------------------------------------*/
+      /*--- Step 2: Calculate modal coefficients of density in this element ---*/
+      /*---         before updating the solution. Also, track the maximum   ---*/
+      /*---         and minimum mach numbers as well as minimum pressure    ---*/
+      /*---         in ths element.                                         ---*/
+      /*-----------------------------------------------------------------------*/
+      for(unsigned short iInd=0; iInd<nDOFs; ++iInd) {
+        for(unsigned short jInd=0; jInd<nDOFs; ++jInd) {
+          modalValOld[iInd] += matVanderInv[iInd+jInd*nDOFs]*solDOFs[jInd*nVar];
+        }
+
+        const su2double *sol     = solDOFs + iInd*nVar;
+        const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + iInd*nDim;
+        DensityInv = 1.0/sol[0];
+        Velocity2 = 0.0;
+        Velocity2Rel = 0.0;
+        for(unsigned short iDim=1; iDim<nDim; ++iDim) {
+          const su2double vel    = sol[iDim]*DensityInv;
+          const su2double velRel = vel - gridVel[iDim-1];
+          Velocity2    += vel*vel;
+          Velocity2Rel += velRel*velRel;
+        }
+        StaticEnergy = sol[nDim+1]*DensityInv - 0.5*Velocity2;
+        FluidModel->SetTDState_rhoe(sol[0], StaticEnergy);
+        SoundSpeed2 = FluidModel->GetSoundSpeed2();
+        machMax = max(sqrt(Velocity2Rel/SoundSpeed2),machMax);
+        machMin = min(sqrt(Velocity2Rel/SoundSpeed2),machMin);
+        pMin = min(pMin,SoundSpeed2*sol[0]/1.4);
+      }
+
+      /*-----------------------------------------------------------------------*/
+      /*--- Step 3: Update the solution.                                    ---*/
+      /*-----------------------------------------------------------------------*/
+      /* Loop over the DOFs for this element and update the solution.
+         Initialize the residual to zero afterwards. */
+      for(unsigned short i=0; i<(nVar*volElem[l].nDOFsSol); ++i) {
+        solDOFs[i] -= VecDeltaTime[l]*res[i];
+        res[i]      = 0.0;
+      }
+
+      /*-----------------------------------------------------------------------*/
+      /*--- Step 4: Calculate modal coefficients of density in this element ---*/
+      /*---         after updating the solution. Also, track the maximum    ---*/
+      /*---         and minimum mach numbers as well as maximum pressure    ---*/
+      /*---         in ths element.                                         ---*/
+      /*-----------------------------------------------------------------------*/
+      for(unsigned short iInd=0; iInd<nDOFs; ++iInd) {
+        for(unsigned short jInd=0; jInd<nDOFs; ++jInd) {
+          modalValNew[iInd] += matVanderInv[iInd+jInd*nDOFs]*solDOFs[jInd*nVar];
+        }
+
+        const su2double *sol     = solDOFs + iInd*nVar;
+        const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + iInd*nDim;
+        DensityInv = 1.0/sol[0];
+        Velocity2 = 0.0;
+        Velocity2Rel = 0.0;
+        for(unsigned short iDim=1; iDim<nDim; ++iDim) {
+          const su2double vel    = sol[iDim]*DensityInv;
+          const su2double velRel = vel - gridVel[iDim-1];
+          Velocity2    += vel*vel;
+          Velocity2Rel += velRel*velRel;
+        }
+        StaticEnergy = sol[nDim+1]*DensityInv - 0.5*Velocity2;
+        FluidModel->SetTDState_rhoe(sol[0], StaticEnergy);
+        SoundSpeed2 = FluidModel->GetSoundSpeed2();
+        machMax = max(sqrt(Velocity2Rel/SoundSpeed2),machMax);
+        machMin = min(sqrt(Velocity2Rel/SoundSpeed2),machMin);
+        pMax = max(pMax,SoundSpeed2*sol[0]/1.4);
+      }
+
+      /*-----------------------------------------------------------------------*/
+      /*--- Step 5: Calculate the shock sensor value for this element.      ---*/
+      /*-----------------------------------------------------------------------*/
+      /* Calculate phi_old and phi_new */
+      switch( VTK_TypeElem ) {
+        case TRIANGLE: {
+          if ( nPoly == 1 ) {
+            phi_old += sqrt(modalValOld[1]*modalValOld[1]   + modalValOld[2]*modalValOld[2]);
+            phi_new += sqrt(modalValNew[1]*modalValNew[1]   + modalValNew[2]*modalValNew[2]);
+            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.05;
+          }
+          else if ( nPoly == 2 ) {
+            phi_old += sqrt(modalValOld[2]*modalValOld[2]   + modalValOld[4]*modalValOld[4]
+                          + modalValOld[5]*modalValOld[5]);
+            phi_new += sqrt(modalValNew[2]*modalValNew[2]   + modalValNew[4]*modalValNew[4]
+                          + modalValNew[5]*modalValNew[5]);
+            phi_threshold_shock = 0.0002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.05;
+          }
+          else if ( nPoly == 3 ) {
+            phi_old += sqrt(modalValOld[3]*modalValOld[3]   + modalValOld[6]*modalValOld[6]
+                          + modalValOld[8]*modalValOld[8]   + modalValOld[9]*modalValOld[9]);
+            phi_new += sqrt(modalValNew[3]*modalValNew[3]   + modalValNew[6]*modalValNew[6]
+                          + modalValNew[8]*modalValNew[8]   + modalValNew[9]*modalValNew[9]);
+            phi_threshold_shock = 0.00001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.55;
+          }
+          else if ( nPoly == 4 ) { // Need to test
+            phi_old += sqrt(modalValOld[4]*modalValOld[4]   + modalValOld[8]*modalValOld[8]
+                          + modalValOld[11]*modalValOld[11] + modalValOld[13]*modalValOld[13]
+                          + modalValOld[14]*modalValOld[14]);
+            phi_new += sqrt(modalValNew[4]*modalValNew[4]   + modalValNew[8]*modalValNew[8]
+                          + modalValNew[11]*modalValNew[11] + modalValNew[13]*modalValNew[13]
+                          + modalValNew[14]*modalValNew[14]);
+            phi_threshold_shock = 0.000005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 5 ) { // Need to test
+            phi_old += sqrt(modalValOld[5]*modalValOld[5]   + modalValOld[10]*modalValOld[10]
+                          + modalValOld[14]*modalValOld[14] + modalValOld[17]*modalValOld[17]
+                          + modalValOld[19]*modalValOld[19] + modalValOld[20]*modalValOld[20]);
+            phi_new += sqrt(modalValNew[5]*modalValNew[5]   + modalValNew[10]*modalValNew[10]
+                          + modalValNew[14]*modalValNew[14] + modalValNew[17]*modalValNew[17]
+                          + modalValNew[19]*modalValNew[19] + modalValNew[20]*modalValNew[20]);
+            phi_threshold_shock = 0.000002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          phi_old = phi_old/modalValOld[0];
+          phi_new = phi_new/modalValNew[0];
+          break;
+        }
+        case QUADRILATERAL: {
+          if ( nPoly == 1 ) {
+            phi_old += sqrt(modalValOld[1]*modalValOld[1]   + modalValOld[2]*modalValOld[2]
+                          + modalValOld[3]*modalValOld[3]);
+            phi_new += sqrt(modalValNew[1]*modalValNew[1]   + modalValNew[2]*modalValNew[2]
+                          + modalValNew[3]*modalValNew[3]);
+            phi_threshold_shock = 0.002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 2 ) {
+            phi_old += sqrt(modalValOld[2]*modalValOld[2]   + modalValOld[4]*modalValOld[4]
+                          + modalValOld[5]*modalValOld[5]   + modalValOld[6]*modalValOld[6]
+                          + modalValOld[7]*modalValOld[7]   + modalValOld[8]*modalValOld[8]);
+            phi_new += sqrt(modalValNew[2]*modalValNew[2]   + modalValNew[4]*modalValNew[4]
+                          + modalValNew[5]*modalValNew[5]   + modalValNew[6]*modalValNew[6]
+                          + modalValNew[7]*modalValNew[7]   + modalValNew[8]*modalValNew[8]);
+            phi_threshold_shock = 0.0002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 3 ) { // Need to test
+            phi_old += sqrt(modalValOld[3]*modalValOld[3]   + modalValOld[6]*modalValOld[6]
+                          + modalValOld[7]*modalValOld[7]   + modalValOld[9]*modalValOld[9]
+                          + modalValOld[10]*modalValOld[10] + modalValOld[11]*modalValOld[11]
+                          + modalValOld[12]*modalValOld[12] + modalValOld[13]*modalValOld[13]
+                          + modalValOld[14]*modalValOld[14] + modalValOld[15]*modalValOld[15]);
+            phi_new += sqrt(modalValNew[3]*modalValNew[3]   + modalValNew[6]*modalValNew[6]
+                          + modalValNew[7]*modalValNew[7]   + modalValNew[9]*modalValNew[9]
+                          + modalValNew[10]*modalValNew[10] + modalValNew[11]*modalValNew[11]
+                          + modalValNew[12]*modalValNew[12] + modalValNew[13]*modalValNew[13]
+                          + modalValNew[14]*modalValNew[14] + modalValNew[15]*modalValNew[15]);
+            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 4 ) { // Need to test
+            phi_old += sqrt(modalValOld[4]*modalValOld[4]   + modalValOld[8]*modalValOld[8]
+                          + modalValOld[9]*modalValOld[9]   + modalValOld[12]*modalValOld[12]
+                          + modalValOld[13]*modalValOld[13] + modalValOld[14]*modalValOld[14]
+                          + modalValOld[16]*modalValOld[16] + modalValOld[17]*modalValOld[17]
+                          + modalValOld[18]*modalValOld[18] + modalValOld[19]*modalValOld[19]
+                          + modalValOld[20]*modalValOld[20] + modalValOld[21]*modalValOld[21]
+                          + modalValOld[22]*modalValOld[22] + modalValOld[23]*modalValOld[23]
+                          + modalValOld[24]*modalValOld[24]                                   );
+            phi_new += sqrt(modalValNew[4]*modalValNew[4]   + modalValNew[8]*modalValNew[8]
+                          + modalValNew[9]*modalValNew[9]   + modalValNew[12]*modalValNew[12]
+                          + modalValNew[13]*modalValNew[13] + modalValNew[14]*modalValNew[14]
+                          + modalValNew[16]*modalValNew[16] + modalValNew[17]*modalValNew[17]
+                          + modalValNew[18]*modalValNew[18] + modalValNew[19]*modalValNew[19]
+                          + modalValNew[20]*modalValNew[20] + modalValNew[21]*modalValNew[21]
+                          + modalValNew[22]*modalValNew[22] + modalValNew[23]*modalValNew[23]
+                          + modalValNew[24]*modalValNew[24]                                   );
+            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 5 ) { // Need to test
+            phi_old += sqrt(modalValOld[5]*modalValOld[5]   + modalValOld[10]*modalValOld[10]
+                          + modalValOld[11]*modalValOld[11] + modalValOld[15]*modalValOld[15]
+                          + modalValOld[16]*modalValOld[16] + modalValOld[17]*modalValOld[17]
+                          + modalValOld[20]*modalValOld[20] + modalValOld[21]*modalValOld[21]
+                          + modalValOld[22]*modalValOld[22] + modalValOld[23]*modalValOld[23]
+                          + modalValOld[25]*modalValOld[25] + modalValOld[26]*modalValOld[26]
+                          + modalValOld[27]*modalValOld[27] + modalValOld[28]*modalValOld[28]
+                          + modalValOld[29]*modalValOld[29] + modalValOld[30]*modalValOld[30]
+                          + modalValOld[31]*modalValOld[31] + modalValOld[32]*modalValOld[32]
+                          + modalValOld[33]*modalValOld[33] + modalValOld[34]*modalValOld[34]
+                          + modalValOld[35]*modalValOld[35]                                   );
+            phi_new += sqrt(modalValNew[5]*modalValNew[5]   + modalValNew[10]*modalValNew[10]
+                          + modalValNew[11]*modalValNew[11] + modalValNew[15]*modalValNew[15]
+                          + modalValNew[16]*modalValNew[16] + modalValNew[17]*modalValNew[17]
+                          + modalValNew[20]*modalValNew[20] + modalValNew[21]*modalValNew[21]
+                          + modalValNew[22]*modalValNew[22] + modalValNew[23]*modalValNew[23]
+                          + modalValNew[25]*modalValNew[25] + modalValNew[26]*modalValNew[26]
+                          + modalValNew[27]*modalValNew[27] + modalValNew[28]*modalValNew[28]
+                          + modalValNew[29]*modalValNew[29] + modalValNew[30]*modalValNew[30]
+                          + modalValNew[31]*modalValNew[31] + modalValNew[32]*modalValNew[32]
+                          + modalValNew[33]*modalValNew[33] + modalValNew[34]*modalValNew[34]
+                          + modalValNew[35]*modalValNew[35]                                   );
+            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          phi_old = phi_old/modalValOld[0];
+          phi_new = phi_new/modalValNew[0];
+          break;
+        }
+      }
+
+      /*-----------------------------------------------------------------------*/
+      /*--- Step 6: If current element is a trouble cell, apply filtering.  ---*/
+      /*---         Filtering strength is determined by sensor value.       ---*/
+      /*-----------------------------------------------------------------------*/
+      isTrouble = false;
+      if ( phi_new > phi_threshold_shock ) {
+        if ( (machMax > 1.0) && (machMax/machMin > machRatio) ) {
+          isTrouble = true;
+        }
+      }
+      if ( isTrouble ) {
+        // Determine alpha value
+        switch( VTK_TypeElem ) {
+          case TRIANGLE: {
+            if ( nPoly == 1 ) {
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.014)*(3.21*phi_new+0.05006)
+                    + int(0.014 <= phi_new)*int(phi_new < 0.2)*(3.21*phi_new+0.05006)
+                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 2 ) {
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.021)*(5.68*phi_new+0.14092)
+                    + int(0.021 <= phi_new)*int(phi_new < 0.2)*(3.32*phi_new+0.19048)
+                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 3 ) {
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.004)*(34.0*phi_new+0.09400)
+                    + int(0.004 <= phi_new)*int(phi_new < 0.2)*(34.0*phi_new+0.09400)
+                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 4 ) { // Need to test
+              alpha = 1.0;
+            }
+            else if ( nPoly == 5 ) { // Need to test
+              alpha = 1.0;
+            }
+            if ( alpha < 0.0 ) alpha = 0.0;
+            break;
+          }
+          case QUADRILATERAL: {
+            if ( nPoly == 1 ) {
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.01)*(4.60*phi_new+0.09500)
+                    + int(0.01 <= phi_new)*int(phi_new < 0.2)*(4.60*phi_new+0.09500)
+                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 2 ) {
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.001)*(74.4*phi_new+0.04060)
+                    + int(0.001 <= phi_new)*int(phi_new < 0.008)*(74.4*phi_new+0.04060)
+                    + int(0.008 <= phi_new)*int(phi_new < 0.2)*(7.87*phi_new+0.57284)
+                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 3 ) { // Need to test
+              alpha = 1.0;
+            }
+            else if ( nPoly == 4 ) { // Need to test
+              alpha = 1.0;
+            }
+            else if ( nPoly == 5 ) { // Need to test
+              alpha = 1.0;
+            }
+            if ( alpha < 0.0 ) alpha = 0.0;
+            break;
+          }
+        }
+
+        // Construct local filter
+        // Step 1) Calculate filtered modal coefficients
+        switch( VTK_TypeElem ) {
+          case TRIANGLE: {
+            cnt = 0;
+            for(unsigned short i=0; i<nPoly+1; ++i) {
+              for(unsigned short j=0; j<nPoly+1-i; ++j) {
+                orderVal = i+j;
+                filterCoeff[cnt] = exp(-alpha*pow(orderVal,2)/pow(nPoly,2));
+                cnt += 1;
+              }
+            }
+            break;
+          }
+          case QUADRILATERAL: {
+            cnt = 0;
+            for(unsigned short i=0; i<nPoly+1; ++i) {
+              for(unsigned short j=0; j<nPoly+1; ++j) {
+                orderVal = int(i+j < nPoly)*(i+j) + int(i+j >= nPoly)*nPoly;
+                filterCoeff[cnt] = exp(-alpha*pow(orderVal,2)/pow(nPoly,2));
+                cnt += 1;
+              }
+            }
+            break;
+          }
+        }
+
+        // Step 2) Construct local filter matrix
+        cnt = 0;
+        for(unsigned short i=0; i<nDOFs; ++i) {
+          for(unsigned short j=0; j<nDOFs; ++j) {
+            filterLocal[cnt] = 0.0;
+            for(unsigned short k=0; k<nDOFs; ++k) {
+              filterLocal[cnt] += matVander[i+k*nDOFs]*filterCoeff[k]*matVanderInv[k+j*nDOFs];
+            }
+            cnt += 1;
+          }
+        }
+
+        // Step 3) Apply filter
+        for(unsigned short i=0; i<nDOFs; ++i){
+          for(unsigned short j=0; j<nDOFs; ++j){
+            for(unsigned short k=0; k<nVar; ++k){
+              consVarTemp[i*nVar+k] += filterLocal[i*nDOFs+j]*solDOFs[j*nVar+k];
+            }
+          }
+        }
+
+        // Step 4) Loop over the DOFs for this element and update the filtered solution.
+        for(unsigned short i=0; i<(nVar*volElem[l].nDOFsSol); ++i) {
+          solDOFs[i] = consVarTemp[i];
+        }
+
+        // Step 5) Save filtering strength for postprocessing purpose.
+        for(unsigned short i=0; i<(volElem[l].nDOFsSol); ++i) {
+          solAlpha[i] = alpha;
+        }
+      }
+      else {
+        // Save filtering strength for postprocessing purpose.
+        for(unsigned short i=0; i<(volElem[l].nDOFsSol); ++i) {
+          solAlpha[i] = 0.0;
+        }
+      }
+    }
+  }
+  else {
+    /*--- Update the solution by looping over the given range
+          of volume elements. ---*/
+    for(unsigned long l=elemBeg; l<elemEnd; ++l) {
+
+      /* Set the pointers for the residual and solution for this element. */
+      const unsigned long offset = nVar*volElem[l].offsetDOFsSolLocal;
+      su2double *res     = VecTotResDOFsADER.data() + offset;
+      su2double *solDOFs = VecSolDOFs.data()        + offset;
+
+      /* Loop over the DOFs for this element and update the solution.
+         Initialize the residual to zero afterwards. */
+      for(unsigned short i=0; i<(nVar*volElem[l].nDOFsSol); ++i) {
+        solDOFs[i] -= VecDeltaTime[l]*res[i];
+        res[i]      = 0.0;
+      }
     }
   }
 }
