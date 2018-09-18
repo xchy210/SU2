@@ -7535,9 +7535,9 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
             phi_new += sqrt(modalValNew[2]*modalValNew[2]   + modalValNew[4]*modalValNew[4]
                           + modalValNew[5]*modalValNew[5]   + modalValNew[6]*modalValNew[6]
                           + modalValNew[7]*modalValNew[7]   + modalValNew[8]*modalValNew[8]);
-            phi_threshold_shock = 0.0002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+            phi_threshold_shock = 0.0005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
-          else if ( nPoly == 3 ) { // Need to test
+          else if ( nPoly == 3 ) {
             phi_old += sqrt(modalValOld[3]*modalValOld[3]   + modalValOld[6]*modalValOld[6]
                           + modalValOld[7]*modalValOld[7]   + modalValOld[9]*modalValOld[9]
                           + modalValOld[10]*modalValOld[10] + modalValOld[11]*modalValOld[11]
@@ -7548,9 +7548,9 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
                           + modalValNew[10]*modalValNew[10] + modalValNew[11]*modalValNew[11]
                           + modalValNew[12]*modalValNew[12] + modalValNew[13]*modalValNew[13]
                           + modalValNew[14]*modalValNew[14] + modalValNew[15]*modalValNew[15]);
-            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+            phi_threshold_shock = 0.0002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
-          else if ( nPoly == 4 ) { // Need to test
+          else if ( nPoly == 4 ) {
             phi_old += sqrt(modalValOld[4]*modalValOld[4]   + modalValOld[8]*modalValOld[8]
                           + modalValOld[9]*modalValOld[9]   + modalValOld[12]*modalValOld[12]
                           + modalValOld[13]*modalValOld[13] + modalValOld[14]*modalValOld[14]
@@ -7567,7 +7567,7 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
                           + modalValNew[20]*modalValNew[20] + modalValNew[21]*modalValNew[21]
                           + modalValNew[22]*modalValNew[22] + modalValNew[23]*modalValNew[23]
                           + modalValNew[24]*modalValNew[24]                                   );
-            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+            phi_threshold_shock = 0.00005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
           else if ( nPoly == 5 ) { // Need to test
             phi_old += sqrt(modalValOld[5]*modalValOld[5]   + modalValOld[10]*modalValOld[10]
@@ -7592,7 +7592,85 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
                           + modalValNew[31]*modalValNew[31] + modalValNew[32]*modalValNew[32]
                           + modalValNew[33]*modalValNew[33] + modalValNew[34]*modalValNew[34]
                           + modalValNew[35]*modalValNew[35]                                   );
-            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+            phi_threshold_shock = 0.00005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          phi_old = phi_old/modalValOld[0];
+          phi_new = phi_new/modalValNew[0];
+          break;
+        }
+        case TETRAHEDRON: {
+          if ( nPoly == 1 ) {
+            phi_old += sqrt(modalValOld[1]*modalValOld[1]   + modalValOld[2]*modalValOld[2]
+                          + modalValOld[3]*modalValOld[3]);
+            phi_new += sqrt(modalValNew[1]*modalValNew[1]   + modalValNew[2]*modalValNew[2]
+                          + modalValNew[3]*modalValNew[3]);
+            phi_threshold_shock = 0.002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 2 ) { // Need to test
+            phi_old += sqrt(modalValOld[2]*modalValOld[2]   + modalValOld[4]*modalValOld[4]
+                          + modalValOld[5]*modalValOld[5]   + modalValOld[7]*modalValOld[7]
+                          + modalValOld[8]*modalValOld[8]   + modalValOld[9]*modalValOld[9]);
+            phi_new += sqrt(modalValNew[2]*modalValNew[2]   + modalValNew[4]*modalValNew[4]
+                          + modalValNew[5]*modalValNew[5]   + modalValNew[7]*modalValNew[7]
+                          + modalValNew[8]*modalValNew[8]   + modalValNew[9]*modalValNew[9]);
+            phi_threshold_shock = 0.0005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 3 ) { // Need to test
+            phi_old += sqrt(modalValOld[3]*modalValOld[3]   + modalValOld[6]*modalValOld[6]
+                          + modalValOld[8]*modalValOld[8]   + modalValOld[9]*modalValOld[9]
+                          + modalValOld[12]*modalValOld[12] + modalValOld[14]*modalValOld[14]
+                          + modalValOld[15]*modalValOld[15] + modalValOld[17]*modalValOld[17]
+                          + modalValOld[18]*modalValOld[18] + modalValOld[19]*modalValOld[19]);
+            phi_new += sqrt(modalValNew[3]*modalValNew[3]   + modalValNew[6]*modalValNew[6]
+                          + modalValNew[8]*modalValNew[8]   + modalValNew[9]*modalValNew[9]
+                          + modalValNew[12]*modalValNew[12] + modalValNew[14]*modalValNew[14]
+                          + modalValNew[15]*modalValNew[15] + modalValNew[17]*modalValNew[17]
+                          + modalValNew[18]*modalValNew[18] + modalValNew[19]*modalValNew[19]);
+            phi_threshold_shock = 0.0002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 4 ) { // Need to test
+            phi_old += sqrt(modalValOld[4]*modalValOld[4]   + modalValOld[8]*modalValOld[8]
+                          + modalValOld[11]*modalValOld[11] + modalValOld[13]*modalValOld[13]
+                          + modalValOld[14]*modalValOld[14] + modalValOld[18]*modalValOld[18]
+                          + modalValOld[21]*modalValOld[21] + modalValOld[23]*modalValOld[23]
+                          + modalValOld[24]*modalValOld[24] + modalValOld[27]*modalValOld[27]
+                          + modalValOld[29]*modalValOld[29] + modalValOld[30]*modalValOld[30]
+                          + modalValOld[32]*modalValOld[32] + modalValOld[33]*modalValOld[33]
+                          + modalValOld[34]*modalValOld[34]                                  );
+            phi_new += sqrt(modalValNew[4]*modalValNew[4]   + modalValNew[8]*modalValNew[8]
+                          + modalValNew[11]*modalValNew[11] + modalValNew[13]*modalValNew[13]
+                          + modalValNew[14]*modalValNew[14] + modalValNew[18]*modalValNew[18]
+                          + modalValNew[21]*modalValNew[21] + modalValNew[23]*modalValNew[23]
+                          + modalValNew[24]*modalValNew[24] + modalValNew[27]*modalValNew[27]
+                          + modalValNew[29]*modalValNew[29] + modalValNew[30]*modalValNew[30]
+                          + modalValNew[32]*modalValNew[32] + modalValNew[33]*modalValNew[33]
+                          + modalValNew[34]*modalValNew[34]                                  );
+            phi_threshold_shock = 0.00005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+          }
+          else if ( nPoly == 5 ) { // Need to test
+            phi_old += sqrt(modalValOld[5]*modalValOld[5]   + modalValOld[10]*modalValOld[10]
+                          + modalValOld[14]*modalValOld[14] + modalValOld[17]*modalValOld[17]
+                          + modalValOld[19]*modalValOld[19] + modalValOld[20]*modalValOld[20]
+                          + modalValOld[25]*modalValOld[25] + modalValOld[29]*modalValOld[29]
+                          + modalValOld[32]*modalValOld[32] + modalValOld[34]*modalValOld[34]
+                          + modalValOld[35]*modalValOld[35] + modalValOld[39]*modalValOld[39]
+                          + modalValOld[42]*modalValOld[42] + modalValOld[44]*modalValOld[44]
+                          + modalValOld[45]*modalValOld[45] + modalValOld[48]*modalValOld[48]
+                          + modalValOld[50]*modalValOld[50] + modalValOld[51]*modalValOld[51]
+                          + modalValOld[53]*modalValOld[53] + modalValOld[54]*modalValOld[54]
+                          + modalValOld[55]*modalValOld[55]                                  );
+            phi_new += sqrt(modalValNew[5]*modalValNew[5]   + modalValNew[10]*modalValNew[10]
+                          + modalValNew[14]*modalValNew[14] + modalValNew[17]*modalValNew[17]
+                          + modalValNew[19]*modalValNew[19] + modalValNew[20]*modalValNew[20]
+                          + modalValNew[25]*modalValNew[25] + modalValNew[29]*modalValNew[29]
+                          + modalValNew[32]*modalValNew[32] + modalValNew[34]*modalValNew[34]
+                          + modalValNew[35]*modalValNew[35] + modalValNew[39]*modalValNew[39]
+                          + modalValNew[42]*modalValNew[42] + modalValNew[44]*modalValNew[44]
+                          + modalValNew[45]*modalValNew[45] + modalValNew[48]*modalValNew[48]
+                          + modalValNew[50]*modalValNew[50] + modalValNew[51]*modalValNew[51]
+                          + modalValNew[53]*modalValNew[53] + modalValNew[54]*modalValNew[54]
+                          + modalValNew[55]*modalValNew[55]                                  );
+            phi_threshold_shock = 0.00005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
           phi_old = phi_old/modalValOld[0];
           phi_new = phi_new/modalValNew[0];
@@ -7640,15 +7718,38 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
           }
           case QUADRILATERAL: {
             if ( nPoly == 1 ) {
-              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.01)*(4.60*phi_new+0.09500)
-                    + int(0.01 <= phi_new)*int(phi_new < 0.2)*(4.60*phi_new+0.09500)
-                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.01100)*(4.00*phi_new+0.10600)
+                    + int(0.01100 <= phi_new)*int(phi_new < 0.20000)*(4.00*phi_new+0.10600)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 2 ) {
-              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.001)*(74.4*phi_new+0.04060)
-                    + int(0.001 <= phi_new)*int(phi_new < 0.008)*(74.4*phi_new+0.04060)
-                    + int(0.008 <= phi_new)*int(phi_new < 0.2)*(7.87*phi_new+0.57284)
-                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00680)*(3.67*phi_new+0.09004)
+                    + int(0.00680 <= phi_new)*int(phi_new < 0.01916)*(3.67*phi_new+0.09004)
+                    + int(0.01916 <= phi_new)*int(phi_new < 0.20000)*(2.46*phi_new+0.11323)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 3 ) { // Need to test
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00290)*(33.6*phi_new-0.01244)
+                    + int(0.00290 <= phi_new)*int(phi_new < 0.20000)*(33.6*phi_new-0.01244)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 4 ) { // Need to test
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00043)*(34.8*phi_new+0.075036)
+                    + int(0.00043 <= phi_new)*int(phi_new < 0.20000)*(34.8*phi_new+0.075036)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+            }
+            else if ( nPoly == 5 ) { // Need to test
+              alpha = 1.0;
+            }
+            if ( alpha < 0.0 ) alpha = 0.0;
+            break;
+          }
+          case TETRAHEDRON: {
+            if ( nPoly == 1 ) { // Need to test
+              alpha = 1.0;
+            }
+            else if ( nPoly == 2 ) { // Need to test
+              alpha = 1.0;
             }
             else if ( nPoly == 3 ) { // Need to test
               alpha = 1.0;
@@ -7665,7 +7766,7 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
         }
 
         // Construct local filter
-        // Step 1) Calculate filtered modal coefficients
+        // Step 1) Calculate factors for filtered modal coefficients
         switch( VTK_TypeElem ) {
           case TRIANGLE: {
             cnt = 0;
@@ -7685,6 +7786,19 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
                 orderVal = int(i+j < nPoly)*(i+j) + int(i+j >= nPoly)*nPoly;
                 filterCoeff[cnt] = exp(-alpha*pow(orderVal,2)/pow(nPoly,2));
                 cnt += 1;
+              }
+            }
+            break;
+          }
+          case TETRAHEDRON: {
+            cnt = 0;
+            for(unsigned short i=0; i<nPoly+1; ++i) {
+              for(unsigned short j=0; j<nPoly+1-i; ++j) {
+                for(unsigned short k=0; k<nPoly+1-i-j; ++k) {
+                  orderVal = i+j+k;
+                  filterCoeff[cnt] = exp(-alpha*pow(orderVal,2)/pow(nPoly,2));
+                  cnt += 1;
+                }
               }
             }
             break;
