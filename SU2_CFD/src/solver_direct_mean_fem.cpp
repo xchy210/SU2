@@ -7392,7 +7392,8 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
       su2double pMax = 0.0;
       su2double machMin = 1.0e300;
       su2double machMax = 0.0;
-      su2double machRatio = 1.2;
+      su2double machRatio = 1.1;
+      su2double betaVal = 1.05;
       su2double DensityInv;
       su2double Velocity2;
       su2double Velocity2Rel;
@@ -7683,8 +7684,11 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
       /*---         Filtering strength is determined by sensor value.       ---*/
       /*-----------------------------------------------------------------------*/
       isTrouble = false;
-      if ( phi_new > phi_threshold_shock ) {
-        if ( (machMax > 1.0) && (machMax/machMin > machRatio) ) {
+      if ( (phi_new > phi_threshold_shock) && (machMax > 1.0) ) {
+        if ( phi_new/phi_old > betaVal ) {
+          isTrouble = true;
+        }
+        else if ( machMax/machMin > machRatio ) {
           isTrouble = true;
         }
       }
