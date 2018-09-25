@@ -7483,16 +7483,16 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
           if ( nPoly == 1 ) {
             phi_old += sqrt(modalValOld[1]*modalValOld[1]   + modalValOld[2]*modalValOld[2]);
             phi_new += sqrt(modalValNew[1]*modalValNew[1]   + modalValNew[2]*modalValNew[2]);
-            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.05;
+            phi_threshold_shock = 0.005; alpha_strong_shock = 5.0; alpha_offset_shock = -0.05;
           }
           else if ( nPoly == 2 ) {
             phi_old += sqrt(modalValOld[2]*modalValOld[2]   + modalValOld[4]*modalValOld[4]
                           + modalValOld[5]*modalValOld[5]);
             phi_new += sqrt(modalValNew[2]*modalValNew[2]   + modalValNew[4]*modalValNew[4]
                           + modalValNew[5]*modalValNew[5]);
-            phi_threshold_shock = 0.0002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.05;
+            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = -0.05;
           }
-          else if ( nPoly == 3 ) {
+          else if ( nPoly == 3 ) { // Need to test
             phi_old += sqrt(modalValOld[3]*modalValOld[3]   + modalValOld[6]*modalValOld[6]
                           + modalValOld[8]*modalValOld[8]   + modalValOld[9]*modalValOld[9]);
             phi_new += sqrt(modalValNew[3]*modalValNew[3]   + modalValNew[6]*modalValNew[6]
@@ -7522,14 +7522,14 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
           break;
         }
         case QUADRILATERAL: {
-          if ( nPoly == 1 ) {
+          if ( nPoly == 1 ) { // Need to test
             phi_old += sqrt(modalValOld[1]*modalValOld[1]   + modalValOld[2]*modalValOld[2]
                           + modalValOld[3]*modalValOld[3]);
             phi_new += sqrt(modalValNew[1]*modalValNew[1]   + modalValNew[2]*modalValNew[2]
                           + modalValNew[3]*modalValNew[3]);
-            phi_threshold_shock = 0.002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
-          else if ( nPoly == 2 ) {
+          else if ( nPoly == 2 ) { // Need to test
             phi_old += sqrt(modalValOld[2]*modalValOld[2]   + modalValOld[4]*modalValOld[4]
                           + modalValOld[5]*modalValOld[5]   + modalValOld[6]*modalValOld[6]
                           + modalValOld[7]*modalValOld[7]   + modalValOld[8]*modalValOld[8]);
@@ -7538,7 +7538,7 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
                           + modalValNew[7]*modalValNew[7]   + modalValNew[8]*modalValNew[8]);
             phi_threshold_shock = 0.0005; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
-          else if ( nPoly == 3 ) {
+          else if ( nPoly == 3 ) { // Need to test
             phi_old += sqrt(modalValOld[3]*modalValOld[3]   + modalValOld[6]*modalValOld[6]
                           + modalValOld[7]*modalValOld[7]   + modalValOld[9]*modalValOld[9]
                           + modalValOld[10]*modalValOld[10] + modalValOld[11]*modalValOld[11]
@@ -7551,7 +7551,7 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
                           + modalValNew[14]*modalValNew[14] + modalValNew[15]*modalValNew[15]);
             phi_threshold_shock = 0.0002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
-          else if ( nPoly == 4 ) {
+          else if ( nPoly == 4 ) { // Need to test
             phi_old += sqrt(modalValOld[4]*modalValOld[4]   + modalValOld[8]*modalValOld[8]
                           + modalValOld[9]*modalValOld[9]   + modalValOld[12]*modalValOld[12]
                           + modalValOld[13]*modalValOld[13] + modalValOld[14]*modalValOld[14]
@@ -7600,12 +7600,12 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
           break;
         }
         case TETRAHEDRON: {
-          if ( nPoly == 1 ) {
+          if ( nPoly == 1 ) { // Need to test
             phi_old += sqrt(modalValOld[1]*modalValOld[1]   + modalValOld[2]*modalValOld[2]
                           + modalValOld[3]*modalValOld[3]);
             phi_new += sqrt(modalValNew[1]*modalValNew[1]   + modalValNew[2]*modalValNew[2]
                           + modalValNew[3]*modalValNew[3]);
-            phi_threshold_shock = 0.002; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
+            phi_threshold_shock = 0.001; alpha_strong_shock = 5.0; alpha_offset_shock = 0.0;
           }
           else if ( nPoly == 2 ) { // Need to test
             phi_old += sqrt(modalValOld[2]*modalValOld[2]   + modalValOld[4]*modalValOld[4]
@@ -7697,19 +7697,20 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
         switch( VTK_TypeElem ) {
           case TRIANGLE: {
             if ( nPoly == 1 ) {
-              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.014)*(3.21*phi_new+0.05006)
-                    + int(0.014 <= phi_new)*int(phi_new < 0.2)*(3.21*phi_new+0.05006)
-                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.01400)*(3.21*phi_new+0.05006)
+                    + int(0.01400 <= phi_new)*int(phi_new < 0.20000)*(3.21*phi_new+0.05006)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 2 ) {
-              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.021)*(5.68*phi_new+0.14092)
-                    + int(0.021 <= phi_new)*int(phi_new < 0.2)*(3.32*phi_new+0.19048)
-                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00650)*(6.18*phi_new+0.04383)
+                    + int(0.00650 <= phi_new)*int(phi_new < 0.01980)*(6.18*phi_new+0.04383)
+                    + int(0.01980 <= phi_new)*int(phi_new < 0.20000)*(2.93*phi_new+0.10818)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 3 ) {
-              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.004)*(34.0*phi_new+0.09400)
-                    + int(0.004 <= phi_new)*int(phi_new < 0.2)*(34.0*phi_new+0.09400)
-                    + int(0.2 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00400)*(34.0*phi_new+0.09400)
+                    + int(0.00400 <= phi_new)*int(phi_new < 0.20000)*(34.0*phi_new+0.09400)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 4 ) { // Need to test
               alpha = 1.0;
@@ -7721,25 +7722,25 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
             break;
           }
           case QUADRILATERAL: {
-            if ( nPoly == 1 ) {
+            if ( nPoly == 1 ) { // Need to test
               alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.01100)*(4.00*phi_new+0.10600)
                     + int(0.01100 <= phi_new)*int(phi_new < 0.20000)*(4.00*phi_new+0.10600)
                     + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
-            else if ( nPoly == 2 ) {
+            else if ( nPoly == 2 ) { // Need to test
               alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00680)*(3.67*phi_new+0.09004)
                     + int(0.00680 <= phi_new)*int(phi_new < 0.01916)*(3.67*phi_new+0.09004)
                     + int(0.01916 <= phi_new)*int(phi_new < 0.20000)*(2.46*phi_new+0.11323)
                     + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 3 ) { // Need to test
-              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00290)*(33.6*phi_new-0.01244)
-                    + int(0.00290 <= phi_new)*int(phi_new < 0.20000)*(33.6*phi_new-0.01244)
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00290)*(20.54*phi_new+0.025434)
+                    + int(0.00290 <= phi_new)*int(phi_new < 0.20000)*(20.54*phi_new+0.025434)
                     + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 4 ) { // Need to test
-              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00043)*(34.8*phi_new+0.075036)
-                    + int(0.00043 <= phi_new)*int(phi_new < 0.20000)*(34.8*phi_new+0.075036)
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.00056)*(30.15*phi_new+0.093116)
+                    + int(0.00056 <= phi_new)*int(phi_new < 0.20000)*(30.15*phi_new+0.093116)
                     + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 5 ) { // Need to test
@@ -7750,7 +7751,9 @@ void CFEM_DG_EulerSolver::ADER_DG_Iteration(const unsigned long elemBeg,
           }
           case TETRAHEDRON: {
             if ( nPoly == 1 ) { // Need to test
-              alpha = 1.0;
+              alpha = int(phi_threshold_shock <= phi_new)*int(phi_new < 0.01500)*(5.48*phi_new+0.01780)
+                    + int(0.01500 <= phi_new)*int(phi_new < 0.20000)*(5.48*phi_new+0.01780)
+                    + int(0.20000 <= phi_new)*alpha_strong_shock + alpha_offset_shock;
             }
             else if ( nPoly == 2 ) { // Need to test
               alpha = 1.0;
