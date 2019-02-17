@@ -5308,25 +5308,20 @@ void CMeshFEM_DG::LengthScaleVolumeElements(void) {
   /*---         owned elements.                                     ---*/
   /*-------------------------------------------------------------------*/
 
-  /* Determine the number of metric terms per integration point.
-     This depends on the number of spatial dimensions of the problem. */
-  const unsigned short nMetricPerPoint = nDim*nDim + 1;
-
   /* Loop over the owned volume elements. */
   for(unsigned long i=0; i<nVolElemOwned; ++i) {
 
-    /* Easier storage of the metric terms and determine the number of
+    /* Easier storage of the Jacobians and determine the number of
        integration points for this element. */
-    const su2double      *metric = volElem[i].metricTerms.data();
-    const unsigned short ind     = volElem[i].indStandardElement;
-    const unsigned short nInt    = standardElementsSol[ind].GetNIntegration();
+    const su2double      *Jac = volElem[i].metricTerms.data();
+    const unsigned short ind  = volElem[i].indStandardElement;
+    const unsigned short nInt = standardElementsSol[ind].GetNIntegration();
 
     /* Loop over the integration points and determine the minimum Jacobian
-       for this element. Note that the Jacobian is the first variable stored
-       in the metric terms of the integration points. */
-    su2double minJacElem = metric[0];
+       for this element. */
+    su2double minJacElem = Jac[0];
     for(unsigned short k=1; k<nInt; ++k)
-      minJacElem = min(minJacElem, metric[k*nMetricPerPoint]);
+      minJacElem = min(minJacElem, Jac[k]);
 
     /* Determine the length scale of the element, for which the length
        scale of the reference element, 2.0, must be taken into account. */
@@ -5523,14 +5518,15 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
                                        volElem[i].metricTermsSolDOFs);
 
     /* Check for negative Jacobians in the integrations points and at the
-       location of the solution DOFs. */
+       location of the solution DOFs. Note that the Jacobians are stored
+       first in the metric terms. */
     bool negJacobian = false;
     for(unsigned short j=0; j<nInt; ++j) {
-      if(volElem[i].metricTerms[nMetricPerPoint*j] <= 0.0) negJacobian = true;
+      if(volElem[i].metricTerms[j] <= 0.0) negJacobian = true;
     }
 
     for(unsigned short j=0; j<nDOFsSol; ++j) {
-      if(volElem[i].metricTermsSolDOFs[nMetricPerPoint*j] <= 0.0) negJacobian = true;
+      if(volElem[i].metricTermsSolDOFs[j] <= 0.0) negJacobian = true;
     }
 
     if( negJacobian )
@@ -5576,22 +5572,22 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
       /* Convert the values of dxdr, dydr, etc. to the required metric terms
          in the grid DOFs. */
-      vector<su2double> metricGridDOFs(nDOFsGrid*nMetricPerPoint);
+      vector<su2double> metricGridDOFsTmp(nDOFsGrid*nMetricPerPoint);
       VolumeMetricTermsFromCoorGradients(nDOFsGrid, vecResultGridDOFs,
-                                         metricGridDOFs);
+                                         metricGridDOFsTmp);
 
       /*--- The metric terms currently stored in metricGridDOFs are scaled
             with the Jacobian and also the Jacobian is part of the metric
             terms. For the derivatives of the metric terms, the Jacobian
             is not needed, but the original unscaled terms are needed.
             This is done in the loop below. ---*/
+      vector<su2double> metricGridDOFs(nDOFsGrid*(nMetricPerPoint-1));
       for(unsigned short j=0; j<nDOFsGrid; ++j) {
-        su2double *metOld = metricGridDOFs.data() + j*nMetricPerPoint;
         su2double *metNew = metricGridDOFs.data() + j*(nMetricPerPoint-1);
 
-        const su2double JacInv = 1.0/metOld[0];
+        const su2double JacInv = 1.0/metricGridDOFsTmp[j];
         for(unsigned short k=1; k<nMetricPerPoint; ++k)
-          metNew[k-1] = JacInv*metOld[k];
+          metNew[k-1] = JacInv*metricGridDOFsTmp[j+k*nDOFsGrid];
       }
 
       /* Compute the derivatives of the metric terms w.r.t. the
@@ -5617,13 +5613,19 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
       switch( nDim ) {
         case 2: {
 
-          /* 2D computation. Loop over the integration points. */
+          /* 2D computation. Set the pointers for the derivatives
+             in the integration points. */
+          const su2double *JacInt  = volElem[i].metricTerms.data();
+          const su2double *drdxInt = JacInt  + nInt;
+          const su2double *drdyInt = drdxInt + nInt;
+          const su2double *dsdxInt = drdyInt + nInt;
+          const su2double *dsdyInt = dsdxInt + nInt;
+
+          /* Loop over the integration points. */
           for(unsigned short j=0; j<nInt; ++j) {
 
             /* Set the pointers where the data for this integration
                point starts. */
-            const su2double *metric       = volElem[i].metricTerms.data()
-                                          + j*nMetricPerPoint;
             const su2double *rDerMetric   = vecDerMetrics + j*(nMetricPerPoint-1);
             const su2double *sDerMetric   = rDerMetric + nInt*(nMetricPerPoint-1);
             su2double       *metric2ndDer = volElem[i].metricTerms2ndDer.data()
@@ -5631,9 +5633,9 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
             /* More readable abbreviations for the metric terms
                and its derivatives. */
-            const su2double JacInv = 1.0/metric[0];
-            const su2double drdx   = JacInv*metric[1], drdy = JacInv*metric[2];
-            const su2double dsdx   = JacInv*metric[3], dsdy = JacInv*metric[4];
+            const su2double JacInv = 1.0/JacInt[j];
+            const su2double drdx   = JacInv*drdxInt[j], drdy = JacInv*drdyInt[j];
+            const su2double dsdx   = JacInv*dsdxInt[j], dsdy = JacInv*dsdyInt[j];
 
             const su2double ddrdx_dr = rDerMetric[0], ddrdy_dr = rDerMetric[1];
             const su2double ddsdx_dr = rDerMetric[2], ddsdy_dr = rDerMetric[3];
@@ -5661,13 +5663,24 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
         case 3: {
 
-          /* 3D computation. Loop over the integration points. */
+          /* 3D computation. Set the pointers for the derivatives
+             in the integration points. */
+          const su2double *JacInt  = volElem[i].metricTerms.data();
+          const su2double *drdxInt = JacInt  + nInt;
+          const su2double *drdyInt = drdxInt + nInt;
+          const su2double *drdzInt = drdyInt + nInt;
+          const su2double *dsdxInt = drdzInt + nInt;
+          const su2double *dsdyInt = dsdxInt + nInt;
+          const su2double *dsdzInt = dsdyInt + nInt;
+          const su2double *dtdxInt = dsdzInt + nInt;
+          const su2double *dtdyInt = dtdxInt + nInt;
+          const su2double *dtdzInt = dtdyInt + nInt;
+
+          /* Loop over the integration points. */
           for(unsigned short j=0; j<nInt; ++j) {
 
             /* Set the pointers where the data for this integration
                point starts. */
-            const su2double *metric       = volElem[i].metricTerms.data()
-                                          + j*nMetricPerPoint;
             const su2double *rDerMetric   = vecDerMetrics + j*(nMetricPerPoint-1);
             const su2double *sDerMetric   = rDerMetric + nInt*(nMetricPerPoint-1);
             const su2double *tDerMetric   = sDerMetric + nInt*(nMetricPerPoint-1);
@@ -5676,10 +5689,10 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
             /* More readable abbreviations for the metric terms
                and its derivatives. */
-            const su2double JacInv = 1.0/metric[0];
-            const su2double drdx   = JacInv*metric[1], drdy = JacInv*metric[2], drdz = JacInv*metric[3];
-            const su2double dsdx   = JacInv*metric[4], dsdy = JacInv*metric[5], dsdz = JacInv*metric[6];
-            const su2double dtdx   = JacInv*metric[7], dtdy = JacInv*metric[5], dtdz = JacInv*metric[9];
+            const su2double JacInv = 1.0/JacInt[j];
+            const su2double drdx   = JacInv*drdxInt[j], drdy = JacInv*drdyInt[j], drdz = JacInv*drdzInt[j];
+            const su2double dsdx   = JacInv*dsdxInt[j], dsdy = JacInv*dsdyInt[j], dsdz = JacInv*dsdzInt[j];
+            const su2double dtdx   = JacInv*dtdxInt[j], dtdy = JacInv*dtdyInt[j], dtdz = JacInv*dtdzInt[j];
 
             const su2double ddrdx_dr = rDerMetric[0], ddrdy_dr = rDerMetric[1], ddrdz_dr = rDerMetric[2];
             const su2double ddsdx_dr = rDerMetric[3], ddsdy_dr = rDerMetric[4], ddsdz_dr = rDerMetric[5];
@@ -5783,15 +5796,10 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
     const unsigned int   nDOFs2 = nDOFs*nDOFs;
     const su2double     *valInt = valMMInt[ind].data();
 
-    /* Copy the data of the Jacobian in the integration points in
-       a separate vector. */
-    vector<su2double> JacVec(nInt);
-    su2double *Jac = JacVec.data();
+    /* Set the pointer to the Jacobians for readability. */
+    const su2double *Jac = volElem[i].metricTerms.data();
 
-    for(unsigned short l=0; l<nInt; ++l)
-      Jac[l] = volElem[i].metricTerms[l*nMetricPerPoint];
-
-    /* Allocate the memory for working vector for the construction
+    /* Allocate the memory for the working vector for the construction
        of the mass matrix. */
     vector<su2double> massMat(nDOFs2);
 
@@ -6119,18 +6127,24 @@ void CMeshFEM_DG::VolumeMetricTermsFromCoorGradients(
       /* 2D computation. Store the offset between the r and s derivatives. */
       const unsigned short off = 2*nEntities;
 
-      /* Loop over the entities and store the metric terms. */
-      unsigned short ii = 0;
+      /* Set the pointers for the metric terms. */
+      su2double *Jac  = metricTerms.data();
+      su2double *drdx = Jac  + nEntities;
+      su2double *drdy = drdx + nEntities;
+      su2double *dsdx = drdy + nEntities;
+      su2double *dsdy = dsdx + nEntities;
+
+      /* Loop over the entities and compute the metric terms. */
       for(unsigned short j=0; j<nEntities; ++j) {
         const unsigned short jx = 2*j; const unsigned short jy = jx+1;
         const su2double dxdr = gradCoor[jx],     dydr = gradCoor[jy];
         const su2double dxds = gradCoor[jx+off], dyds = gradCoor[jy+off];
 
-        metricTerms[ii++] =  dxdr*dyds - dxds*dydr; // J
-        metricTerms[ii++] =  dyds;   // J drdx
-        metricTerms[ii++] = -dxds;   // J drdy
-        metricTerms[ii++] = -dydr;   // J dsdx
-        metricTerms[ii++] =  dxdr;   // J dsdy
+        Jac[j]  =  dxdr*dyds - dxds*dydr;
+        drdx[j] =  dyds;   // Actually, J drdx.
+        drdy[j] = -dxds;   // Actually, J drdy.
+        dsdx[j] = -dydr;   // Actually, J dsdx.
+        dsdy[j] =  dxdr;   // Actually, J dsdy.
       }
 
       break;
@@ -6140,29 +6154,39 @@ void CMeshFEM_DG::VolumeMetricTermsFromCoorGradients(
       /* 3D computation. Store the offset between the r and s and r and t derivatives. */
       unsigned short offS = 3*nEntities, offT = 6*nEntities;
 
+      /* Set the pointers for the metric terms. */
+      su2double *Jac  = metricTerms.data();
+      su2double *drdx = Jac  + nEntities;
+      su2double *drdy = drdx + nEntities;
+      su2double *drdz = drdy + nEntities;
+      su2double *dsdx = drdz + nEntities;
+      su2double *dsdy = dsdx + nEntities;
+      su2double *dsdz = dsdy + nEntities;
+      su2double *dtdx = dsdz + nEntities;
+      su2double *dtdy = dtdx + nEntities;
+      su2double *dtdz = dtdy + nEntities;
+
       /* Loop over the entities and store the metric terms. */
-      unsigned short ii = 0;
       for(unsigned short j=0; j<nEntities; ++j) {
         const unsigned short jx = 3*j; const unsigned short jy = jx+1, jz = jx+2;
         const su2double dxdr = gradCoor[jx],      dydr = gradCoor[jy],      dzdr = gradCoor[jz];
         const su2double dxds = gradCoor[jx+offS], dyds = gradCoor[jy+offS], dzds = gradCoor[jz+offS];
         const su2double dxdt = gradCoor[jx+offT], dydt = gradCoor[jy+offT], dzdt = gradCoor[jz+offT];
 
-        metricTerms[ii++] = dxdr*(dyds*dzdt - dzds*dydt)
-                          - dxds*(dydr*dzdt - dzdr*dydt)
-                          + dxdt*(dydr*dzds - dzdr*dyds); // J
+        Jac[j] = dxdr*(dyds*dzdt - dzds*dydt) - dxds*(dydr*dzdt - dzdr*dydt)
+               + dxdt*(dydr*dzds - dzdr*dyds);
 
-        metricTerms[ii++] = dyds*dzdt - dzds*dydt;  // J drdx
-        metricTerms[ii++] = dzds*dxdt - dxds*dzdt;  // J drdy
-        metricTerms[ii++] = dxds*dydt - dyds*dxdt;  // J drdz
+        drdx[j] = dyds*dzdt - dzds*dydt;  // Actually, J drdx.
+        drdy[j] = dzds*dxdt - dxds*dzdt;  // Actually, J drdy.
+        drdz[j] = dxds*dydt - dyds*dxdt;  // Actually, J drdz.
 
-        metricTerms[ii++] = dzdr*dydt - dydr*dzdt;  // J dsdx
-        metricTerms[ii++] = dxdr*dzdt - dzdr*dxdt;  // J dsdy
-        metricTerms[ii++] = dydr*dxdt - dxdr*dydt;  // J dsdz
+        dsdx[j] = dzdr*dydt - dydr*dzdt;  // Actually, J dsdx.
+        dsdy[j] = dxdr*dzdt - dzdr*dxdt;  // Actually, J dsdy.
+        dsdz[j] = dydr*dxdt - dxdr*dydt;  // Actually, J dsdz.
 
-        metricTerms[ii++] = dydr*dzds - dzdr*dyds;  // J dtdx
-        metricTerms[ii++] = dzdr*dxds - dxdr*dzds;  // J dtdy
-        metricTerms[ii++] = dxdr*dyds - dydr*dxds;  // J dtdz
+        dtdx[j] = dydr*dzds - dzdr*dyds;  // Actually, J dtdx.
+        dtdy[j] = dzdr*dxds - dxdr*dzds;  // Actually, J dtdy.
+        dtdz[j] = dxdr*dyds - dydr*dxds;  // Actually, J dtdz.
       }
 
       break;

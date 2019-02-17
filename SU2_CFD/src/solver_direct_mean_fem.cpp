@@ -4949,9 +4949,6 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
      the fluxes. */
   const unsigned short offDeriv = NPad*nInt;
 
-  /* Store the number of metric points per integration point for readability. */
-  const unsigned short nMetricPerPoint = 5;  /* nDim*nDim + 1. */
-
   /*--------------------------------------------------------------------------*/
   /*---          Construct the Cartesian fluxes in the DOFs.               ---*/
   /*--------------------------------------------------------------------------*/
@@ -5016,6 +5013,15 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+    /*--- Easier storage of the metric terms. Note that the first nInt terms
+          in the metric terms are the Jacobians.
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdy = drdx + nInt;
+    const su2double *dsdx = drdy + nInt;
+    const su2double *dsdy = dsdx + nInt;
+
     /*--- Loop over the integration points of the element. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
 
@@ -5027,30 +5033,16 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
       const su2double *gradFluxYDs = gradFluxYDr  + offDeriv;
       su2double       *divFluxInt  = divFlux      + offInt;
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST
-         BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
-      /* Compute the metric terms multiplied by the integration weight. Note that the
-         first term in the metric terms is the Jacobian. */
-      const su2double wDrdx = weights[i]*metricTerms[1];
-      const su2double wDrdy = weights[i]*metricTerms[2];
-
-      const su2double wDsdx = weights[i]*metricTerms[3];
-      const su2double wDsdy = weights[i]*metricTerms[4];
-
       /* Compute the divergence of the fluxes, multiplied by the
          integration weight. */
-      divFluxInt[0] = gradFluxXDr[0]*wDrdx + gradFluxXDs[0]*wDsdx
-                    + gradFluxYDr[0]*wDrdy + gradFluxYDs[0]*wDsdy;
-      divFluxInt[1] = gradFluxXDr[1]*wDrdx + gradFluxXDs[1]*wDsdx
-                    + gradFluxYDr[1]*wDrdy + gradFluxYDs[1]*wDsdy;
-      divFluxInt[2] = gradFluxXDr[2]*wDrdx + gradFluxXDs[2]*wDsdx
-                    + gradFluxYDr[2]*wDrdy + gradFluxYDs[2]*wDsdy;
-      divFluxInt[3] = gradFluxXDr[3]*wDrdx + gradFluxXDs[3]*wDsdx
-                    + gradFluxYDr[3]*wDrdy + gradFluxYDs[3]*wDsdy;
+      divFluxInt[0] = weights[i]*(gradFluxXDr[0]*drdx[i] + gradFluxXDs[0]*dsdx[i]
+                    +             gradFluxYDr[0]*drdy[i] + gradFluxYDs[0]*dsdy[i]);
+      divFluxInt[1] = weights[i]*(gradFluxXDr[1]*drdx[i] + gradFluxXDs[1]*dsdx[i]
+                    +             gradFluxYDr[1]*drdy[i] + gradFluxYDs[1]*dsdy[i]);
+      divFluxInt[2] = weights[i]*(gradFluxXDr[2]*drdx[i] + gradFluxXDs[2]*dsdx[i]
+                    +             gradFluxYDr[2]*drdy[i] + gradFluxYDs[2]*dsdy[i]);
+      divFluxInt[3] = weights[i]*(gradFluxXDr[3]*drdx[i] + gradFluxXDs[3]*dsdx[i]
+                    +             gradFluxYDr[3]*drdy[i] + gradFluxYDs[3]*dsdy[i]);
     }
   }
 
@@ -5073,6 +5065,11 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
     /*--- Loop over the number of entities that are treated simultaneously. */
     for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+      /*--- Easier storage of the Jacobians.
+            THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+            THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+      const su2double *Jac = elem->metricTerms.data();
+
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
 
@@ -5080,12 +5077,6 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
         const unsigned short offInt  = i*NPad + simul*nVar;
         const su2double *solThisInt = solInt  + offInt;
         su2double       *divFluxInt = divFlux + offInt;
-
-        /* Easier storage of the metric terms in this integration point.
-           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-           THE DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST
-           BE TAKEN. */
-        const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
 
         /* Compute the velocities. */
         const su2double rhoInv = 1.0/solThisInt[0];
@@ -5097,7 +5088,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
            integration weight in order to be consistent with the formulation of
            the residual. Also note that for the energy source term the absolute
            velocity must be taken and not the relative. */
-        const su2double weightJac = weights[i]*metricTerms[0];
+        const su2double weightJac = weights[i]*Jac[i];
 
         divFluxInt[1] -= weightJac*body_force_vector[0];
         divFluxInt[2] -= weightJac*body_force_vector[1];
@@ -5146,9 +5137,6 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
   /* Determine the offset between the r-derivatives and s-derivatives, which is
      also the offset between s- and t-derivatives, of the fluxes. */
   const unsigned short offDeriv = NPad*nInt;
-
-  /* Store the number of metric points per integration point for readability. */
-  const unsigned short nMetricPerPoint = 10;  /* nDim*nDim + 1. */
 
   /*--------------------------------------------------------------------------*/
   /*---          Construct the Cartesian fluxes in the DOFs.               ---*/
@@ -5227,6 +5215,20 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+    /*--- Easier storage of the metric terms. Note that the first nInt terms
+          in the metric terms are the Jacobians.
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdy = drdx + nInt;
+    const su2double *drdz = drdy + nInt;
+    const su2double *dsdx = drdz + nInt;
+    const su2double *dsdy = dsdx + nInt;
+    const su2double *dsdz = dsdy + nInt;
+    const su2double *dtdx = dsdz + nInt;
+    const su2double *dtdy = dtdx + nInt;
+    const su2double *dtdz = dtdy + nInt;
+
     /*--- Loop over the integration points of the element. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
 
@@ -5243,42 +5245,22 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
       const su2double *gradFluxZDt = gradFluxZDs  + offDeriv;
       su2double       *divFluxInt  = divFlux      + offInt;
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
-      /* Compute the metric terms multiplied by the integration weight. Note that the
-         first term in the metric terms is the Jacobian. */
-      const su2double wDrdx = weights[i]*metricTerms[1];
-      const su2double wDrdy = weights[i]*metricTerms[2];
-      const su2double wDrdz = weights[i]*metricTerms[3];
-
-      const su2double wDsdx = weights[i]*metricTerms[4];
-      const su2double wDsdy = weights[i]*metricTerms[5];
-      const su2double wDsdz = weights[i]*metricTerms[6];
-
-      const su2double wDtdx = weights[i]*metricTerms[7];
-      const su2double wDtdy = weights[i]*metricTerms[8];
-      const su2double wDtdz = weights[i]*metricTerms[9];
-
       /* Compute the divergence of the fluxes, multiplied by the integration weight. */
-      divFluxInt[0] = gradFluxXDr[0]*wDrdx + gradFluxXDs[0]*wDsdx + gradFluxXDt[0]*wDtdx
-                    + gradFluxYDr[0]*wDrdy + gradFluxYDs[0]*wDsdy + gradFluxYDt[0]*wDtdy
-                    + gradFluxZDr[0]*wDrdz + gradFluxZDs[0]*wDsdz + gradFluxZDt[0]*wDtdz;
-      divFluxInt[1] = gradFluxXDr[1]*wDrdx + gradFluxXDs[1]*wDsdx + gradFluxXDt[1]*wDtdx
-                    + gradFluxYDr[1]*wDrdy + gradFluxYDs[1]*wDsdy + gradFluxYDt[1]*wDtdy
-                    + gradFluxZDr[1]*wDrdz + gradFluxZDs[1]*wDsdz + gradFluxZDt[1]*wDtdz;
-      divFluxInt[2] = gradFluxXDr[2]*wDrdx + gradFluxXDs[2]*wDsdx + gradFluxXDt[2]*wDtdx
-                    + gradFluxYDr[2]*wDrdy + gradFluxYDs[2]*wDsdy + gradFluxYDt[2]*wDtdy
-                    + gradFluxZDr[2]*wDrdz + gradFluxZDs[2]*wDsdz + gradFluxZDt[2]*wDtdz;
-      divFluxInt[3] = gradFluxXDr[3]*wDrdx + gradFluxXDs[3]*wDsdx + gradFluxXDt[3]*wDtdx
-                    + gradFluxYDr[3]*wDrdy + gradFluxYDs[3]*wDsdy + gradFluxYDt[3]*wDtdy
-                    + gradFluxZDr[3]*wDrdz + gradFluxZDs[3]*wDsdz + gradFluxZDt[3]*wDtdz;
-      divFluxInt[4] = gradFluxXDr[4]*wDrdx + gradFluxXDs[4]*wDsdx + gradFluxXDt[4]*wDtdx
-                    + gradFluxYDr[4]*wDrdy + gradFluxYDs[4]*wDsdy + gradFluxYDt[4]*wDtdy
-                    + gradFluxZDr[4]*wDrdz + gradFluxZDs[4]*wDsdz + gradFluxZDt[4]*wDtdz;
+      divFluxInt[0] = weights[i]*(gradFluxXDr[0]*drdx[i] + gradFluxXDs[0]*dsdx[i] + gradFluxXDt[0]*dtdx[i]
+                    +             gradFluxYDr[0]*drdy[i] + gradFluxYDs[0]*dsdy[i] + gradFluxYDt[0]*dtdy[i]
+                    +             gradFluxZDr[0]*drdz[i] + gradFluxZDs[0]*dsdz[i] + gradFluxZDt[0]*dtdz[i]);
+      divFluxInt[1] = weights[i]*(gradFluxXDr[1]*drdx[i] + gradFluxXDs[1]*dsdx[i] + gradFluxXDt[1]*dtdx[i]
+                    +             gradFluxYDr[1]*drdy[i] + gradFluxYDs[1]*dsdy[i] + gradFluxYDt[1]*dtdy[i]
+                    +             gradFluxZDr[1]*drdz[i] + gradFluxZDs[1]*dsdz[i] + gradFluxZDt[1]*dtdz[i]);
+      divFluxInt[2] = weights[i]*(gradFluxXDr[2]*drdx[i] + gradFluxXDs[2]*dsdx[i] + gradFluxXDt[2]*dtdx[i]
+                    +             gradFluxYDr[2]*drdy[i] + gradFluxYDs[2]*dsdy[i] + gradFluxYDt[2]*dtdy[i]
+                    +             gradFluxZDr[2]*drdz[i] + gradFluxZDs[2]*dsdz[i] + gradFluxZDt[2]*dtdz[i]);
+      divFluxInt[3] = weights[i]*(gradFluxXDr[3]*drdx[i] + gradFluxXDs[3]*dsdx[i] + gradFluxXDt[3]*dtdx[i]
+                    +             gradFluxYDr[3]*drdy[i] + gradFluxYDs[3]*dsdy[i] + gradFluxYDt[3]*dtdy[i]
+                    +             gradFluxZDr[3]*drdz[i] + gradFluxZDs[3]*dsdz[i] + gradFluxZDt[3]*dtdz[i]);
+      divFluxInt[4] = weights[i]*(gradFluxXDr[4]*drdx[i] + gradFluxXDs[4]*dsdx[i] + gradFluxXDt[4]*dtdx[i]
+                    +             gradFluxYDr[4]*drdy[i] + gradFluxYDs[4]*dsdy[i] + gradFluxYDt[4]*dtdy[i]
+                    +             gradFluxZDr[4]*drdz[i] + gradFluxZDs[4]*dsdz[i] + gradFluxZDt[4]*dtdz[i]);
     }
   }
 
@@ -5301,6 +5283,11 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
     /*--- Loop over the number of entities that are treated simultaneously. */
     for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+      /*--- Easier storage of the Jacobians.
+            THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+            THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+      const su2double *Jac = elem->metricTerms.data();
+
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
 
@@ -5308,12 +5295,6 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
         const unsigned short offInt = i*NPad + simul*nVar;
         const su2double *solThisInt = solInt  + offInt;
         su2double       *divFluxInt = divFlux + offInt;
-
-        /* Easier storage of the metric terms in this integration point.
-           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-           THE DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST
-           BE TAKEN. */
-        const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
 
         /* Compute the velocities. */
         const su2double rhoInv = 1.0/solThisInt[0];
@@ -5326,7 +5307,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
            integration weight in order to be consistent with the formulation of
            the residual. Also note that for the energy source term the absolute
            velocity must be taken and not the relative. */
-        const su2double weightJac = weights[i]*metricTerms[0];
+        const su2double weightJac = weights[i]*Jac[i];
 
         divFluxInt[1] -= weightJac*body_force_vector[0];
         divFluxInt[2] -= weightJac*body_force_vector[1];
@@ -5378,9 +5359,6 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
      which is also the offset between the r- and s-derivatives. */
   const unsigned short offDeriv = NPad*nInt;
 
-  /* Store the number of metric points per integration point for readability. */
-  const unsigned short nMetricPerPoint = 5;  /* nDim*nDim + 1. */
-
   /*--------------------------------------------------------------------------*/
   /*--- Compute the solution and the derivatives w.r.t. the parametric     ---*/
   /*--- coordinates in the integration points. The first argument in       ---*/
@@ -5396,6 +5374,15 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
 
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
+
+    /*--- Easier storage of the metric terms. 
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *Jac  = elem->metricTerms.data();
+    const su2double *drdx = Jac  + nInt;
+    const su2double *drdy = drdx + nInt;
+    const su2double *dsdx = drdy + nInt;
+    const su2double *dsdy = dsdx + nInt;
 
     /*--- Loop over the integration points. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
@@ -5431,31 +5418,20 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
          INTEGRATION POINT MUST BE TAKEN. */
       const su2double *gridVel = elem->gridVelocities.data() + 2*i; /* nDim*i. */
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
-      const su2double drdx = metricTerms[1];
-      const su2double drdy = metricTerms[2];
-      const su2double dsdx = metricTerms[3];
-      const su2double dsdy = metricTerms[4];
-
       /* Compute the Cartesian gradients of the independent solution
          variables from the gradients in parametric coordinates and the
          metric terms in this integration point. Note that these gradients
          must be scaled with the Jacobian. This scaling is already present
          in the metric terms. */
-      const su2double drhodx = solDr[0]*drdx + solDs[0]*dsdx;
-      const su2double drudx  = solDr[1]*drdx + solDs[1]*dsdx;
-      const su2double drvdx  = solDr[2]*drdx + solDs[2]*dsdx;
-      const su2double drEdx  = solDr[3]*drdx + solDs[3]*dsdx;
+      const su2double drhodx = solDr[0]*drdx[i] + solDs[0]*dsdx[i];
+      const su2double drudx  = solDr[1]*drdx[i] + solDs[1]*dsdx[i];
+      const su2double drvdx  = solDr[2]*drdx[i] + solDs[2]*dsdx[i];
+      const su2double drEdx  = solDr[3]*drdx[i] + solDs[3]*dsdx[i];
 
-      const su2double drhody = solDr[0]*drdy + solDs[0]*dsdy;
-      const su2double drudy  = solDr[1]*drdy + solDs[1]*dsdy;
-      const su2double drvdy  = solDr[2]*drdy + solDs[2]*dsdy;
-      const su2double drEdy  = solDr[3]*drdy + solDs[3]*dsdy;
+      const su2double drhody = solDr[0]*drdy[i] + solDs[0]*dsdy[i];
+      const su2double drudy  = solDr[1]*drdy[i] + solDs[1]*dsdy[i];
+      const su2double drvdy  = solDr[2]*drdy[i] + solDs[2]*dsdy[i];
+      const su2double drEdy  = solDr[3]*drdy[i] + solDs[3]*dsdy[i];
 
       /*--- Compute the divergence of the grid velocity.
             SET TO ZERO FOR NOW. THIS IS NOT CORRECT!!!!. ---*/
@@ -5489,7 +5465,7 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
          integration weight in order to be consistent with the formulation of
          the residual. Also note that for the energy source term the absolute
          velocity must be taken and not the relative. */
-      const su2double weightJac = weights[i]*metricTerms[0];
+      const su2double weightJac = weights[i]*Jac[i];
 
       divFluxInt[1] -= weightJac*bodyForceX;
       divFluxInt[2] -= weightJac*bodyForceY;
@@ -5540,9 +5516,6 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
      between s- and t-derivatives. */
   const unsigned short offDeriv = NPad*nInt;
 
-  /* Store the number of metric points per integration point for readability. */
-  const unsigned short nMetricPerPoint = 10;  /* nDim*nDim + 1. */
-
   /*--------------------------------------------------------------------------*/
   /*--- Compute the solution and the derivatives w.r.t. the parametric     ---*/
   /*--- coordinates in the integration points. The first argument in       ---*/
@@ -5553,6 +5526,20 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
 
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
+
+    /*--- Easier storage of the metric terms.
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *Jac  = elem->metricTerms.data();
+    const su2double *drdx = Jac  + nInt;
+    const su2double *drdy = drdx + nInt;
+    const su2double *drdz = drdy + nInt;
+    const su2double *dsdx = drdz + nInt;
+    const su2double *dsdy = dsdx + nInt;
+    const su2double *dsdz = dsdy + nInt;
+    const su2double *dtdx = dsdz + nInt;
+    const su2double *dtdy = dtdx + nInt;
+    const su2double *dtdz = dtdy + nInt;
 
     /* Set the pointers to the location where the solution and the divergence
        of the 1st DOF of this entity is stored, such that this offset does not
@@ -5597,46 +5584,28 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
          INTEGRATION POINT MUST BE TAKEN. */
       const su2double *gridVel = elem->gridVelocities.data() + 3*i; /* nDim*i. */
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
-      const su2double drdx = metricTerms[1];
-      const su2double drdy = metricTerms[2];
-      const su2double drdz = metricTerms[3];
-
-      const su2double dsdx = metricTerms[4];
-      const su2double dsdy = metricTerms[5];
-      const su2double dsdz = metricTerms[6];
-
-      const su2double dtdx = metricTerms[7];
-      const su2double dtdy = metricTerms[8];
-      const su2double dtdz = metricTerms[9];
-
       /* Compute the Cartesian gradients of the independent solution
          variables from the gradients in parametric coordinates and the
          metric terms in this integration point. Note that these gradients
          must be scaled with the Jacobian. This scaling is already present
          in the metric terms. */
-      const su2double drhodx = solDr[0]*drdx + solDs[0]*dsdx + solDt[0]*dtdx;
-      const su2double drudx  = solDr[1]*drdx + solDs[1]*dsdx + solDt[1]*dtdx;
-      const su2double drvdx  = solDr[2]*drdx + solDs[2]*dsdx + solDt[2]*dtdx;
-      const su2double drwdx  = solDr[3]*drdx + solDs[3]*dsdx + solDt[3]*dtdx;
-      const su2double drEdx  = solDr[4]*drdx + solDs[4]*dsdx + solDt[4]*dtdx;
+      const su2double drhodx = solDr[0]*drdx[i] + solDs[0]*dsdx[i] + solDt[0]*dtdx[i];
+      const su2double drudx  = solDr[1]*drdx[i] + solDs[1]*dsdx[i] + solDt[1]*dtdx[i];
+      const su2double drvdx  = solDr[2]*drdx[i] + solDs[2]*dsdx[i] + solDt[2]*dtdx[i];
+      const su2double drwdx  = solDr[3]*drdx[i] + solDs[3]*dsdx[i] + solDt[3]*dtdx[i];
+      const su2double drEdx  = solDr[4]*drdx[i] + solDs[4]*dsdx[i] + solDt[4]*dtdx[i];
 
-      const su2double drhody = solDr[0]*drdy + solDs[0]*dsdy + solDs[0]*dtdy;
-      const su2double drudy  = solDr[1]*drdy + solDs[1]*dsdy + solDs[1]*dtdy;
-      const su2double drvdy  = solDr[2]*drdy + solDs[2]*dsdy + solDs[2]*dtdy;
-      const su2double drwdy  = solDr[3]*drdy + solDs[3]*dsdy + solDs[3]*dtdy;
-      const su2double drEdy  = solDr[4]*drdy + solDs[4]*dsdy + solDs[4]*dtdy;
+      const su2double drhody = solDr[0]*drdy[i] + solDs[0]*dsdy[i] + solDs[0]*dtdy[i];
+      const su2double drudy  = solDr[1]*drdy[i] + solDs[1]*dsdy[i] + solDs[1]*dtdy[i];
+      const su2double drvdy  = solDr[2]*drdy[i] + solDs[2]*dsdy[i] + solDs[2]*dtdy[i];
+      const su2double drwdy  = solDr[3]*drdy[i] + solDs[3]*dsdy[i] + solDs[3]*dtdy[i];
+      const su2double drEdy  = solDr[4]*drdy[i] + solDs[4]*dsdy[i] + solDs[4]*dtdy[i];
 
-      const su2double drhodz = solDr[0]*drdz + solDs[0]*dsdz + solDs[0]*dtdz;
-      const su2double drudz  = solDr[1]*drdz + solDs[1]*dsdz + solDs[1]*dtdz;
-      const su2double drvdz  = solDr[2]*drdz + solDs[2]*dsdz + solDs[2]*dtdz;
-      const su2double drwdz  = solDr[3]*drdz + solDs[3]*dsdz + solDs[3]*dtdz;
-      const su2double drEdz  = solDr[4]*drdz + solDs[4]*dsdz + solDs[4]*dtdz;
+      const su2double drhodz = solDr[0]*drdz[i] + solDs[0]*dsdz[i] + solDs[0]*dtdz[i];
+      const su2double drudz  = solDr[1]*drdz[i] + solDs[1]*dsdz[i] + solDs[1]*dtdz[i];
+      const su2double drvdz  = solDr[2]*drdz[i] + solDs[2]*dsdz[i] + solDs[2]*dtdz[i];
+      const su2double drwdz  = solDr[3]*drdz[i] + solDs[3]*dsdz[i] + solDs[3]*dtdz[i];
+      const su2double drEdz  = solDr[4]*drdz[i] + solDs[4]*dsdz[i] + solDs[4]*dtdz[i];
 
       /*--- Compute the divergence of the grid velocity.
             SET TO ZERO FOR NOW. THIS IS NOT CORRECT!!!!. ---*/
@@ -5674,7 +5643,7 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
          integration weight in order to be consistent with the formulation of
          the residual. Also note that for the energy source term the absolute
          velocity must be taken and not the relative. */
-      const su2double weightJac = weights[i]*metricTerms[0];
+      const su2double weightJac = weights[i]*Jac[i];
 
       divFluxInt[1] -= weightJac*bodyForceX;
       divFluxInt[2] -= weightJac*bodyForceY;
@@ -5813,10 +5782,6 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
   /* Set the number of bytes that must be copied in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
 
-  /* Store the number of metric points per integration point, which depends
-     on the number of dimensions. */
-  const unsigned short nMetricPerPoint = nDim*nDim + 1;
-
   /*--- Loop over the given element range to compute the contribution of the
         volume integral in the DG FEM formulation to the residual. Multiple
         elements are treated simultaneously to improve the performance
@@ -5881,30 +5846,33 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
 
       case 2: {
 
-        /* 2D simulation. Loop over the chunk of elements and loop over the
-           integration points of the elements to compute the fluxes. */
+        /* 2D simulation. Loop over the chunk of elements. */
         for(unsigned short ll=0; ll<llEnd; ++ll) {
           const unsigned short llNVar = ll*nVar;
           const unsigned long  lInd   = l + ll;
 
+          /* Easier storage of the metric terms. */
+          const su2double *Jac  = volElem[lInd].metricTerms.data();
+          const su2double *drdx = Jac  + nInt;
+          const su2double *drdy = drdx + nInt;
+          const su2double *dsdx = drdy + nInt;
+          const su2double *dsdy = dsdx + nInt;
+
+          /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
 
-            /* Easier storage of the metric terms and grid velocities
-               in this integration point. */
-            const su2double *metricTerms = volElem[lInd].metricTerms.data()
-                                         + i*nMetricPerPoint;
-            const su2double Jac          = metricTerms[0];
-            const su2double *gridVel     = volElem[lInd].gridVelocities.data() + i*nDim;
+            /* Easier storage of the grid velocities in this integration point. */
+            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
 
             /* Compute the metric terms multiplied by minus the integration weight.
                The minus sign comes from the integration by parts in the weak
                formulation. */
-            const su2double wDrdx = -weights[i]*metricTerms[1];
-            const su2double wDrdy = -weights[i]*metricTerms[2];
+            const su2double wDrdx = -weights[i]*drdx[i];
+            const su2double wDrdy = -weights[i]*drdy[i];
 
-            const su2double wDsdx = -weights[i]*metricTerms[3];
-            const su2double wDsdy = -weights[i]*metricTerms[4];
+            const su2double wDsdx = -weights[i]*dsdx[i];
+            const su2double wDsdy = -weights[i]*dsdy[i];
 
             /* Easier storage of the location where the solution data of this
                integration point starts. */
@@ -5953,7 +5921,7 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
                   relative. ---*/
             if( body_force ) {
               su2double *source         = sources + iNPad + llNVar;
-              const su2double weightJac = weights[i]*Jac;
+              const su2double weightJac = weights[i]*Jac[i];
 
               source[0] =  0.0;
               source[1] = -weightJac*body_force_vector[0];
@@ -5970,35 +5938,44 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
 
       case 3: {
 
-        /* 3D simulation. Loop over the chunk of elements and loop over the
-           integration points of the elements to compute the fluxes. */
+        /* 2D simulation. Loop over the chunk of elements. */
         for(unsigned short ll=0; ll<llEnd; ++ll) {
           const unsigned short llNVar = ll*nVar;
           const unsigned long  lInd   = l + ll;
+
+          /* Easier storage of the metric terms. */
+          const su2double *Jac  = volElem[lInd].metricTerms.data();
+          const su2double *drdx = Jac  + nInt;
+          const su2double *drdy = drdx + nInt;
+          const su2double *drdz = drdy + nInt;
+          const su2double *dsdx = drdz + nInt;
+          const su2double *dsdy = dsdx + nInt;
+          const su2double *dsdz = dsdy + nInt;
+          const su2double *dtdx = dsdz + nInt;
+          const su2double *dtdy = dtdx + nInt;
+          const su2double *dtdz = dtdy + nInt;
+
+          /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
 
-            /* Easier storage of the metric terms and grid velocities
-               in this integration point. */
-            const su2double *metricTerms = volElem[lInd].metricTerms.data()
-                                         + i*nMetricPerPoint;
-            const su2double Jac          = metricTerms[0];
-            const su2double *gridVel     = volElem[lInd].gridVelocities.data() + i*nDim;
+            /* Easier storage of the grid velocities in this integration point. */
+            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
 
             /* Compute the metric terms multiplied by minus the integration weight.
                The minus sign comes from the integration by parts in the weak
                formulation. */
-            const su2double wDrdx = -weights[i]*metricTerms[1];
-            const su2double wDrdy = -weights[i]*metricTerms[2];
-            const su2double wDrdz = -weights[i]*metricTerms[3];
+            const su2double wDrdx = -weights[i]*drdx[i];
+            const su2double wDrdy = -weights[i]*drdy[i];
+            const su2double wDrdz = -weights[i]*drdz[i];
 
-            const su2double wDsdx = -weights[i]*metricTerms[4];
-            const su2double wDsdy = -weights[i]*metricTerms[5];
-            const su2double wDsdz = -weights[i]*metricTerms[6];
+            const su2double wDsdx = -weights[i]*dsdx[i];
+            const su2double wDsdy = -weights[i]*dsdy[i];
+            const su2double wDsdz = -weights[i]*dsdz[i];
 
-            const su2double wDtdx = -weights[i]*metricTerms[7];
-            const su2double wDtdy = -weights[i]*metricTerms[8];
-            const su2double wDtdz = -weights[i]*metricTerms[9];
+            const su2double wDtdx = -weights[i]*dtdx[i];
+            const su2double wDtdy = -weights[i]*dtdy[i];
+            const su2double wDtdz = -weights[i]*dtdz[i];
 
             /* Easier storage of the location where the solution data of this
                integration point starts. */
@@ -6061,7 +6038,7 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
                   relative. ---*/
             if( body_force ) {
               su2double *source         = sources + iNPad + llNVar;
-              const su2double weightJac = weights[i]*Jac;
+              const su2double weightJac = weights[i]*Jac[i];
 
               source[0] =  0.0;
               source[1] = -weightJac*body_force_vector[0];
@@ -6092,21 +6069,23 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
         sources[i] = 0.0;
     }
 
-
     /* Easier storage of the gas constant. */
     const su2double RGas = config->GetGas_ConstantND();
 
-    /*--- Loop over the chunk of elements and its integration points. ---*/
+    /*--- Loop over the chunk of elements. ---*/
     for(unsigned short ll=0; ll<llEnd; ++ll) {
       const unsigned short llNVar = ll*nVar;
       const unsigned long  lInd   = l + ll;
+
+      /* Easier storage of the Jacobians. */
+      const su2double *Jac = volElem[lInd].metricTerms.data();
+
+      /*--- Loop over the integration points. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
         const unsigned short iNPad = i*NPad;
 
         /* Determine the integration weight multiplied by the Jacobian. */
-        const su2double *metricTerms = volElem[lInd].metricTerms.data()
-                                     + i*nMetricPerPoint;
-        const su2double weightJac    = weights[i]*metricTerms[0];
+        const su2double weightJac = weights[i]*Jac[i];
 
         /* Set the pointer to the coordinates in this integration point and
            call the function to compute the source terms for the manufactured
@@ -10499,10 +10478,6 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
      the maximum can be determined. */
   const su2double radOverNuTerm = max(1.0, 2.0+lambdaOverMu);
 
-  /* Store the number of metric points per DOF, which depends
-     on the number of dimensions. */
-  const unsigned short nMetricPerPoint = nDim*nDim + 1;
-
   /* Determine the number of elements that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
   const unsigned short nPadInput  = config->GetSizeMatMulPadding();
@@ -10602,6 +10577,13 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               const unsigned short llNVar = ll*nVar;
               const unsigned long  lInd   = l + ll;
 
+              /* Set the pointers for the metric terms of the DOFs. */
+              const su2double *JacDOF  = volElem[lInd].metricTermsSolDOFs.data();
+              const su2double *drdxDOF = JacDOF  + nDOFs;
+              const su2double *drdyDOF = drdxDOF + nDOFs;
+              const su2double *dsdxDOF = drdyDOF + nDOFs;
+              const su2double *dsdyDOF = dsdxDOF + nDOFs;
+
               /* Compute the length scale of this element and initialize the
                  inviscid and viscous spectral radii to zero. */
               const su2double lenScaleInv = nPoly/volElem[lInd].lenScale;
@@ -10648,15 +10630,13 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
 
                   /* Compute the true value of the metric terms in this DOF. Note that in
                      metricTerms the metric terms scaled by the Jacobian are stored. */
-                  const su2double *metricTerms = volElem[lInd].metricTermsSolDOFs.data()
-                                               + i*nMetricPerPoint;
-                  const su2double JacInv       = 1.0/metricTerms[0];
+                  const su2double JacInv = 1.0/JacDOF[i];
 
-                  const su2double drdx = JacInv*metricTerms[1];
-                  const su2double drdy = JacInv*metricTerms[2];
+                  const su2double drdx = JacInv*drdxDOF[i];
+                  const su2double drdy = JacInv*drdyDOF[i];
 
-                  const su2double dsdx = JacInv*metricTerms[3];
-                  const su2double dsdy = JacInv*metricTerms[4];
+                  const su2double dsdx = JacInv*dsdxDOF[i];
+                  const su2double dsdy = JacInv*dsdyDOF[i];
 
                   /*--- Compute the Cartesian gradients of the independent solution
                         variables from the gradients in parametric coordinates and the metric
@@ -10718,6 +10698,18 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               const unsigned short llNVar = ll*nVar;
               const unsigned long  lInd   = l + ll;
 
+               /* Set the pointers for the metric terms of the DOFs. */
+              const su2double *JacDOF  = volElem[lInd].metricTermsSolDOFs.data();
+              const su2double *drdxDOF = JacDOF  + nDOFs;
+              const su2double *drdyDOF = drdxDOF + nDOFs;
+              const su2double *drdzDOF = drdyDOF + nDOFs;
+              const su2double *dsdxDOF = drdzDOF + nDOFs;
+              const su2double *dsdyDOF = dsdxDOF + nDOFs;
+              const su2double *dsdzDOF = dsdyDOF + nDOFs;
+              const su2double *dtdxDOF = dsdzDOF + nDOFs;
+              const su2double *dtdyDOF = dtdxDOF + nDOFs;
+              const su2double *dtdzDOF = dtdyDOF + nDOFs;
+
               /* Compute the length scale of this element and initialize the
                  inviscid and viscous spectral radii to zero. */
               const su2double lenScaleInv = nPoly/volElem[lInd].lenScale;
@@ -10767,21 +10759,19 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
 
                   /* Compute the true value of the metric terms in this DOF. Note that in
                      metricTerms the metric terms scaled by the Jacobian are stored. */
-                  const su2double *metricTerms = volElem[lInd].metricTermsSolDOFs.data()
-                                               + i*nMetricPerPoint;
-                  const su2double JacInv       = 1.0/metricTerms[0];
+                  const su2double JacInv = 1.0/JacDOF[i];
 
-                  const su2double drdx = JacInv*metricTerms[1];
-                  const su2double drdy = JacInv*metricTerms[2];
-                  const su2double drdz = JacInv*metricTerms[3];
+                  const su2double drdx = JacInv*drdxDOF[i];
+                  const su2double drdy = JacInv*drdyDOF[i];
+                  const su2double drdz = JacInv*drdzDOF[i];
 
-                  const su2double dsdx = JacInv*metricTerms[4];
-                  const su2double dsdy = JacInv*metricTerms[5];
-                  const su2double dsdz = JacInv*metricTerms[6];
+                  const su2double dsdx = JacInv*dsdxDOF[i];
+                  const su2double dsdy = JacInv*dsdzDOF[i];
+                  const su2double dsdz = JacInv*dsdzDOF[i];
 
-                  const su2double dtdx = JacInv*metricTerms[7];
-                  const su2double dtdy = JacInv*metricTerms[8];
-                  const su2double dtdz = JacInv*metricTerms[9];
+                  const su2double dtdx = JacInv*dtdxDOF[i];
+                  const su2double dtdy = JacInv*dtdyDOF[i];
+                  const su2double dtdz = JacInv*dtdzDOF[i];
 
                   /*--- Compute the Cartesian gradients of the independent solution
                         variables from the gradients in parametric coordinates and the metric
@@ -10931,9 +10921,6 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
   const unsigned short offDerivSol    = NPad*nDOFs;
   const unsigned short offDerivFluxes = NPad*nInt;
 
-  /* Store the number of metric points per integration point for readability. */
-  const unsigned short nMetricPerPoint = 5;  /* nDim*nDim + 1. */
-
   /*--------------------------------------------------------------------------*/
   /*---          Construct the Cartesian fluxes in the DOFs.               ---*/
   /*--------------------------------------------------------------------------*/
@@ -10944,6 +10931,16 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
 
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
+
+    /* Set the pointers for the metric terms of the DOFs.
+       THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
+       MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE
+       CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *JacDOF  = elem->metricTermsSolDOFs.data();
+    const su2double *drdxDOF = JacDOF  + nDOFs;
+    const su2double *drdyDOF = drdxDOF + nDOFs;
+    const su2double *dsdxDOF = drdyDOF + nDOFs;
+    const su2double *dsdyDOF = dsdxDOF + nDOFs;
 
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
     for(unsigned short i=0; i<nDOFs; ++i) {
@@ -10964,18 +10961,14 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
       const su2double *gridVel = elem->gridVelocitiesSolDOFs.data() + 2*i; /* nDim*i. */
 
       /* Compute the true value of the metric terms in this DOF. Note that in
-         metricTerms the metric terms scaled by the Jacobian are stored. THIS
-         IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE
-         DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTermsSolDOFs.data()
-                                   + i*nMetricPerPoint;
-      const su2double JacInv       = 1.0/metricTerms[0];
+         metricTerms the metric terms scaled by the Jacobian are stored. */
+      const su2double JacInv = 1.0/JacDOF[i];
 
-      const su2double drdx = JacInv*metricTerms[1];
-      const su2double drdy = JacInv*metricTerms[2];
+      const su2double drdx = JacInv*drdxDOF[i];
+      const su2double drdy = JacInv*drdyDOF[i];
 
-      const su2double dsdx = JacInv*metricTerms[3];
-      const su2double dsdy = JacInv*metricTerms[4];
+      const su2double dsdx = JacInv*dsdxDOF[i];
+      const su2double dsdy = JacInv*dsdyDOF[i];
 
       /* Compute the Cartesian gradients of the independent solution variables
          from the gradients in parametric coordinates and the metric terms. */
@@ -11063,6 +11056,15 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+    /*--- Easier storage of the metric terms. Note that the first nInt terms
+          in the metric terms are the Jacobians.
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdy = drdx + nInt;
+    const su2double *dsdx = drdy + nInt;
+    const su2double *dsdy = dsdx + nInt;
+
     /*--- Loop over the integration points of the element. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
 
@@ -11074,30 +11076,16 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
       const su2double *gradFluxYDs = gradFluxYDr  + offDerivFluxes;
       su2double       *divFluxInt  = divFlux      + offInt;
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST
-         BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
-      /* Compute the metric terms multiplied by the integration weight. Note that the
-         first term in the metric terms is the Jacobian. */
-      const su2double wDrdx = weights[i]*metricTerms[1];
-      const su2double wDrdy = weights[i]*metricTerms[2];
-
-      const su2double wDsdx = weights[i]*metricTerms[3];
-      const su2double wDsdy = weights[i]*metricTerms[4];
-
       /* Compute the divergence of the fluxes, multiplied by the
          integration weight. */
-      divFluxInt[0] = gradFluxXDr[0]*wDrdx + gradFluxXDs[0]*wDsdx
-                    + gradFluxYDr[0]*wDrdy + gradFluxYDs[0]*wDsdy;
-      divFluxInt[1] = gradFluxXDr[1]*wDrdx + gradFluxXDs[1]*wDsdx
-                    + gradFluxYDr[1]*wDrdy + gradFluxYDs[1]*wDsdy;
-      divFluxInt[2] = gradFluxXDr[2]*wDrdx + gradFluxXDs[2]*wDsdx
-                    + gradFluxYDr[2]*wDrdy + gradFluxYDs[2]*wDsdy;
-      divFluxInt[3] = gradFluxXDr[3]*wDrdx + gradFluxXDs[3]*wDsdx
-                    + gradFluxYDr[3]*wDrdy + gradFluxYDs[3]*wDsdy;
+      divFluxInt[0] = weights[i]*(gradFluxXDr[0]*drdx[i] + gradFluxXDs[0]*dsdx[i]
+                    +             gradFluxYDr[0]*drdy[i] + gradFluxYDs[0]*dsdy[i]);
+      divFluxInt[1] = weights[i]*(gradFluxXDr[1]*drdx[i] + gradFluxXDs[1]*dsdx[i]
+                    +             gradFluxYDr[1]*drdy[i] + gradFluxYDs[1]*dsdy[i]);
+      divFluxInt[2] = weights[i]*(gradFluxXDr[2]*drdx[i] + gradFluxXDs[2]*dsdx[i]
+                    +             gradFluxYDr[2]*drdy[i] + gradFluxYDs[2]*dsdy[i]);
+      divFluxInt[3] = weights[i]*(gradFluxXDr[3]*drdx[i] + gradFluxXDs[3]*dsdx[i]
+                    +             gradFluxYDr[3]*drdy[i] + gradFluxYDs[3]*dsdy[i]);
     }
   }
 
@@ -11120,6 +11108,11 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
     /*--- Loop over the number of entities that are treated simultaneously. */
     for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+      /*--- Easier storage of the Jacobians.
+            THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+            THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+      const su2double *Jac = elem->metricTerms.data();
+
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
 
@@ -11127,12 +11120,6 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
         const unsigned short offInt = i*NPad + simul*nVar;
         const su2double *solThisInt = solInt  + offInt;
         su2double       *divFluxInt = divFlux + offInt;
-
-        /* Easier storage of the metric terms in this integration point.
-           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-           THE DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST
-           BE TAKEN. */
-        const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
 
         /* Compute the velocities. */
         const su2double rhoInv = 1.0/solThisInt[0];
@@ -11144,7 +11131,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
            integration weight in order to be consistent with the formulation of
            the residual. Also note that for the energy source term the absolute
            velocity must be taken and not the relative. */
-        const su2double weightJac = weights[i]*metricTerms[0];
+        const su2double weightJac = weights[i]*Jac[i];
 
         divFluxInt[1] -= weightJac*body_force_vector[0];
         divFluxInt[2] -= weightJac*body_force_vector[1];
@@ -11208,9 +11195,6 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
   const unsigned short offDerivSol    = NPad*nDOFs;
   const unsigned short offDerivFluxes = NPad*nInt;
 
-  /* Store the number of metric points per integration point/DOF for readability. */
-  const unsigned short nMetricPerPoint = 10;  /* nDim*nDim + 1. */
-
   /*--------------------------------------------------------------------------*/
   /*---          Construct the Cartesian fluxes in the DOFs.               ---*/
   /*--------------------------------------------------------------------------*/
@@ -11221,6 +11205,21 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
 
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
+
+    /* Set the pointers for the metric terms of the DOFs.
+       THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
+       MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE
+       CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *JacDOF  = elem->metricTermsSolDOFs.data();
+    const su2double *drdxDOF = JacDOF  + nDOFs;
+    const su2double *drdyDOF = drdxDOF + nDOFs;
+    const su2double *drdzDOF = drdyDOF + nDOFs;
+    const su2double *dsdxDOF = drdzDOF + nDOFs;
+    const su2double *dsdyDOF = dsdxDOF + nDOFs;
+    const su2double *dsdzDOF = dsdyDOF + nDOFs;
+    const su2double *dtdxDOF = dsdzDOF + nDOFs;
+    const su2double *dtdyDOF = dtdxDOF + nDOFs;
+    const su2double *dtdzDOF = dtdyDOF + nDOFs;
 
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
     for(unsigned short i=0; i<nDOFs; ++i) {
@@ -11243,24 +11242,20 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
       const su2double *gridVel = elem->gridVelocitiesSolDOFs.data() + 3*i; /* nDim*i. */
 
       /* Compute the true value of the metric terms in this DOF. Note that in
-         metricTerms the metric terms scaled by the Jacobian are stored. THIS
-         IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE
-         DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTermsSolDOFs.data()
-                                   + i*nMetricPerPoint;
-      const su2double JacInv       = 1.0/metricTerms[0];
+         metricTerms the metric terms scaled by the Jacobian are stored. */
+      const su2double JacInv = 1.0/JacDOF[i];
 
-      const su2double drdx = JacInv*metricTerms[1];
-      const su2double drdy = JacInv*metricTerms[2];
-      const su2double drdz = JacInv*metricTerms[3];
+      const su2double drdx = JacInv*drdxDOF[i];
+      const su2double drdy = JacInv*drdyDOF[i];
+      const su2double drdz = JacInv*drdzDOF[i];
 
-      const su2double dsdx = JacInv*metricTerms[4];
-      const su2double dsdy = JacInv*metricTerms[5];
-      const su2double dsdz = JacInv*metricTerms[6];
+      const su2double dsdx = JacInv*dsdxDOF[i];
+      const su2double dsdy = JacInv*dsdyDOF[i];
+      const su2double dsdz = JacInv*dsdzDOF[i];
 
-      const su2double dtdx = JacInv*metricTerms[7];
-      const su2double dtdy = JacInv*metricTerms[8];
-      const su2double dtdz = JacInv*metricTerms[9];
+      const su2double dtdx = JacInv*dtdxDOF[i];
+      const su2double dtdy = JacInv*dtdyDOF[i];
+      const su2double dtdz = JacInv*dtdzDOF[i];
 
       /* Compute the Cartesian gradients of the independent solution variables
          from the gradients in parametric coordinates and the metric terms. */
@@ -11381,6 +11376,20 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+    /*--- Easier storage of the metric terms. Note that the first nInt terms
+          in the metric terms are the Jacobians.
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdy = drdx + nInt;
+    const su2double *drdz = drdy + nInt;
+    const su2double *dsdx = drdz + nInt;
+    const su2double *dsdy = dsdx + nInt;
+    const su2double *dsdz = dsdy + nInt;
+    const su2double *dtdx = dsdz + nInt;
+    const su2double *dtdy = dtdx + nInt;
+    const su2double *dtdz = dtdy + nInt;
+
     /*--- Loop over the integration points of the element. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
 
@@ -11397,42 +11406,22 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
       const su2double *gradFluxZDt = gradFluxZDs  + offDerivFluxes;
       su2double       *divFluxInt  = divFlux      + offInt;
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
-      /* Compute the metric terms multiplied by the integration weight. Note that the
-         first term in the metric terms is the Jacobian. */
-      const su2double wDrdx = weights[i]*metricTerms[1];
-      const su2double wDrdy = weights[i]*metricTerms[2];
-      const su2double wDrdz = weights[i]*metricTerms[3];
-
-      const su2double wDsdx = weights[i]*metricTerms[4];
-      const su2double wDsdy = weights[i]*metricTerms[5];
-      const su2double wDsdz = weights[i]*metricTerms[6];
-
-      const su2double wDtdx = weights[i]*metricTerms[7];
-      const su2double wDtdy = weights[i]*metricTerms[8];
-      const su2double wDtdz = weights[i]*metricTerms[9];
-
       /* Compute the divergence of the fluxes, multiplied by the integration weight. */
-      divFluxInt[0] = gradFluxXDr[0]*wDrdx + gradFluxXDs[0]*wDsdx + gradFluxXDt[0]*wDtdx
-                    + gradFluxYDr[0]*wDrdy + gradFluxYDs[0]*wDsdy + gradFluxYDt[0]*wDtdy
-                    + gradFluxZDr[0]*wDrdz + gradFluxZDs[0]*wDsdz + gradFluxZDt[0]*wDtdz;
-      divFluxInt[1] = gradFluxXDr[1]*wDrdx + gradFluxXDs[1]*wDsdx + gradFluxXDt[1]*wDtdx
-                    + gradFluxYDr[1]*wDrdy + gradFluxYDs[1]*wDsdy + gradFluxYDt[1]*wDtdy
-                    + gradFluxZDr[1]*wDrdz + gradFluxZDs[1]*wDsdz + gradFluxZDt[1]*wDtdz;
-      divFluxInt[2] = gradFluxXDr[2]*wDrdx + gradFluxXDs[2]*wDsdx + gradFluxXDt[2]*wDtdx
-                    + gradFluxYDr[2]*wDrdy + gradFluxYDs[2]*wDsdy + gradFluxYDt[2]*wDtdy
-                    + gradFluxZDr[2]*wDrdz + gradFluxZDs[2]*wDsdz + gradFluxZDt[2]*wDtdz;
-      divFluxInt[3] = gradFluxXDr[3]*wDrdx + gradFluxXDs[3]*wDsdx + gradFluxXDt[3]*wDtdx
-                    + gradFluxYDr[3]*wDrdy + gradFluxYDs[3]*wDsdy + gradFluxYDt[3]*wDtdy
-                    + gradFluxZDr[3]*wDrdz + gradFluxZDs[3]*wDsdz + gradFluxZDt[3]*wDtdz;
-      divFluxInt[4] = gradFluxXDr[4]*wDrdx + gradFluxXDs[4]*wDsdx + gradFluxXDt[4]*wDtdx
-                    + gradFluxYDr[4]*wDrdy + gradFluxYDs[4]*wDsdy + gradFluxYDt[4]*wDtdy
-                    + gradFluxZDr[4]*wDrdz + gradFluxZDs[4]*wDsdz + gradFluxZDt[4]*wDtdz;
+      divFluxInt[0] = weights[i]*(gradFluxXDr[0]*drdx[i] + gradFluxXDs[0]*dsdx[i] + gradFluxXDt[0]*dtdx[i]
+                    +             gradFluxYDr[0]*drdy[i] + gradFluxYDs[0]*dsdy[i] + gradFluxYDt[0]*dtdy[i]
+                    +             gradFluxZDr[0]*drdz[i] + gradFluxZDs[0]*dsdz[i] + gradFluxZDt[0]*dtdz[i]);
+      divFluxInt[1] = weights[i]*(gradFluxXDr[1]*drdx[i] + gradFluxXDs[1]*dsdx[i] + gradFluxXDt[1]*dtdx[i]
+                    +             gradFluxYDr[1]*drdy[i] + gradFluxYDs[1]*dsdy[i] + gradFluxYDt[1]*dtdy[i]
+                    +             gradFluxZDr[1]*drdz[i] + gradFluxZDs[1]*dsdz[i] + gradFluxZDt[1]*dtdz[i]);
+      divFluxInt[2] = weights[i]*(gradFluxXDr[2]*drdx[i] + gradFluxXDs[2]*dsdx[i] + gradFluxXDt[2]*dtdx[i]
+                    +             gradFluxYDr[2]*drdy[i] + gradFluxYDs[2]*dsdy[i] + gradFluxYDt[2]*dtdy[i]
+                    +             gradFluxZDr[2]*drdz[i] + gradFluxZDs[2]*dsdz[i] + gradFluxZDt[2]*dtdz[i]);
+      divFluxInt[3] = weights[i]*(gradFluxXDr[3]*drdx[i] + gradFluxXDs[3]*dsdx[i] + gradFluxXDt[3]*dtdx[i]
+                    +             gradFluxYDr[3]*drdy[i] + gradFluxYDs[3]*dsdy[i] + gradFluxYDt[3]*dtdy[i]
+                    +             gradFluxZDr[3]*drdz[i] + gradFluxZDs[3]*dsdz[i] + gradFluxZDt[3]*dtdz[i]);
+      divFluxInt[4] = weights[i]*(gradFluxXDr[4]*drdx[i] + gradFluxXDs[4]*dsdx[i] + gradFluxXDt[4]*dtdx[i]
+                    +             gradFluxYDr[4]*drdy[i] + gradFluxYDs[4]*dsdy[i] + gradFluxYDt[4]*dtdy[i]
+                    +             gradFluxZDr[4]*drdz[i] + gradFluxZDs[4]*dsdz[i] + gradFluxZDt[4]*dtdz[i]);
     }
   }
 
@@ -11455,6 +11444,11 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
     /*--- Loop over the number of entities that are treated simultaneously. */
     for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+      /*--- Easier storage of the Jacobians.
+            THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+            THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+      const su2double *Jac = elem->metricTerms.data();
+
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
 
@@ -11462,12 +11456,6 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
         const unsigned short offInt = i*NPad + simul*nVar;
         const su2double *solThisInt = solInt  + offInt;
         su2double       *divFluxInt = divFlux + offInt;
-
-        /* Easier storage of the metric terms in this integration point.
-           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-           THE DATA FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST
-           BE TAKEN. */
-        const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
 
         /* Compute the velocities. */
         const su2double rhoInv = 1.0/solThisInt[0];
@@ -11480,7 +11468,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
            integration weight in order to be consistent with the formulation of
            the residual. Also note that for the energy source term the absolute
            velocity must be taken and not the relative. */
-        const su2double weightJac = weights[i]*metricTerms[0];
+        const su2double weightJac = weights[i]*Jac[i];
 
         divFluxInt[1] -= weightJac*body_force_vector[0];
         divFluxInt[2] -= weightJac*body_force_vector[1];
@@ -11552,9 +11540,6 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
      after the first derivatives. */
   su2double *secDerSol = solAndGradInt + 3*NPad*nInt;   /*(nDim+1)*NPad*nInt. */
 
-  /* Store the number of metric points per integration point for readability. */
-  const unsigned short nMetricPerPoint = 5;  /* nDim*nDim + 1. */
-
   /* Store the number of additional metric points per integration point, which
      are needed to compute the second derivatives. These terms take the
      non-constant metric into account. */
@@ -11582,6 +11567,15 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
 
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
+
+    /*--- Easier storage of the metric terms.
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *JacInt  = elem->metricTerms.data();
+    const su2double *drdxInt = JacInt  + nInt;
+    const su2double *drdyInt = drdxInt + nInt;
+    const su2double *dsdxInt = drdyInt + nInt;
+    const su2double *dsdyInt = dsdxInt + nInt;
 
     /*--- Loop over the integration points. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
@@ -11627,21 +11621,14 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
          INTEGRATION POINT MUST BE TAKEN. */
       const su2double *gridVel = elem->gridVelocities.data() + 2*i; /* nDim*i. */
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
       /* Compute the true metric terms. Note in metricTerms the actual metric
          terms multiplied by the Jacobian are stored. */
-      const su2double Jac    = metricTerms[0];
-      const su2double JacInv = 1.0/Jac;
+      const su2double JacInv = 1.0/JacInt[i];
 
-      const su2double drdx = JacInv*metricTerms[1];
-      const su2double drdy = JacInv*metricTerms[2];
-      const su2double dsdx = JacInv*metricTerms[3];
-      const su2double dsdy = JacInv*metricTerms[4];
+      const su2double drdx = JacInv*drdxInt[i];
+      const su2double drdy = JacInv*drdyInt[i];
+      const su2double dsdx = JacInv*dsdxInt[i];
+      const su2double dsdy = JacInv*dsdyInt[i];
 
       /* Compute the Cartesian gradients of the independent solution
          variables from the gradients in parametric coordinates and the
@@ -11793,7 +11780,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
       /* Set the pointer to store the divergence terms for this integration
          point and compute these terms, multiplied by the integration weight
          and Jacobian. */
-      const su2double weightJac = weights[i]*Jac;
+      const su2double weightJac = weights[i]*JacInt[i];
       su2double *divFluxInt     = divFlux + offInt;
 
       divFluxInt[0] = weightJac*(abv1 - rho*divGridVel
@@ -11896,9 +11883,6 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
      after the first derivatives. */
   su2double *secDerSol = solAndGradInt + 4*NPad*nInt;  /*(nDim+1)*NPad*nInt. */
 
-  /* Store the number of metric points per integration point for readability. */
-  const unsigned short nMetricPerPoint = 10;  /* nDim*nDim + 1. */
-
   /* Store the number of additional metric points per integration point, which
      are needed to compute the second derivatives. These terms take the
      non-constant metric into account. */
@@ -11926,6 +11910,20 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
 
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
+
+    /*--- Easier storage of the metric terms.
+          THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
+          THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
+    const su2double *JacInt = elem->metricTerms.data();
+    const su2double *drdxInt = JacInt  + nInt;
+    const su2double *drdyInt = drdxInt + nInt;
+    const su2double *drdzInt = drdyInt + nInt;
+    const su2double *dsdxInt = drdzInt + nInt;
+    const su2double *dsdyInt = dsdxInt + nInt;
+    const su2double *dsdzInt = dsdyInt + nInt;
+    const su2double *dtdxInt = dsdzInt + nInt;
+    const su2double *dtdyInt = dtdxInt + nInt;
+    const su2double *dtdzInt = dtdyInt + nInt;
 
     /*--- Loop over the integration points. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
@@ -11977,28 +11975,21 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
          INTEGRATION POINT MUST BE TAKEN. */
       const su2double *gridVel = elem->gridVelocities.data() + 3*i; /* nDim*i. */
 
-      /* Easier storage of the metric terms in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms = elem->metricTerms.data() + i*nMetricPerPoint;
-
       /* Compute the true metric terms. Note in metricTerms the actual metric
          terms multiplied by the Jacobian are stored. */
-      const su2double Jac    = metricTerms[0];
-      const su2double JacInv = 1.0/Jac;
+      const su2double JacInv = 1.0/JacInt[i];
 
-      const su2double drdx = JacInv*metricTerms[1];
-      const su2double drdy = JacInv*metricTerms[2];
-      const su2double drdz = JacInv*metricTerms[3];
+      const su2double drdx = JacInv*drdxInt[i];
+      const su2double drdy = JacInv*drdyInt[i];
+      const su2double drdz = JacInv*drdzInt[i];
 
-      const su2double dsdx = JacInv*metricTerms[4];
-      const su2double dsdy = JacInv*metricTerms[5];
-      const su2double dsdz = JacInv*metricTerms[6];
+      const su2double dsdx = JacInv*dsdxInt[i];
+      const su2double dsdy = JacInv*dsdyInt[i];
+      const su2double dsdz = JacInv*dsdzInt[i];
 
-      const su2double dtdx = JacInv*metricTerms[7];
-      const su2double dtdy = JacInv*metricTerms[8];
-      const su2double dtdz = JacInv*metricTerms[9];
+      const su2double dtdx = JacInv*dtdxInt[i];
+      const su2double dtdy = JacInv*dtdyInt[i];
+      const su2double dtdz = JacInv*dtdzInt[i];
 
       /* Compute the Cartesian gradients of the independent solution
          variables from the gradients in parametric coordinates and the
@@ -12293,7 +12284,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
       /* Set the pointer to store the divergence terms for this integration
          point and compute these terms, multiplied by the integration weight
          and Jacobian. */
-      const su2double weightJac = weights[i]*Jac;
+      const su2double weightJac = weights[i]*JacInt[i];
       su2double *divFluxInt     = divFlux + offInt;
 
       divFluxInt[0] = weightJac*(abv1 - rho*divGridVel - gridVel[0]*drhodx
@@ -12556,10 +12547,6 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
   /* Set the number of bytes that must be copied in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
 
-  /* Store the number of metric points per integration point, which depends
-     on the number of dimensions. */
-  const unsigned short nMetricPerPoint = nDim*nDim + 1;
-
   /*--- Loop over the given element range to compute the contribution of the
         volume integral in the DG FEM formulation to the residual. Multiple
         elements are treated simultaneously to improve the performance
@@ -12634,38 +12621,42 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
 
       case 2: {
 
-        /* 2D simulation. Loop over the chunk of elements and loop over the
-           integration points of the elements to compute the fluxes. */
+        /* 2D simulation. Loop over the chunk of elements. */
         for(unsigned short ll=0; ll<llEnd; ++ll) {
           const unsigned short llNVar = ll*nVar;
           const unsigned long  lInd   = l + ll;
 
+          /* Easier storage of the metric terms. */
+          const su2double *JacInt  = volElem[lInd].metricTerms.data();
+          const su2double *drdxInt = JacInt  + nInt;
+          const su2double *drdyInt = drdxInt + nInt;
+          const su2double *dsdxInt = drdyInt + nInt;
+          const su2double *dsdyInt = dsdxInt + nInt;
+
+          /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
 
-            /* Easier storage of the metric terms and grid velocities in this
-               integration point and compute the inverse of the Jacobian. */
-            const su2double *metricTerms = volElem[lInd].metricTerms.data()
-                                         + i*nMetricPerPoint;
-            const su2double *gridVel     = volElem[lInd].gridVelocities.data() + i*nDim;
-            const su2double Jac          = metricTerms[0];
-            const su2double JacInv       = 1.0/Jac;
+            /* Easier storage of the grid velocities in this integration
+               point and compute the inverse of the Jacobian. */
+            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
+            const su2double JacInv   = 1.0/JacInt[i];
 
             /* Compute the true metric terms in this integration point. */
-            const su2double drdx = JacInv*metricTerms[1];
-            const su2double drdy = JacInv*metricTerms[2];
+            const su2double drdx = JacInv*drdxInt[i];
+            const su2double drdy = JacInv*drdyInt[i];
 
-            const su2double dsdx = JacInv*metricTerms[3];
-            const su2double dsdy = JacInv*metricTerms[4];
+            const su2double dsdx = JacInv*dsdxInt[i];
+            const su2double dsdy = JacInv*dsdyInt[i];
 
             /* Compute the metric terms multiplied by minus the integration weight.
                The minus sign comes from the integration by parts in the weak
                formulation. */
-            const su2double wDrdx = -weights[i]*metricTerms[1];
-            const su2double wDrdy = -weights[i]*metricTerms[2];
+            const su2double wDrdx = -weights[i]*drdxInt[i];
+            const su2double wDrdy = -weights[i]*drdyInt[i];
 
-            const su2double wDsdx = -weights[i]*metricTerms[3];
-            const su2double wDsdy = -weights[i]*metricTerms[4];
+            const su2double wDsdx = -weights[i]*dsdxInt[i];
+            const su2double wDsdy = -weights[i]*dsdyInt[i];
 
             /* Easier storage of the location where the solution data of this
                integration point starts. */
@@ -12780,7 +12771,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
                   relative. ---*/
             if( body_force ) {
               su2double *source         = sources + iNPad + llNVar;
-              const su2double weightJac = weights[i]*Jac;
+              const su2double weightJac = weights[i]*JacInt[i];
 
               source[0] =  0.0;
               source[1] = -weightJac*body_force_vector[0];
@@ -12797,50 +12788,59 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
 
       case 3: {
 
-        /* 3D simulation. Loop over the chunk of elements and loop over the
-           integration points of the elements to compute the fluxes. */
+        /* 3D simulation. Loop over the chunk of elements. */
         for(unsigned short ll=0; ll<llEnd; ++ll) {
           const unsigned short llNVar = ll*nVar;
           const unsigned long  lInd   = l + ll;
 
+          /* Easier storage of the metric terms. */
+          const su2double *JacInt  = volElem[lInd].metricTerms.data();
+          const su2double *drdxInt = JacInt  + nInt;
+          const su2double *drdyInt = drdxInt + nInt;
+          const su2double *drdzInt = drdyInt + nInt;
+          const su2double *dsdxInt = drdzInt + nInt;
+          const su2double *dsdyInt = dsdxInt + nInt;
+          const su2double *dsdzInt = dsdyInt + nInt;
+          const su2double *dtdxInt = dsdzInt + nInt;
+          const su2double *dtdyInt = dtdxInt + nInt;
+          const su2double *dtdzInt = dtdyInt + nInt;
+
+          /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
 
-            /* Easier storage of the metric terms and grid velocities in this
-               integration point and compute the inverse of the Jacobian. */
-            const su2double *metricTerms = volElem[lInd].metricTerms.data()
-                                         + i*nMetricPerPoint;
-            const su2double *gridVel     = volElem[lInd].gridVelocities.data() + i*nDim;
-            const su2double Jac          = metricTerms[0];
-            const su2double JacInv       = 1.0/Jac;
+            /* Easier storage of the grid velocities in this integration
+               point and compute the inverse of the Jacobian. */
+            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
+            const su2double JacInv   = 1.0/JacInt[i];
 
             /* Compute the true metric terms in this integration point. */
-            const su2double drdx = JacInv*metricTerms[1];
-            const su2double drdy = JacInv*metricTerms[2];
-            const su2double drdz = JacInv*metricTerms[3];
+            const su2double drdx = JacInv*drdxInt[i];
+            const su2double drdy = JacInv*drdyInt[i];
+            const su2double drdz = JacInv*drdzInt[i];
 
-            const su2double dsdx = JacInv*metricTerms[4];
-            const su2double dsdy = JacInv*metricTerms[5];
-            const su2double dsdz = JacInv*metricTerms[6];
+            const su2double dsdx = JacInv*dsdxInt[i];
+            const su2double dsdy = JacInv*dsdyInt[i];
+            const su2double dsdz = JacInv*dsdzInt[i];
 
-            const su2double dtdx = JacInv*metricTerms[7];
-            const su2double dtdy = JacInv*metricTerms[8];
-            const su2double dtdz = JacInv*metricTerms[9];
+            const su2double dtdx = JacInv*dtdxInt[i];
+            const su2double dtdy = JacInv*dtdyInt[i];
+            const su2double dtdz = JacInv*dtdzInt[i];
 
             /* Compute the metric terms multiplied by minus the integration weight.
                The minus sign comes from the integration by parts in the weak
                formulation. */
-            const su2double wDrdx = -weights[i]*metricTerms[1];
-            const su2double wDrdy = -weights[i]*metricTerms[2];
-            const su2double wDrdz = -weights[i]*metricTerms[3];
+            const su2double wDrdx = -weights[i]*drdxInt[i];
+            const su2double wDrdy = -weights[i]*drdyInt[i];
+            const su2double wDrdz = -weights[i]*drdzInt[i];
 
-            const su2double wDsdx = -weights[i]*metricTerms[4];
-            const su2double wDsdy = -weights[i]*metricTerms[5];
-            const su2double wDsdz = -weights[i]*metricTerms[6];
+            const su2double wDsdx = -weights[i]*dsdxInt[i];
+            const su2double wDsdy = -weights[i]*dsdyInt[i];
+            const su2double wDsdz = -weights[i]*dsdzInt[i];
 
-            const su2double wDtdx = -weights[i]*metricTerms[7];
-            const su2double wDtdy = -weights[i]*metricTerms[8];
-            const su2double wDtdz = -weights[i]*metricTerms[9];
+            const su2double wDtdx = -weights[i]*dtdxInt[i];
+            const su2double wDtdy = -weights[i]*dtdyInt[i];
+            const su2double wDtdz = -weights[i]*dtdzInt[i];
 
             /* Easier storage of the location where the solution data of this
                integration point starts. */
@@ -12997,7 +12997,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
                   relative. ---*/
             if( body_force ) {
               su2double *source         = sources + iNPad + llNVar;
-              const su2double weightJac = weights[i]*Jac;
+              const su2double weightJac = weights[i]*JacInt[i];
 
               source[0] =  0.0;
               source[1] = -weightJac*body_force_vector[0];
@@ -13031,10 +13031,15 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
     /* Easier storage of the gas constant. */
     const su2double RGas = config->GetGas_ConstantND();
 
-    /*--- Loop over the chunk of elements and its integration points. ---*/
+    /*--- Loop over the chunk of elements. ---*/
     for(unsigned short ll=0; ll<llEnd; ++ll) {
       const unsigned short llNVar = ll*nVar;
       const unsigned long  lInd   = l + ll;
+
+      /* Easier storage of the Jacobians. */
+      const su2double *Jac = volElem[lInd].metricTerms.data();
+
+      /*--- Loop over the integration points. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
         const unsigned short iNPad = i*NPad;
 
@@ -13053,9 +13058,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
         const su2double ThermalConductivity = FluidModel->GetThermalConductivity();
 
         /* Determine the integration weight multiplied by the Jacobian. */
-        const su2double *metricTerms = volElem[lInd].metricTerms.data()
-                                     + i*nMetricPerPoint;
-        const su2double weightJac    = weights[i]*metricTerms[0];
+        const su2double weightJac = weights[i]*Jac[i];
 
         /* Set the pointer to the coordinates in this integration point and
            call the function to compute the source terms for the manufactured
