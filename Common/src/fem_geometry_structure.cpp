@@ -6773,27 +6773,27 @@ void CMeshFEM_DG::InitStaticMeshMovement(CConfig              *config,
         /* Determine the grid velocities in the integration points. */
         for(unsigned short i=0; i<nInt; ++i) {
           const su2double *coor    = volElem[l].coorIntegrationPoints.data() + i*nDim;
-          su2double       *gridVel = volElem[l].gridVelocities.data() + i*nDim;
+          su2double       *gridVel = volElem[l].gridVelocities.data() + i;
 
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
             dist[iDim] = (coor[iDim]-Center[iDim])/L_Ref;
 
-          gridVel[0] = Omega[1]*dist[2] - Omega[2]*dist[1];
-          gridVel[1] = Omega[2]*dist[0] - Omega[0]*dist[2];
-          if(nDim == 3) gridVel[2] = Omega[0]*dist[1] - Omega[1]*dist[0];
+          gridVel[0]    = Omega[1]*dist[2] - Omega[2]*dist[1];
+          gridVel[nInt] = Omega[2]*dist[0] - Omega[0]*dist[2];
+          if(nDim == 3) gridVel[2*nInt] = Omega[0]*dist[1] - Omega[1]*dist[0];
         }
 
         /* Determine the grid velocities in the solution DOFs. */
         for(unsigned short i=0; i<nDOFs; ++i) {
           const su2double *coor    = volElem[l].coorSolDOFs.data() + i*nDim;
-          su2double       *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i*nDim;
+          su2double       *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i;
 
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
             dist[iDim] = (coor[iDim]-Center[iDim])/L_Ref;
 
-          gridVel[0] = Omega[1]*dist[2] - Omega[2]*dist[1];
-          gridVel[1] = Omega[2]*dist[0] - Omega[0]*dist[2];
-          if(nDim == 3) gridVel[2] = Omega[0]*dist[1] - Omega[1]*dist[0];
+          gridVel[0]     = Omega[1]*dist[2] - Omega[2]*dist[1];
+          gridVel[nDOFs] = Omega[2]*dist[0] - Omega[0]*dist[2];
+          if(nDim == 3) gridVel[2*nDOFs] = Omega[0]*dist[1] - Omega[1]*dist[0];
         }
       }
 
@@ -6888,15 +6888,15 @@ void CMeshFEM_DG::InitStaticMeshMovement(CConfig              *config,
         /* Set the grid velocity in both the integration points and
            the sol DOFs. */
         for(unsigned short i=0; i<nInt; ++i) {
-          su2double *gridVel = volElem[l].gridVelocities.data() + i*nDim;
+          su2double *gridVel = volElem[l].gridVelocities.data() + i;
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
-            gridVel[iDim] = vTrans[iDim];
+            gridVel[iDim*nInt] = vTrans[iDim];
         }
 
         for(unsigned short i=0; i<nDOFs; ++i) {
-          su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i*nDim;
+          su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i;
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
-            gridVel[iDim] = vTrans[iDim];
+            gridVel[iDim*nDOFs] = vTrans[iDim];
         }
       }
 

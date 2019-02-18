@@ -3590,14 +3590,14 @@ void CFEM_DG_EulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_co
 
             /* Compute the grid velocity in the integration points. */
             for(unsigned short i=0; i<nInt; ++i) {
-              su2double *gridVel = volElem[l].gridVelocities.data() + i*nDim;
-              gridVel[1] = db2Newdt;
+              su2double *gridVel = volElem[l].gridVelocities.data() + i;
+              gridVel[nInt] = db2Newdt;
             }
 
             /* Compute the grid velocities for the solution DOFs. */
             for(unsigned short i=0; i<volElem[l].nDOFsSol; ++i) {
-              su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i*nDim;
-              gridVel[1] = db2Newdt;
+              su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i;
+              gridVel[volElem[l].nDOFsSol] = db2Newdt;
             }
           }
 
@@ -3863,13 +3863,15 @@ void CFEM_DG_EulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_con
         switch( nDim ) {
 
           case 2: {
-            /*--- 2D simulation. Loop over the DOFs of this element
-                  and determine the maximum wave speed. ---*/
+            /* 2D simulation. Set the pointers for the grid velocities. */
+            const su2double *gridVelX = volElem[l].gridVelocitiesSolDOFs.data();
+            const su2double *gridVelY = gridVelX + volElem[l].nDOFsSol;
+
+            /*--- Loop over the DOFs of this element and determine
+                  the maximum wave speed. ---*/
             for(unsigned short i=0; i<volElem[l].nDOFsSol; ++i) {
               const su2double *solDOF  = VecSolDOFs.data()
                                        + nVar*(volElem[l].offsetDOFsSolLocal + i);
-              const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data()
-                                       + i*nDim;
 
               /* Compute the velocities and the internal energy per unit mass. */
               const su2double DensityInv   = 1.0/solDOF[0];
@@ -3883,8 +3885,8 @@ void CFEM_DG_EulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_con
               const su2double SoundSpeed2 = FluidModel->GetSoundSpeed2();
               const su2double SoundSpeed  = sqrt(fabs(SoundSpeed2));
 
-              const su2double radx     = fabs(u-gridVel[0]) + SoundSpeed;
-              const su2double rady     = fabs(v-gridVel[1]) + SoundSpeed;
+              const su2double radx     = fabs(u-gridVelX[i]) + SoundSpeed;
+              const su2double rady     = fabs(v-gridVelY[i]) + SoundSpeed;
               const su2double charVel2 = radx*radx + rady*rady;
 
               charVel2Max = max(charVel2Max, charVel2);
@@ -3894,13 +3896,16 @@ void CFEM_DG_EulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_con
           }
 
           case 3: {
-            /*--- 3D simulation. Loop over the DOFs of this element
-                  and determine the maximum wave speed. ---*/
+            /* 3D simulation. Set the pointers for the grid velocities. */
+            const su2double *gridVelX = volElem[l].gridVelocitiesSolDOFs.data();
+            const su2double *gridVelY = gridVelX + volElem[l].nDOFsSol;
+            const su2double *gridVelZ = gridVelY + volElem[l].nDOFsSol;
+
+            /*--- Loop over the DOFs of this element and determine
+                  the maximum wave speed. ---*/
             for(unsigned short i=0; i<volElem[l].nDOFsSol; ++i) {
               const su2double *solDOF = VecSolDOFs.data()
                                       + nVar*(volElem[l].offsetDOFsSolLocal + i);
-              const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data()
-                                       + i*nDim;
 
               /* Compute the velocities and the internal energy per unit mass. */
               const su2double DensityInv   = 1.0/solDOF[0];
@@ -3915,9 +3920,9 @@ void CFEM_DG_EulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_con
               const su2double SoundSpeed2 = FluidModel->GetSoundSpeed2();
               const su2double SoundSpeed  = sqrt(fabs(SoundSpeed2));
 
-              const su2double radx     = fabs(u-gridVel[0]) + SoundSpeed;
-              const su2double rady     = fabs(v-gridVel[1]) + SoundSpeed;
-              const su2double radz     = fabs(w-gridVel[2]) + SoundSpeed;
+              const su2double radx     = fabs(u-gridVelX[i]) + SoundSpeed;
+              const su2double rady     = fabs(v-gridVelY[i]) + SoundSpeed;
+              const su2double radz     = fabs(w-gridVelZ[i]) + SoundSpeed;
               const su2double charVel2 = radx*radx + rady*rady + radz*radz;
 
               charVel2Max = max(charVel2Max, charVel2);
@@ -4956,6 +4961,12 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+    /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
+       THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelY = gridVelX + nDOFs;
+
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
     for(unsigned short i=0; i<nDOFs; ++i) {
 
@@ -4965,12 +4976,6 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
       const su2double *solDOF     = sol      + offDOF;
       su2double *fluxX            = fluxXDOF + offDOF;
       su2double *fluxY            = fluxYDOF + offDOF;
-
-      /* Set the pointer to the grid velocities at the location of the
-         solution DOFS. THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
-         MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocitiesSolDOFs.data() + 2*i; /* nDim*i. */
 
       /* Compute the velocities and pressure in this DOF. */
       const su2double DensityInv   = 1.0/solDOF[0];
@@ -4982,14 +4987,14 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
       const su2double Pressure = FluidModel->GetPressure();
 
       /* The Cartesian fluxes in the x-direction. */
-      const su2double uRel = u - gridVel[0];
+      const su2double uRel = u - gridVelX[i];
       fluxX[0] = solDOF[0]*uRel;
       fluxX[1] = solDOF[1]*uRel + Pressure;
       fluxX[2] = solDOF[2]*uRel;
       fluxX[3] = solDOF[3]*uRel + Pressure*u;
 
       /* The Cartesian fluxes in the y-direction. */
-      const su2double vRel = v - gridVel[1];
+      const su2double vRel = v - gridVelY[i];
       fluxY[0] = solDOF[0]*vRel;
       fluxY[1] = solDOF[1]*vRel;
       fluxY[2] = solDOF[2]*vRel + Pressure;
@@ -5145,6 +5150,13 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
   /*--- Loop over the number of entities that are treated simultaneously. */
   for(unsigned short simul=0; simul<nSimul; ++simul) {
 
+    /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
+       THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelY = gridVelX + nDOFs;
+    const su2double *gridVelZ = gridVelY + nDOFs;
+
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
     for(unsigned short i=0; i<nDOFs; ++i) {
 
@@ -5155,12 +5167,6 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
       su2double *fluxX            = fluxXDOF + offDOF;
       su2double *fluxY            = fluxYDOF + offDOF;
       su2double *fluxZ            = fluxZDOF + offDOF;
-
-      /* Set the pointer to the grid velocities at the location of the
-         solution DOFS. THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
-         MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocitiesSolDOFs.data() + 3*i; /* nDim*i. */
 
       /* Compute the velocities and pressure in this DOF. */
       const su2double DensityInv   = 1.0/solDOF[0];
@@ -5173,7 +5179,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
       const su2double Pressure = FluidModel->GetPressure();
 
       /* The Cartesian fluxes in the x-direction. */
-      const su2double uRel = u - gridVel[0];
+      const su2double uRel = u - gridVelX[i];
       fluxX[0] = solDOF[0]*uRel;
       fluxX[1] = solDOF[1]*uRel + Pressure;
       fluxX[2] = solDOF[2]*uRel;
@@ -5181,7 +5187,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
       fluxX[4] = solDOF[4]*uRel + Pressure*u;
 
       /* The Cartesian fluxes in the y-direction. */
-      const su2double vRel = v - gridVel[1];
+      const su2double vRel = v - gridVelY[i];
       fluxY[0] = solDOF[0]*vRel;
       fluxY[1] = solDOF[1]*vRel;
       fluxY[2] = solDOF[2]*vRel + Pressure;
@@ -5189,7 +5195,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
       fluxY[4] = solDOF[4]*vRel + Pressure*v;
 
       /* The Cartesian fluxes in the z-direction. */
-      const su2double wRel = w - gridVel[2];
+      const su2double wRel = w - gridVelZ[i];
       fluxZ[0] = solDOF[0]*wRel;
       fluxZ[1] = solDOF[1]*wRel;
       fluxZ[2] = solDOF[2]*wRel;
@@ -5384,6 +5390,12 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
     const su2double *dsdx = drdy + nInt;
     const su2double *dsdy = dsdx + nInt;
 
+    /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
+       THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelY = gridVelX + nInt;
+
     /*--- Loop over the integration points. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
 
@@ -5411,12 +5423,6 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
       FluidModel->SetTDState_rhoe(rho, StaticEnergy);
       const su2double Pressure = FluidModel->GetPressure();
       const su2double Htot     = rhoInv*(rE + Pressure);
-
-      /* Set the pointer to the grid velocities in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocities.data() + 2*i; /* nDim*i. */
 
       /* Compute the Cartesian gradients of the independent solution
          variables from the gradients in parametric coordinates and the
@@ -5452,13 +5458,13 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
       /* Compute the divergence terms for this integration point,
          multiplied by the integration weight. */
       divFluxInt[0] = weights[i]*(abv1 - rho*divGridVel
-                    -             gridVel[0]*drhodx - gridVel[1]*drhody);
+                    -             gridVelX[i]*drhodx - gridVelY[i]*drhody);
       divFluxInt[1] = weights[i]*(dpdx + u*(abv1 - abv2 + drudx) + v*drudy
-                    -             ru*divGridVel - gridVel[0]*drudx - gridVel[1]*drudy);
+                    -             ru*divGridVel - gridVelX[i]*drudx - gridVelY[i]*drudy);
       divFluxInt[2] = weights[i]*(dpdy + v*(abv1 - abv2 + drvdy) + u*drvdx
-                    -             rv*divGridVel - gridVel[0]*drvdx - gridVel[1]*drvdy);
+                    -             rv*divGridVel - gridVelX[i]*drvdx - gridVelY[i]*drvdy);
       divFluxInt[3] = weights[i]*(abv3 + Htot*(abv1 - abv2) - rE*divGridVel
-                    -             gridVel[0]*drEdx - gridVel[1]*drEdy);
+                    -             gridVelX[i]*drEdx - gridVelY[i]*drEdy);
 
       /* Add the body force to the flux divergence for the momentum and energy
          equation. Note that the source terms are multiplied with minus the
@@ -5541,6 +5547,13 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
     const su2double *dtdy = dtdx + nInt;
     const su2double *dtdz = dtdy + nInt;
 
+    /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
+       THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelY = gridVelX + nInt;
+    const su2double *gridVelZ = gridVelY + nInt;
+
     /* Set the pointers to the location where the solution and the divergence
        of the 1st DOF of this entity is stored, such that this offset does not
        need to be taken into account anymore in the loop over the integration
@@ -5577,12 +5590,6 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
       FluidModel->SetTDState_rhoe(rho, StaticEnergy);
       const su2double Pressure = FluidModel->GetPressure();
       const su2double Htot     = rhoInv*(rE + Pressure);
-
-      /* Set the pointer to the grid velocities in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocities.data() + 3*i; /* nDim*i. */
 
       /* Compute the Cartesian gradients of the independent solution
          variables from the gradients in parametric coordinates and the
@@ -5628,15 +5635,15 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
       /* Compute the divergence terms for this integration point,
          multiplied by the integration weight. */
       divFluxInt[0] = weights[i]*(abv1 - rho*divGridVel
-                    -             gridVel[0]*drhodx - gridVel[1]*drhody - gridVel[2]*drhodz);
+                    -             gridVelX[i]*drhodx - gridVelY[i]*drhody - gridVelZ[i]*drhodz);
       divFluxInt[1] = weights[i]*(dpdx + u*(abv1 - abv2 + drudx) + v*drudy + w*drudz
-                    -             ru*divGridVel - gridVel[0]*drudx - gridVel[1]*drudy - gridVel[2]*drudz);
+                    -             ru*divGridVel - gridVelX[i]*drudx - gridVelY[i]*drudy - gridVelZ[i]*drudz);
       divFluxInt[2] = weights[i]*(dpdy + v*(abv1 - abv2 + drvdy) + u*drvdx + w*drvdz
-                    -             rv*divGridVel - gridVel[0]*drvdx - gridVel[1]*drvdy - gridVel[2]*drvdz);
+                    -             rv*divGridVel - gridVelX[i]*drvdx - gridVelY[i]*drvdy - gridVelZ[i]*drvdz);
       divFluxInt[3] = weights[i]*(dpdz + w*(abv1 - abv2 + drwdz) + u*drwdx + v*drwdy
-                    -             rw*divGridVel - gridVel[0]*drwdx - gridVel[1]*drwdy - gridVel[2]*drwdz);
+                    -             rw*divGridVel - gridVelX[i]*drwdx - gridVelY[i]*drwdy - gridVelZ[i]*drwdz);
       divFluxInt[4] = weights[i]*(abv3 + Htot*(abv1 - abv2) - rE*divGridVel
-                    -             gridVel[0]*drEdx - gridVel[1]*drEdy - gridVel[2]*drEdz);
+                    -             gridVelX[i]*drEdx - gridVelY[i]*drEdy - gridVelZ[i]*drEdz);
 
       /* Add the body force to the flux divergence for the momentum and energy
          equation. Note that the source terms are multiplied with minus the
@@ -5858,12 +5865,13 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
           const su2double *dsdx = drdy + nInt;
           const su2double *dsdy = dsdx + nInt;
 
+          /* Set the pointers for the grid velocities. */
+          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelY = gridVelX + nInt;
+
           /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
-
-            /* Easier storage of the grid velocities in this integration point. */
-            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
 
             /* Compute the metric terms multiplied by minus the integration weight.
                The minus sign comes from the integration by parts in the weak
@@ -5890,8 +5898,8 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
             const su2double Pressure = FluidModel->GetPressure();
 
             /* Compute the relative velocities w.r.t. the grid. */
-            const su2double uRel = u - gridVel[0];
-            const su2double vRel = v - gridVel[1];
+            const su2double uRel = u - gridVelX[i];
+            const su2double vRel = v - gridVelY[i];
 
             /* Set the pointer for the fluxes in this integration point. */
             su2double *flux = fluxes + nDim*iNPad + llNVar;
@@ -5938,7 +5946,7 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
 
       case 3: {
 
-        /* 2D simulation. Loop over the chunk of elements. */
+        /* 3D simulation. Loop over the chunk of elements. */
         for(unsigned short ll=0; ll<llEnd; ++ll) {
           const unsigned short llNVar = ll*nVar;
           const unsigned long  lInd   = l + ll;
@@ -5955,12 +5963,14 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
           const su2double *dtdy = dtdx + nInt;
           const su2double *dtdz = dtdy + nInt;
 
+          /* Set the pointers for the grid velocities. */
+          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelY = gridVelX + nInt;
+          const su2double *gridVelZ = gridVelY + nInt;
+
           /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
-
-            /* Easier storage of the grid velocities in this integration point. */
-            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
 
             /* Compute the metric terms multiplied by minus the integration weight.
                The minus sign comes from the integration by parts in the weak
@@ -5994,9 +6004,9 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
             const su2double Pressure = FluidModel->GetPressure();
 
             /* Compute the relative velocities w.r.t. the grid. */
-            const su2double uRel = u - gridVel[0];
-            const su2double vRel = v - gridVel[1];
-            const su2double wRel = w - gridVel[2];
+            const su2double uRel = u - gridVelX[i];
+            const su2double vRel = v - gridVelY[i];
+            const su2double wRel = w - gridVelZ[i];
 
             /* Set the pointer for the fluxes in this integration point. */
             su2double *flux = fluxes + nDim*iNPad + llNVar;
@@ -10584,6 +10594,10 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               const su2double *dsdxDOF = drdyDOF + nDOFs;
               const su2double *dsdyDOF = dsdxDOF + nDOFs;
 
+              /* Set the pointers for the grid velocities. */
+              const su2double *gridVelX = volElem[lInd].gridVelocitiesSolDOFs.data();
+              const su2double *gridVelY = gridVelX + nDOFs;
+
               /* Compute the length scale of this element and initialize the
                  inviscid and viscous spectral radii to zero. */
               const su2double lenScaleInv = nPoly/volElem[lInd].lenScale;
@@ -10595,8 +10609,6 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               for(unsigned short i=0; i<nDOFs; ++i) {
                 const su2double *solDOF  = VecSolDOFs.data()
                                          + nVar*(volElem[lInd].offsetDOFsSolLocal + i);
-                const su2double *gridVel = volElem[lInd].gridVelocitiesSolDOFs.data()
-                                         + i*nDim;
 
                 /* Compute the velocities and the internal energy per unit mass. */
                 const su2double DensityInv   = 1.0/solDOF[0];
@@ -10610,8 +10622,8 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
                 const su2double SoundSpeed2 = FluidModel->GetSoundSpeed2();
                 const su2double SoundSpeed  = sqrt(fabs(SoundSpeed2));
 
-                const su2double radx     = fabs(u-gridVel[0]) + SoundSpeed;
-                const su2double rady     = fabs(v-gridVel[1]) + SoundSpeed;
+                const su2double radx     = fabs(u-gridVelX[i]) + SoundSpeed;
+                const su2double rady     = fabs(v-gridVelY[i]) + SoundSpeed;
                 const su2double charVel2 = radx*radx + rady*rady;
 
                 charVel2Max = max(charVel2Max, charVel2);
@@ -10710,6 +10722,11 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               const su2double *dtdyDOF = dtdxDOF + nDOFs;
               const su2double *dtdzDOF = dtdyDOF + nDOFs;
 
+              /* Set the pointers for the grid velocities. */
+              const su2double *gridVelX = volElem[lInd].gridVelocitiesSolDOFs.data();
+              const su2double *gridVelY = gridVelX + nDOFs;
+              const su2double *gridVelZ = gridVelY + nDOFs;
+
               /* Compute the length scale of this element and initialize the
                  inviscid and viscous spectral radii to zero. */
               const su2double lenScaleInv = nPoly/volElem[lInd].lenScale;
@@ -10721,8 +10738,6 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               for(unsigned short i=0; i<nDOFs; ++i) {
                 const su2double *solDOF  = VecSolDOFs.data()
                                          + nVar*(volElem[lInd].offsetDOFsSolLocal + i);
-                const su2double *gridVel = volElem[lInd].gridVelocitiesSolDOFs.data()
-                                         + i*nDim;
 
                 /* Compute the velocities and the internal energy per unit mass. */
                 const su2double DensityInv   = 1.0/solDOF[0];
@@ -10737,9 +10752,9 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
                 const su2double SoundSpeed2 = FluidModel->GetSoundSpeed2();
                 const su2double SoundSpeed  = sqrt(fabs(SoundSpeed2));
 
-                const su2double radx     = fabs(u-gridVel[0]) + SoundSpeed;
-                const su2double rady     = fabs(v-gridVel[1]) + SoundSpeed;
-                const su2double radz     = fabs(w-gridVel[2]) + SoundSpeed;
+                const su2double radx     = fabs(u-gridVelX[i]) + SoundSpeed;
+                const su2double rady     = fabs(v-gridVelY[i]) + SoundSpeed;
+                const su2double radz     = fabs(w-gridVelZ[i]) + SoundSpeed;
                 const su2double charVel2 = radx*radx + rady*rady + radz*radz;
 
                 charVel2Max = max(charVel2Max, charVel2);
@@ -10942,6 +10957,12 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
     const su2double *dsdxDOF = drdyDOF + nDOFs;
     const su2double *dsdyDOF = dsdxDOF + nDOFs;
 
+    /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
+       FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelY = gridVelX + nDOFs;
+
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
     for(unsigned short i=0; i<nDOFs; ++i) {
 
@@ -10953,12 +10974,6 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
       const su2double *solDOFDs   = solDOFDr    + offDerivSol;
       su2double *fluxX            = fluxXDOF    + offDOF;
       su2double *fluxY            = fluxYDOF    + offDOF;
-
-      /* Set the pointer to the grid velocities at the location of the
-         solution DOFS. THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
-         MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocitiesSolDOFs.data() + 2*i; /* nDim*i. */
 
       /* Compute the true value of the metric terms in this DOF. Note that in
          metricTerms the metric terms scaled by the Jacobian are stored. */
@@ -11025,14 +11040,14 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
       const su2double tauxy = Viscosity*(dudy + dvdx);
 
       /* The Cartesian fluxes in the x-direction. */
-      const su2double uRel = u - gridVel[0];
+      const su2double uRel = u - gridVelX[i];
       fluxX[0] = solDOF[0]*uRel;
       fluxX[1] = solDOF[1]*uRel + Pressure - tauxx;
       fluxX[2] = solDOF[2]*uRel - tauxy;
       fluxX[3] = solDOF[3]*uRel + Pressure*u - kOverCv*dedx - u*tauxx - v*tauxy;;
 
       /* The Cartesian fluxes in the y-direction. */
-      const su2double vRel = v - gridVel[1];
+      const su2double vRel = v - gridVelY[i];
       fluxY[0] = solDOF[0]*vRel;
       fluxY[1] = solDOF[1]*vRel - tauxy;
       fluxY[2] = solDOF[2]*vRel + Pressure - tauyy;
@@ -11221,6 +11236,13 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
     const su2double *dtdyDOF = dtdxDOF + nDOFs;
     const su2double *dtdzDOF = dtdyDOF + nDOFs;
 
+    /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
+       FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelY = gridVelX + nDOFs;
+    const su2double *gridVelZ = gridVelY + nDOFs;
+
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
     for(unsigned short i=0; i<nDOFs; ++i) {
 
@@ -11234,12 +11256,6 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
       su2double *fluxX            = fluxXDOF    + offDOF;
       su2double *fluxY            = fluxYDOF    + offDOF;
       su2double *fluxZ            = fluxZDOF    + offDOF;
-
-      /* Set the pointer to the grid velocities at the location of the
-         solution DOFS. THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
-         MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocitiesSolDOFs.data() + 3*i; /* nDim*i. */
 
       /* Compute the true value of the metric terms in this DOF. Note that in
          metricTerms the metric terms scaled by the Jacobian are stored. */
@@ -11334,7 +11350,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
       const su2double tauyz = Viscosity*(dvdz + dwdy);
 
       /* The Cartesian fluxes in the x-direction. */
-      const su2double uRel = u - gridVel[0];
+      const su2double uRel = u - gridVelX[i];
       fluxX[0] = solDOF[0]*uRel;
       fluxX[1] = solDOF[1]*uRel + Pressure - tauxx;
       fluxX[2] = solDOF[2]*uRel - tauxy;
@@ -11342,7 +11358,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
       fluxX[4] = solDOF[4]*uRel + Pressure*u - kOverCv*dedx - u*tauxx - v*tauxy - w*tauxz;
 
       /* The Cartesian fluxes in the y-direction. */
-      const su2double vRel = v - gridVel[1];
+      const su2double vRel = v - gridVelY[i];
       fluxY[0] = solDOF[0]*vRel;
       fluxY[1] = solDOF[1]*vRel - tauxy;
       fluxY[2] = solDOF[2]*vRel + Pressure - tauyy;
@@ -11350,7 +11366,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
       fluxY[4] = solDOF[4]*vRel + Pressure*v - kOverCv*dedy - u*tauxy - v*tauyy - w*tauyz;
 
       /* The Cartesian fluxes in the z-direction. */
-      const su2double wRel = w - gridVel[2];
+      const su2double wRel = w - gridVelZ[i];
       fluxZ[0] = solDOF[0]*wRel;
       fluxZ[1] = solDOF[1]*wRel - tauxz;
       fluxZ[2] = solDOF[2]*wRel - tauyz;
@@ -11577,6 +11593,12 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
     const su2double *dsdxInt = drdyInt + nInt;
     const su2double *dsdyInt = dsdxInt + nInt;
 
+    /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
+       FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelY = gridVelX + nInt;
+
     /*--- Loop over the integration points. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
 
@@ -11614,12 +11636,6 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
       /* Compute the laminar viscosity and its derivative w.r.t. temperature. */
       const su2double ViscosityLam = FluidModel->GetLaminarViscosity();
       const su2double dViscLamdT   = FluidModel->GetdmudT_rho();
-
-      /* Set the pointer to the grid velocities in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocities.data() + 2*i; /* nDim*i. */
 
       /* Compute the true metric terms. Note in metricTerms the actual metric
          terms multiplied by the Jacobian are stored. */
@@ -11784,21 +11800,21 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
       su2double *divFluxInt     = divFlux + offInt;
 
       divFluxInt[0] = weightJac*(abv1 - rho*divGridVel
-                    -            gridVel[0]*drhodx - gridVel[1]*drhody);
+                    -            gridVelX[i]*drhodx - gridVelY[i]*drhody);
       divFluxInt[1] = weightJac*(dpdx + u*(abv1-abv2) - lambdaOverMu*abv4*dViscDx
                     +            u*drudx + v*drudy
                     -            lambdaOverMu*Viscosity*(d2udxdx + d2vdxdy)
                     -            Viscosity*(2.0*d2udxdx + d2udydy + d2vdxdy)
                     -            2.0*dViscDx*dudx - dViscDy*(dudy+dvdx)
                     -            ru*divGridVel
-                    -            gridVel[0]*drudx - gridVel[1]*drudy);
+                    -            gridVelX[i]*drudx - gridVelY[i]*drudy);
       divFluxInt[2] = weightJac*(dpdy + v*(abv1-abv2) - lambdaOverMu*abv4*dViscDy
                     +            u*drvdx + v*drvdy
                     -            lambdaOverMu*Viscosity*(d2udxdy + d2vdydy)
                     -            Viscosity*(2.0*d2vdydy + d2vdxdx + d2udxdy)
                     -            dViscDx*(dudy + dvdx) - 2.0*dViscDy*dvdy
                     -            rv*divGridVel
-                    -            gridVel[0]*drvdx - gridVel[1]*drvdy);
+                    -            gridVelX[i]*drvdx - gridVelY[i]*drvdy);
       divFluxInt[3] = weightJac*(abv3 + Htot*(abv1 - abv2)
                     -            abv4*lambdaOverMu*(Viscosity*abv4 + u*dViscDx + v*dViscDy)
                     -            dkOverCvdx*dedx - dkOverCvdy*dedy - kOverCv*(d2edxdx + d2edydy)
@@ -11808,7 +11824,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
                     -            Viscosity*u*(d2udxdx+d2udydy + (1.0+lambdaOverMu)*(d2udxdx+d2vdxdy))
                     -            Viscosity*v*(d2vdxdx+d2vdydy + (1.0+lambdaOverMu)*(d2udxdy+d2vdydy))
                     -            rE*divGridVel
-                    -            gridVel[0]*drEdx - gridVel[1]*drEdy);
+                    -            gridVelX[i]*drEdx - gridVelY[i]*drEdy);
 
       /* Add the body force to the flux divergence for the momentum and energy
          equation. Note that the source terms are multiplied with minus the
@@ -11925,6 +11941,13 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
     const su2double *dtdyInt = dtdxInt + nInt;
     const su2double *dtdzInt = dtdyInt + nInt;
 
+    /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
+       IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
+       FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
+    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelY = gridVelX + nInt;
+    const su2double *gridVelZ = gridVelY + nInt;
+
     /*--- Loop over the integration points. ---*/
     for(unsigned short i=0; i<nInt; ++i) {
 
@@ -11968,12 +11991,6 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
        /* Compute the laminar viscosity and its derivative w.r.t. temperature. */
       const su2double ViscosityLam = FluidModel->GetLaminarViscosity();
       const su2double dViscLamdT   = FluidModel->GetdmudT_rho();
-
-      /* Set the pointer to the grid velocities in this integration point.
-         THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
-         THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
-         INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *gridVel = elem->gridVelocities.data() + 3*i; /* nDim*i. */
 
       /* Compute the true metric terms. Note in metricTerms the actual metric
          terms multiplied by the Jacobian are stored. */
@@ -12287,29 +12304,29 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
       const su2double weightJac = weights[i]*JacInt[i];
       su2double *divFluxInt     = divFlux + offInt;
 
-      divFluxInt[0] = weightJac*(abv1 - rho*divGridVel - gridVel[0]*drhodx
-                    -            gridVel[1]*drhody - gridVel[2]*drhodz);
+      divFluxInt[0] = weightJac*(abv1 - rho*divGridVel - gridVelX[i]*drhodx
+                    -            gridVelY[i]*drhody - gridVelZ[i]*drhodz);
       divFluxInt[1] = weightJac*(dpdx + u*(abv1-abv2) - lambdaOverMu*abv4*dViscDx
                     +            u*drudx + v*drudy + w*drudz
                     -            lambdaOverMu*Viscosity*(d2udxdx + d2vdxdy + d2wdxdz)
                     -            Viscosity*(2.0*d2udxdx + d2udydy + d2vdxdy + d2udzdz + d2wdxdz)
                     -            2.0*dViscDx*dudx - dViscDy*(dudy+dvdx) - dViscDz*(dudz+dwdx)
                     -            ru*divGridVel
-                    -            gridVel[0]*drudx - gridVel[1]*drudy - gridVel[2]*drudz);
+                    -            gridVelX[i]*drudx - gridVelY[i]*drudy - gridVelZ[i]*drudz);
       divFluxInt[2] = weightJac*(dpdy + v*(abv1-abv2) - lambdaOverMu*abv4*dViscDy
                     +            u*drvdx + v*drvdy + w*drvdz
                     -            lambdaOverMu*Viscosity*(d2udxdy + d2vdydy + d2wdydz)
                     -            Viscosity*(d2udxdy + d2vdxdx + 2.0*d2vdydy + d2vdzdz + d2wdydz)
                     -            dViscDx*(dudy + dvdx) - 2.0*dViscDy*dvdy - dViscDz*(dvdz+dwdy)
                     -            rv*divGridVel
-                    -            gridVel[0]*drvdx - gridVel[1]*drvdy - gridVel[2]*drvdz);
+                    -            gridVelX[i]*drvdx - gridVelY[i]*drvdy - gridVelZ[i]*drvdz);
       divFluxInt[3] = weightJac*(dpdz + w*(abv1-abv2) - lambdaOverMu*abv4*dViscDz
                     +            u*drwdx + v*drwdy + w*drwdz
                     -            lambdaOverMu*Viscosity*(d2udxdz + d2vdydz + d2wdzdz)
                     -            Viscosity*(d2udxdz + d2wdxdx + d2vdydz + d2wdydy + 2.0*d2wdzdz)
                     -            dViscDx*(dudz+dwdx) - dViscDy*(dvdz+dwdy) - 2.0*dViscDz*dwdz
                     -            rw*divGridVel
-                    -            gridVel[0]*drwdx - gridVel[1]*drwdy - gridVel[2]*drwdz);
+                    -            gridVelX[i]*drwdx - gridVelY[i]*drwdy - gridVelZ[i]*drwdz);
       divFluxInt[4] = weightJac*(abv3 + Htot*(abv1 - abv2)
                     -            abv4*lambdaOverMu*(Viscosity*abv4 + u*dViscDx + v*dViscDy + w*dViscDz)
                     -            dkOverCvdx*dedx - dkOverCvdy*dedy - dkOverCvdz*dedz
@@ -12324,7 +12341,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
                     -            Viscosity*v*(d2vdxdx+d2vdydy+d2vdzdz + (1.0+lambdaOverMu)*(d2udxdy+d2vdydy+d2wdydz))
                     -            Viscosity*w*(d2wdxdx+d2wdydy+d2wdzdz + (1.0+lambdaOverMu)*(d2udxdz+d2vdydz+d2wdzdz))
                     -            rE*divGridVel
-                    -            gridVel[0]*drEdx - gridVel[1]*drEdy - gridVel[2]*drEdz);
+                    -            gridVelX[i]*drEdx - gridVelY[i]*drEdy - gridVelZ[i]*drEdz);
 
       /* Add the body force to the flux divergence for the momentum and energy
          equation. Note that the source terms are multiplied with minus the
@@ -12424,6 +12441,9 @@ void CFEM_DG_NSSolver::Shock_Capturing_DG_Persson(const unsigned long elemBeg,
     const su2double *solDOFs = VecWorkSolDOFs[timeLevel].data()
                              + nVar*volElem[l].offsetDOFsSolThisTimeLevel;
 
+    /* Easier storage of the pointer for the grid velocities. */
+    const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data();
+
     /* Temporary storage of mach number for DOFs in this element. */
     su2double *machSolDOFs = workArray;
     su2double *vecTemp     = machSolDOFs + nDOFs;
@@ -12433,13 +12453,12 @@ void CFEM_DG_NSSolver::Shock_Capturing_DG_Persson(const unsigned long elemBeg,
     for(unsigned short iInd=0; iInd<nDOFs; ++iInd) {
 
       const su2double *sol     = solDOFs + iInd*nVar;
-      const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + iInd*nDim;
       DensityInv = 1.0/sol[0];
       Velocity2 = 0.0;
       Velocity2Rel = 0.0;
       for(unsigned short iDim=1; iDim<=nDim; ++iDim) {
         const su2double vel    = sol[iDim]*DensityInv;
-        const su2double velRel = vel - gridVel[iDim-1];
+        const su2double velRel = vel - gridVel[iInd+(iDim-1)*nDOFs];
         Velocity2    += vel*vel;
         Velocity2Rel += velRel*velRel;
       }
@@ -12616,7 +12635,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
     const unsigned short offDeriv = NPad*nInt;
 
     /* Make a distinction between two and three space dimensions
-        in order to have the most efficient code. */
+       in order to have the most efficient code. */
     switch( nDim ) {
 
       case 2: {
@@ -12633,16 +12652,17 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
           const su2double *dsdxInt = drdyInt + nInt;
           const su2double *dsdyInt = dsdxInt + nInt;
 
+          /* Easier storage of the grid velocities. */
+          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelY = gridVelX + nInt;
+
           /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
 
-            /* Easier storage of the grid velocities in this integration
-               point and compute the inverse of the Jacobian. */
-            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
-            const su2double JacInv   = 1.0/JacInt[i];
-
             /* Compute the true metric terms in this integration point. */
+            const su2double JacInv = 1.0/JacInt[i];
+
             const su2double drdx = JacInv*drdxInt[i];
             const su2double drdy = JacInv*drdyInt[i];
 
@@ -12734,8 +12754,8 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
             const su2double qy = kOverCv*dStaticEnergyDy;
 
             /* Compute the relative velocities w.r.t. the grid. */
-            const su2double uRel = u - gridVel[0];
-            const su2double vRel = v - gridVel[1];
+            const su2double uRel = u - gridVelX[i];
+            const su2double vRel = v - gridVelY[i];
 
             /* Compute the viscous normal stress minus the pressure. */
             const su2double tauxxMP = tauxx - Pressure;
@@ -12805,16 +12825,18 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
           const su2double *dtdyInt = dtdxInt + nInt;
           const su2double *dtdzInt = dtdyInt + nInt;
 
+          /* Easier storage of the grid velocities. */
+          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelY = gridVelX + nInt;
+          const su2double *gridVelZ = gridVelY + nInt;
+
           /* Loop over the integration points of the elements to compute the fluxes. */
           for(unsigned short i=0; i<nInt; ++i) {
             const unsigned short iNPad = i*NPad;
 
-            /* Easier storage of the grid velocities in this integration
-               point and compute the inverse of the Jacobian. */
-            const su2double *gridVel = volElem[lInd].gridVelocities.data() + i*nDim;
-            const su2double JacInv   = 1.0/JacInt[i];
-
             /* Compute the true metric terms in this integration point. */
+            const su2double JacInv = 1.0/JacInt[i];
+
             const su2double drdx = JacInv*drdxInt[i];
             const su2double drdy = JacInv*drdyInt[i];
             const su2double drdz = JacInv*drdzInt[i];
@@ -12942,9 +12964,9 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
             const su2double qz = kOverCv*dStaticEnergyDz;
 
             /* Compute the relative velocities w.r.t. the grid. */
-            const su2double uRel = u - gridVel[0];
-            const su2double vRel = v - gridVel[1];
-            const su2double wRel = w - gridVel[2];
+            const su2double uRel = u - gridVelX[i];
+            const su2double vRel = v - gridVelY[i];
+            const su2double wRel = w - gridVelZ[i];
 
             /* Compute the viscous normal stress minus the pressure. */
             const su2double tauxxMP = tauxx - Pressure;
