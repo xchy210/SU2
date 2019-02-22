@@ -45,7 +45,7 @@ CVanDerWaalsGas::CVanDerWaalsGas() : CIdealGas() {
 
 
 CVanDerWaalsGas::CVanDerWaalsGas(su2double gamma, su2double R, su2double Pstar, su2double Tstar): CIdealGas(gamma, R) {
-    a = 27.0/64.0*Gas_Constant*Gas_Constant*Tstar*Tstar/Pstar;
+  a = 27.0/64.0*Gas_Constant*Gas_Constant*Tstar*Tstar/Pstar;
   b = 1.0/8.0*Gas_Constant*Tstar/Pstar;
   Zed = 1.0;
 
@@ -60,18 +60,18 @@ void CVanDerWaalsGas::SetTDState_rhoe (su2double rho, su2double e ) {
   StaticEnergy = e;
 
   Pressure = Gamma_Minus_One*Density/(1.0-Density*b)*(StaticEnergy + Density*a) - a*Density*Density;
-    Temperature = (Pressure+Density*Density*a)*((1-Density*b)/(Density*Gas_Constant));
-    Entropy = Gas_Constant *( log(Temperature)/Gamma_Minus_One + log(1/Density - b));
+  Temperature = (Pressure+Density*Density*a)*((1-Density*b)/(Density*Gas_Constant));
+  Entropy = Gas_Constant *( log(Temperature)/Gamma_Minus_One + log(1/Density - b));
 
 
-    dPde_rho = Density*Gamma_Minus_One/(1.0 - Density*b);
-    dPdrho_e = Gamma_Minus_One/(1.0 - Density*b)*((StaticEnergy + 2*Density*a) + Density*b*(StaticEnergy + Density*a)/(1.0 - Density*b)) - 2*Density*a;
-    dTdrho_e = Gamma_Minus_One/Gas_Constant*a;
-    dTde_rho = Gamma_Minus_One/Gas_Constant;
+  dPde_rho = Density*Gamma_Minus_One/(1.0 - Density*b);
+  dPdrho_e = Gamma_Minus_One/(1.0 - Density*b)*((StaticEnergy + 2*Density*a) + Density*b*(StaticEnergy + Density*a)/(1.0 - Density*b)) - 2*Density*a;
+  dTdrho_e = Gamma_Minus_One/Gas_Constant*a;
+  dTde_rho = Gamma_Minus_One/Gas_Constant;
 
-    SoundSpeed2 = dPdrho_e + Pressure/(Density*Density)*dPde_rho;
+  SoundSpeed2 = dPdrho_e + Pressure/(Density*Density)*dPde_rho;
 
-    Zed = Pressure/(Gas_Constant*Temperature*Density);
+  Zed = Pressure/(Gas_Constant*Temperature*Density);
 }
 
 
@@ -82,10 +82,10 @@ void CVanDerWaalsGas::SetTDState_PT (su2double P, su2double T ) {
   A= a*P/(T*Gas_Constant)/(T*Gas_Constant);
   B= b*P/(T*Gas_Constant);
 
-	if (Zed > 0.1)
-		Z=min(Zed, 0.99);
-	else
-		Z=0.99;
+  if (Zed > 0.1)
+    Z=min(Zed, 0.99);
+  else
+    Z=0.99;
 
   do{
     F = Z*Z*Z - Z*Z*(B+1.0) + Z*A - A*B;
@@ -104,13 +104,10 @@ void CVanDerWaalsGas::SetTDState_PT (su2double P, su2double T ) {
   if (Z <= 1.01 && Z >= 0.05 && count < nmax)
     Zed = Z;
 
-
   Density = P/(Zed*Gas_Constant*T);
 
-    su2double e = T*Gas_Constant/Gamma_Minus_One - a*Density;
+  su2double e = T*Gas_Constant/Gamma_Minus_One - a*Density;
   SetTDState_rhoe(Density, e);
-
-
 
 }
 
@@ -153,7 +150,7 @@ void CVanDerWaalsGas::SetTDState_hs (su2double h, su2double s ) {
     }
 
 
-    // rtbis algorithm NR
+  // rtbis algorithm NR
 
   f=fx1;
   fmid=fx2;
@@ -203,45 +200,44 @@ void CVanDerWaalsGas::SetTDState_rhoT (su2double rho, su2double T) {
 
 void CVanDerWaalsGas::SetTDState_Ps (su2double P, su2double s) {
 
-	su2double T, rho, cons_P, cons_s;
-	su2double x1,x2, fx1, fx2,f, fmid, T1,T2, rtb, dx, xmid;
-	su2double toll = 1e-5, FACTOR=0.2;
-	unsigned short count=0, NTRY=100, ITMAX=100;
+  su2double T, rho, cons_P, cons_s;
+  su2double x1,x2, fx1, fx2,f, fmid, T1,T2, rtb, dx, xmid;
+  su2double toll = 1e-5, FACTOR=0.2;
+  unsigned short count=0, NTRY=100, ITMAX=100;
 
   T   = exp(Gamma_Minus_One/Gamma* (s/Gas_Constant +log(P) -log(Gas_Constant)) );
-    rho = P/(T*Gas_Constant);
+  rho = P/(T*Gas_Constant);
 
-    if(Zed<0.9999) {
-      x1 = rho;
-      x2 = rho/Zed;
+  if(Zed<0.9999) {
+    x1 = rho;
+    x2 = rho/Zed;
 
-    }else {
-      x1 = rho;
-      x2 = rho/0.5;
+  }else {
+    x1 = rho;
+    x2 = rho/0.5;
+  }
+  T1 = (P+x1*x1*a)*((1-x1*b)/(x1*Gas_Constant));
+  fx1 = Gas_Constant *( log(T1)/Gamma_Minus_One + log(1/x1 - b)) - s;
+  T2 = (P+x2*x2*a)*((1-x2*b)/(x2*Gas_Constant));
+  fx2 = Gas_Constant *( log(T2)/Gamma_Minus_One + log(1/x2 - b)) - s;
+
+  // zbrac algorithm NR
+
+  for (int j=1;j<=NTRY;j++) {
+    if (fx1*fx2 > 0.0) {
+      if (fabs(fx1) < fabs(fx2)) {
+        x1 += FACTOR*(x1-x2);
+        T1 = (P+x1*x1*a)*((1-x1*b)/(x1*Gas_Constant));
+        fx1 = Gas_Constant *( log(T1)/Gamma_Minus_One + log(1/x1 - b)) - s;
+      }else {
+        x2 += FACTOR*(x2-x1);
+          T2 = (P+x2*x2*a)*((1-x2*b)/(x2*Gas_Constant));
+          fx2 = Gas_Constant *( log(T2)/Gamma_Minus_One + log(1/x2 - b)) - s;
+        }
     }
-    T1 = (P+x1*x1*a)*((1-x1*b)/(x1*Gas_Constant));
-    fx1 = Gas_Constant *( log(T1)/Gamma_Minus_One + log(1/x1 - b)) - s;
-    T2 = (P+x2*x2*a)*((1-x2*b)/(x2*Gas_Constant));
-    fx2 = Gas_Constant *( log(T2)/Gamma_Minus_One + log(1/x2 - b)) - s;
+  }
 
-    // zbrac algorithm NR
-
-    for (int j=1;j<=NTRY;j++) {
-      if (fx1*fx2 > 0.0) {
-        if (fabs(fx1) < fabs(fx2)) {
-          x1 += FACTOR*(x1-x2);
-          T1 = (P+x1*x1*a)*((1-x1*b)/(x1*Gas_Constant));
-          fx1 = Gas_Constant *( log(T1)/Gamma_Minus_One + log(1/x1 - b)) - s;
-        }else {
-          x2 += FACTOR*(x2-x1);
-            T2 = (P+x2*x2*a)*((1-x2*b)/(x2*Gas_Constant));
-            fx2 = Gas_Constant *( log(T2)/Gamma_Minus_One + log(1/x2 - b)) - s;
-          }
-      }
-    }
-
-
-    // rtbis algorithm NR
+  // rtbis algorithm NR
 
   f=fx1;
   fmid=fx2;
@@ -256,11 +252,11 @@ void CVanDerWaalsGas::SetTDState_Ps (su2double P, su2double s) {
     fmid = Gas_Constant *( log(T)/Gamma_Minus_One + log(1/xmid - b)) - s;
     if (fmid <= 0.0) rtb=xmid;
     count++;
-    }while(abs(fmid) > toll && count<ITMAX);
+  }while(abs(fmid) > toll && count<ITMAX);
 
-    if(count==ITMAX) {
-      cout <<"Too many bisections in rtbis" << endl;
-    }
+  if(count==ITMAX) {
+    cout <<"Too many bisections in rtbis" << endl;
+  }
 
 
   rho = xmid;
@@ -274,21 +270,19 @@ void CVanDerWaalsGas::SetTDState_Ps (su2double P, su2double s) {
     cout<< "TD consistency not verified in hs call"<< endl;
   }
 
-
-
 }
 
 
 void CVanDerWaalsGas::ComputeDerivativeNRBC_Prho(su2double P, su2double rho ){
 
-	su2double dPdT_rho,dPdrho_T, dPds_rho;
+  su2double dPdT_rho,dPdrho_T, dPds_rho;
 
-	SetTDState_Prho(P, rho);
+  SetTDState_Prho(P, rho);
 
-	dPdT_rho= Gas_Constant*rho/(1.0 -rho*b);
-	dPdrho_T= Gas_Constant*Temperature/(1.0 -rho*b)/(1.0 -rho*b) -2.0*rho*a;
+  dPdT_rho= Gas_Constant*rho/(1.0 -rho*b);
+  dPdrho_T= Gas_Constant*Temperature/(1.0 -rho*b)/(1.0 -rho*b) -2.0*rho*a;
 
-	dhdrho_P= -dPdrho_e/dPde_rho -P/rho/rho;
+  dhdrho_P= -dPdrho_e/dPde_rho -P/rho/rho;
   dhdP_rho= 1.0/dPde_rho +1.0/rho;
   dPds_rho= rho*rho*(SoundSpeed2 - dPdrho_T)/dPdT_rho;
   dsdP_rho= 1.0/dPds_rho;
@@ -296,3 +290,28 @@ void CVanDerWaalsGas::ComputeDerivativeNRBC_Prho(su2double P, su2double rho ){
 
 }
 
+void CVanDerWaalsGas::GetPressure_from_rhoe(const int       nEntities,
+                                            const su2double *rho,
+                                            const su2double *e,
+                                            su2double       *p) {
+
+  /* Loop over the number of entities and compute the
+     pressure from the density and the internal energy. */
+  for(int i=0; i<nEntities; ++i)
+    p[i] = Gamma_Minus_One*rho[i]/(1.0-rho[i]*b)*(e[i] + rho[i]*a) - a*rho[i]*rho[i];
+}
+
+void CVanDerWaalsGas::GetTemperature_from_rhoe(const int       nEntities,
+                                               const su2double *rho,
+                                               const su2double *e,
+                                               su2double       *T) {
+
+  /* Loop over the number of entities and compute the
+     temperature from the density and internal energy. */
+  for(int i=0; i<nEntities; ++i) {
+    const su2double arho2 = a*rho[i]*rho[i];
+    const su2double brho  = b*rho[i];
+    const su2double p     = Gamma_Minus_One*rho[i]/(1.0-brho)*(e[i] + rho[i]*a) - arho2;
+    T[i] = (p+arho2)*((1-brho)/(rho[i]*Gas_Constant));
+  }
+}

@@ -259,6 +259,9 @@ CFEM_DG_EulerSolver::CFEM_DG_EulerSolver(CGeometry *geometry, CConfig *config, u
     sizeWorkArray = max(sizeWorkArray, sizePredictorADER);
   }
 
+  /*--- Add the required size needed for the performance optimization. ---*/
+  sizeWorkArray += ((nDim+1)*nVar + 4)*max(nIntegrationMax, nDOFsMax);
+
   /*--- Perform the non-dimensionalization for the flow equations using the
         specified reference values. ---*/
   SetNondimensionalization(config, iMesh, true);
@@ -10669,9 +10672,8 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
 
                   /* Compute the eddy viscosity. */
                   const su2double dist = volElem[lInd].wallDistanceSolDOFs[i];
-                  muTurb = SGSModel->ComputeEddyViscosity_2D(solDOF[0], dudx, dudy,
-                                                             dvdx, dvdy, lenScale,
-                                                             dist);
+                  SGSModel->ComputeEddyViscosity_2D(1, solDOF, &dudx, &dudy, &dvdx,
+                                                    &dvdy, lenScale, &dist, &muTurb);
                 }
 
                 /*--- Determine the viscous spectral radius. ---*/
@@ -10821,9 +10823,9 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
 
                   /* Compute the eddy viscosity. */
                   const su2double dist = volElem[lInd].wallDistanceSolDOFs[i];
-                  muTurb = SGSModel->ComputeEddyViscosity_3D(solDOF[0], dudx, dudy, dudz,
-                                                             dvdx, dvdy, dvdz, dwdx, dwdy,
-                                                             dwdz, lenScale, dist);
+                  SGSModel->ComputeEddyViscosity_3D(1, solDOF, &dudx, &dudy, &dudz,
+                                                    &dvdx, &dvdy, &dvdz, &dwdx, &dwdy,
+                                                    &dwdz, lenScale, &dist, &muTurb);
                 }
 
                 /*--- Determine the viscous spectral radius. ---*/
@@ -11019,10 +11021,12 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
 
       /* Compute the eddy viscosity, if needed, and the total viscosity. */
       su2double ViscosityTurb = 0.0;
-      if( SGSModelUsed )
-        ViscosityTurb = SGSModel->ComputeEddyViscosity_2D(solDOF[0], dudx, dudy,
-                                                          dvdx, dvdy, lenScale,
-                                                          elem->wallDistanceSolDOFs[i]);
+      if( SGSModelUsed ) {
+        const su2double dist = elem->wallDistanceSolDOFs[i];
+        SGSModel->ComputeEddyViscosity_2D(1, solDOF, &dudx, &dudy, &dvdx, &dvdy,
+                                          lenScale, &dist, &ViscosityTurb);
+      }
+
       const su2double Viscosity = ViscosityLam + ViscosityTurb;
 
       /* Compute the total thermal conductivity divided by Cv. */
@@ -11324,11 +11328,13 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
 
       /* Compute the eddy viscosity, if needed, and the total viscosity. */
       su2double ViscosityTurb = 0.0;
-      if( SGSModelUsed )
-        ViscosityTurb = SGSModel->ComputeEddyViscosity_3D(solDOF[0], dudx, dudy, dudz,
-                                                          dvdx, dvdy, dvdz, dwdx,
-                                                          dwdy, dwdz, lenScale,
-                                                          elem->wallDistanceSolDOFs[i]);
+      if( SGSModelUsed ) {
+        const su2double dist = elem->wallDistanceSolDOFs[i];
+        SGSModel->ComputeEddyViscosity_3D(1, solDOF, &dudx, &dudy, &dudz, &dvdx,
+                                          &dvdy, &dvdz, &dwdx, &dwdy, &dwdz,
+                                          lenScale, &dist, &ViscosityTurb);
+      }
+
       const su2double Viscosity = ViscosityLam + ViscosityTurb;
 
       /* Compute the total thermal conductivity divided by Cv. */
@@ -11759,13 +11765,13 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
 
       if( SGSModelUsed ) {
         const su2double dist = elem->wallDistance[i];
-        ViscosityTurb = SGSModel->ComputeEddyViscosity_2D(rho, dudx, dudy, dvdx,
-                                                          dvdy, lenScale, dist);
+        SGSModel->ComputeEddyViscosity_2D(1, &rho, &dudx, &dudy, &dvdx, &dvdy,
+                                          lenScale, &dist, &ViscosityTurb);
 
-        SGSModel->ComputeGradEddyViscosity_2D(rho, drhodx, drhody, dudx, dudy,
-                                              dvdx, dvdy, d2udxdx, d2udydy, d2udxdy,
-                                              d2vdxdx, d2vdydy, d2vdxdy, lenScale,
-                                              dist, dViscTurbdx, dViscTurbdy);
+        SGSModel->ComputeGradEddyViscosity_2D(1, &rho, &drhodx, &drhody, &dudx, &dudy,
+                                              &dvdx, &dvdy, &d2udxdx, &d2udydy, &d2udxdy,
+                                              &d2vdxdx, &d2vdydy, &d2vdxdy, lenScale,
+                                              &dist, &dViscTurbdx, &dViscTurbdy);
       }
 
       /* Compute the total viscosity, the total heat conductivity and their
@@ -12256,18 +12262,17 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
 
       if( SGSModelUsed ) {
         const su2double dist = elem->wallDistance[i];
-        ViscosityTurb = SGSModel->ComputeEddyViscosity_3D(rho, dudx, dudy, dudz,
-                                                          dvdx, dvdy, dvdz, dwdx,
-                                                          dwdy, dwdz, lenScale, dist);
+        SGSModel->ComputeEddyViscosity_3D(1, &rho, &dudx, &dudy, &dudz, &dvdx, &dvdy, &dvdz,
+                                          &dwdx, &dwdy, &dwdz, lenScale, &dist, &ViscosityTurb);
 
-        SGSModel->ComputeGradEddyViscosity_3D(rho, drhodx, drhody, drhodz, dudx, dudy,
-                                              dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz,
-                                              d2udxdx, d2udydy, d2udzdz, d2udxdy,
-                                              d2udxdz, d2udydz, d2vdxdx, d2vdydy,
-                                              d2vdzdz, d2vdxdy, d2vdxdz, d2vdydz,
-                                              d2wdxdx, d2wdydy, d2wdzdz, d2wdxdy,
-                                              d2wdxdz, d2wdydz, lenScale, dist,
-                                              dViscTurbdx, dViscTurbdy, dViscTurbdz);
+        SGSModel->ComputeGradEddyViscosity_3D(1, &rho, &drhodx, &drhody, &drhodz, &dudx, &dudy,
+                                              &dudz, &dvdx, &dvdy, &dvdz, &dwdx, &dwdy, &dwdz,
+                                              &d2udxdx, &d2udydy, &d2udzdz, &d2udxdy,
+                                              &d2udxdz, &d2udydz, &d2vdxdx, &d2vdydy,
+                                              &d2vdzdz, &d2vdxdy, &d2vdxdz, &d2vdydz,
+                                              &d2wdxdx, &d2wdydy, &d2wdzdz, &d2wdxdy,
+                                              &d2wdxdz, &d2wdydz, lenScale, &dist,
+                                              &dViscTurbdx, &dViscTurbdy, &dViscTurbdz);
       }
 
       /*--- Compute the total viscosity, the total heat conductivity and their
@@ -12728,9 +12733,9 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
             su2double ViscosityTurb = 0.0;
             if( SGSModelUsed ) {
               const su2double lenScale = volElem[lInd].lenScale/nPoly;
-              ViscosityTurb = SGSModel->ComputeEddyViscosity_2D(sol[0], dudx, dudy,
-                                                                dvdx, dvdy, lenScale,
-                                                                volElem[lInd].wallDistance[i]);
+              const su2double dist     = volElem[lInd].wallDistance[i];
+              SGSModel->ComputeEddyViscosity_2D(1, sol, &dudx, &dudy, &dvdx, &dvdy,
+                                                lenScale, &dist, &ViscosityTurb);
             }
 
             /* Compute the total viscosity and heat conductivity. Note that the heat
@@ -12808,7 +12813,40 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
 
       case 3: {
 
-        /* 3D simulation. Loop over the chunk of elements. */
+        /* 3D simulation. Set the pointers for the help variables
+           to compute the fluxes.*/
+        su2double *rhoInt    = fluxes   + nInt *NPad*nDim;
+        su2double *uInt      = rhoInt   + nInt;
+        su2double *vInt      = uInt     + nInt;
+        su2double *wInt      = vInt     + nInt;
+        su2double *eInt      = wInt     + nInt;
+        su2double *pInt      = eInt     + nInt;
+        su2double *EInt      = pInt     + nInt;
+        su2double *muLamInt  = EInt     + nInt;
+        su2double *muTurbInt = muLamInt + nInt;
+
+        su2double *drhodxInt = muTurbInt + nInt;
+        su2double *dudxInt   = drhodxInt + nInt;
+        su2double *dvdxInt   = dudxInt   + nInt;
+        su2double *dwdxInt   = dvdxInt   + nInt;
+        su2double *dedxInt   = dwdxInt   + nInt;
+
+        su2double *drhodyInt = dedxInt   + nInt;
+        su2double *dudyInt   = drhodyInt + nInt;
+        su2double *dvdyInt   = dudyInt   + nInt;
+        su2double *dwdyInt   = dvdyInt   + nInt;
+        su2double *dedyInt   = dwdyInt   + nInt;
+
+        su2double *drhodzInt = dedyInt   + nInt;
+        su2double *dudzInt   = drhodzInt + nInt;
+        su2double *dvdzInt   = dudzInt   + nInt;
+        su2double *dwdzInt   = dvdzInt   + nInt;
+        su2double *dedzInt   = dwdzInt   + nInt;
+
+        /* Initialize the turbulent viscosity to the default value of zero. */
+        for(unsigned short i=0; i<nInt; ++i) muTurbInt[i] = 0.0;
+
+        /* Loop over the chunk of elements. */
         for(unsigned short ll=0; ll<llEnd; ++ll) {
           const unsigned short llNVar = ll*nVar;
           const unsigned long  lInd   = l + ll;
@@ -12830,9 +12868,35 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
           const su2double *gridVelY = gridVelX + nInt;
           const su2double *gridVelZ = gridVelY + nInt;
 
-          /* Loop over the integration points of the elements to compute the fluxes. */
+          /* Copy the data for this element into the arrays to compute the
+             data for this integration element efficiently. The arrays 
+             for the primitive variables are used for temporary storage. */
           for(unsigned short i=0; i<nInt; ++i) {
-            const unsigned short iNPad = i*NPad;
+
+            /* Easier storage of the location where the solution data of this
+               integration point starts. */
+            const su2double *sol    = solAndGradInt + i*NPad + llNVar;
+            const su2double *dSolDr = sol    + offDeriv;
+            const su2double *dSolDs = dSolDr + offDeriv;
+            const su2double *dSolDt = dSolDs + offDeriv;
+
+            /* Copy the data. */
+            rhoInt[i] = sol[0]; drhodxInt[i] = dSolDr[0]; drhodyInt[i] = dSolDs[0]; drhodzInt[i] = dSolDt[0];
+            uInt[i]   = sol[1]; dudxInt[i]   = dSolDr[1]; dudyInt[i]   = dSolDs[1]; dudzInt[i]   = dSolDt[1];
+            vInt[i]   = sol[2]; dvdxInt[i]   = dSolDr[2]; dvdyInt[i]   = dSolDs[2]; dvdzInt[i]   = dSolDt[2];
+            wInt[i]   = sol[3]; dwdxInt[i]   = dSolDr[3]; dwdyInt[i]   = dSolDs[3]; dwdzInt[i]   = dSolDt[3];
+            EInt[i]   = sol[4]; dedxInt[i]   = dSolDr[4]; dedyInt[i]   = dSolDs[4]; dedzInt[i]   = dSolDt[4];
+          }
+
+          /* Loop over the integration points to compute the primitive variables
+             and the Cartesian gradients of the primitive variables. */
+          for(unsigned short i=0; i<nInt; ++i) {
+
+            /* Compute the primitive variables. */
+            const su2double rhoInv = 1.0/rhoInt[i];
+
+            uInt[i] *= rhoInv; vInt[i] *= rhoInv; wInt[i] *= rhoInv; EInt[i] *= rhoInv;
+            eInt[i]  = EInt[i] - 0.5*(uInt[i]*uInt[i] + vInt[i]*vInt[i] + wInt[i]*wInt[i]);
 
             /* Compute the true metric terms in this integration point. */
             const su2double JacInv = 1.0/JacInt[i];
@@ -12849,6 +12913,66 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
             const su2double dtdy = JacInv*dtdyInt[i];
             const su2double dtdz = JacInv*dtdzInt[i];
 
+            /* Compute the Cartesian gradients of the conservative variables. Note that
+               the arrays for the gradients of the primitive variables contain the
+               parametric gradients of the conservative variables, see above. */
+            const su2double dRhoDx  = drhodxInt[i]*drdx + drhodyInt[i]*dsdx + drhodzInt[i]*dtdx;
+            const su2double dRhoUDx = dudxInt[i]  *drdx + dudyInt[i]  *dsdx + dudzInt[i]  *dtdx;
+            const su2double dRhoVDx = dvdxInt[i]  *drdx + dvdyInt[i]  *dsdx + dvdzInt[i]  *dtdx;
+            const su2double dRhoWDx = dwdxInt[i]  *drdx + dwdyInt[i]  *dsdx + dwdzInt[i]  *dtdx;
+            const su2double dRhoEDx = dedxInt[i]  *drdx + dedyInt[i]  *dsdx + dedzInt[i]  *dtdx;
+
+            const su2double dRhoDy  = drhodxInt[i]*drdy + drhodyInt[i]*dsdy + drhodzInt[i]*dtdy;
+            const su2double dRhoUDy = dudxInt[i]  *drdy + dudyInt[i]  *dsdy + dudzInt[i]  *dtdy;
+            const su2double dRhoVDy = dvdxInt[i]  *drdy + dvdyInt[i]  *dsdy + dvdzInt[i]  *dtdy;
+            const su2double dRhoWDy = dwdxInt[i]  *drdy + dwdyInt[i]  *dsdy + dwdzInt[i]  *dtdy;
+            const su2double dRhoEDy = dedxInt[i]  *drdy + dedyInt[i]  *dsdy + dedzInt[i]  *dtdy;
+
+            const su2double dRhoDz  = drhodxInt[i]*drdz + drhodyInt[i]*dsdz + drhodzInt[i]*dtdz;
+            const su2double dRhoUDz = dudxInt[i]  *drdz + dudyInt[i]  *dsdz + dudzInt[i]  *dtdz;
+            const su2double dRhoVDz = dvdxInt[i]  *drdz + dvdyInt[i]  *dsdz + dvdzInt[i]  *dtdz;
+            const su2double dRhoWDz = dwdxInt[i]  *drdz + dwdyInt[i]  *dsdz + dwdzInt[i]  *dtdz;
+            const su2double dRhoEDz = dedxInt[i]  *drdz + dedyInt[i]  *dsdz + dedzInt[i]  *dtdz;
+
+            /* Compute the Cartesian gradients of the velocities and static energy. */
+            dudxInt[i] = rhoInv*(dRhoUDx - uInt[i]*dRhoDx);
+            dudyInt[i] = rhoInv*(dRhoUDy - uInt[i]*dRhoDy);
+            dudzInt[i] = rhoInv*(dRhoUDz - uInt[i]*dRhoDz);
+
+            dvdxInt[i] = rhoInv*(dRhoVDx - vInt[i]*dRhoDx);
+            dvdyInt[i] = rhoInv*(dRhoVDy - vInt[i]*dRhoDy);
+            dvdzInt[i] = rhoInv*(dRhoVDz - vInt[i]*dRhoDz);
+
+            dwdxInt[i] = rhoInv*(dRhoWDx - wInt[i]*dRhoDx);
+            dwdyInt[i] = rhoInv*(dRhoWDy - wInt[i]*dRhoDy);
+            dwdzInt[i] = rhoInv*(dRhoWDz - wInt[i]*dRhoDz);
+
+            dedxInt[i] = rhoInv*(dRhoEDx - EInt[i]*dRhoDx)
+                       - uInt[i]*dudxInt[i] - vInt[i]*dvdxInt[i] - wInt[i]*dwdxInt[i];
+            dedyInt[i] = rhoInv*(dRhoEDy - EInt[i]*dRhoDy)
+                       - uInt[i]*dudyInt[i] - vInt[i]*dvdyInt[i] - wInt[i]*dwdyInt[i];
+            dedzInt[i] = rhoInv*(dRhoEDz - EInt[i]*dRhoDz)
+                       - uInt[i]*dudzInt[i] - vInt[i]*dvdzInt[i] - wInt[i]*dwdzInt[i];
+          }
+
+          /* Compute the pressure and laminar viscosity in the integration points. */
+          FluidModel->GetPressure_from_rhoe(nInt, rhoInt, eInt, pInt);
+          FluidModel->GetLaminarViscosity_from_rhoe(nInt, rhoInt, eInt, muLamInt);
+
+          /* Compute the eddy viscosity if an SGS model is used. */
+          if( SGSModelUsed ) {
+            const su2double lenScale = volElem[lInd].lenScale/nPoly;
+            SGSModel->ComputeEddyViscosity_3D(nInt, rhoInt, dudxInt, dudyInt, dudzInt,
+                                              dvdxInt, dvdyInt, dvdzInt, dwdxInt,
+                                              dwdyInt, dwdzInt, lenScale,
+                                              volElem[lInd].wallDistance.data(),
+                                              muTurbInt);
+          }
+
+          /* Loop over the integration points to compute the fluxes. These will
+             be stored in drhodxInt, dudxInt, etc. */
+          for(unsigned short i=0; i<nInt; ++i) {
+
             /* Compute the metric terms multiplied by minus the integration weight.
                The minus sign comes from the integration by parts in the weak
                formulation. */
@@ -12864,170 +12988,131 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
             const su2double wDtdy = -weights[i]*dtdyInt[i];
             const su2double wDtdz = -weights[i]*dtdzInt[i];
 
-            /* Easier storage of the location where the solution data of this
-               integration point starts. */
-            const su2double *sol    = solAndGradInt + iNPad + llNVar;
-            const su2double *dSolDr = sol    + offDeriv;
-            const su2double *dSolDs = dSolDr + offDeriv;
-            const su2double *dSolDt = dSolDs + offDeriv;
-
-            /*--- Compute the Cartesian gradients of the independent solution
-                  variables from the gradients in parametric coordinates and the
-                  metric terms in this integration point. ---*/
-            const su2double dRhoDx  = dSolDr[0]*drdx + dSolDs[0]*dsdx + dSolDt[0]*dtdx;
-            const su2double dRhoUDx = dSolDr[1]*drdx + dSolDs[1]*dsdx + dSolDt[1]*dtdx;
-            const su2double dRhoVDx = dSolDr[2]*drdx + dSolDs[2]*dsdx + dSolDt[2]*dtdx;
-            const su2double dRhoWDx = dSolDr[3]*drdx + dSolDs[3]*dsdx + dSolDt[3]*dtdx;
-            const su2double dRhoEDx = dSolDr[4]*drdx + dSolDs[4]*dsdx + dSolDt[4]*dtdx;
-
-            const su2double dRhoDy  = dSolDr[0]*drdy + dSolDs[0]*dsdy + dSolDt[0]*dtdy;
-            const su2double dRhoUDy = dSolDr[1]*drdy + dSolDs[1]*dsdy + dSolDt[1]*dtdy;
-            const su2double dRhoVDy = dSolDr[2]*drdy + dSolDs[2]*dsdy + dSolDt[2]*dtdy;
-            const su2double dRhoWDy = dSolDr[3]*drdy + dSolDs[3]*dsdy + dSolDt[3]*dtdy;
-            const su2double dRhoEDy = dSolDr[4]*drdy + dSolDs[4]*dsdy + dSolDt[4]*dtdy;
-
-            const su2double dRhoDz  = dSolDr[0]*drdz + dSolDs[0]*dsdz + dSolDt[0]*dtdz;
-            const su2double dRhoUDz = dSolDr[1]*drdz + dSolDs[1]*dsdz + dSolDt[1]*dtdz;
-            const su2double dRhoVDz = dSolDr[2]*drdz + dSolDs[2]*dsdz + dSolDt[2]*dtdz;
-            const su2double dRhoWDz = dSolDr[3]*drdz + dSolDs[3]*dsdz + dSolDt[3]*dtdz;
-            const su2double dRhoEDz = dSolDr[4]*drdz + dSolDs[4]*dsdz + dSolDt[4]*dtdz;
-
-            /*--- Compute the velocities and static energy in this integration point. ---*/
-            const su2double rhoInv       = 1.0/sol[0];
-            const su2double u            = sol[1]*rhoInv;
-            const su2double v            = sol[2]*rhoInv;
-            const su2double w            = sol[3]*rhoInv;
-            const su2double TotalEnergy  = sol[4]*rhoInv;
-            const su2double StaticEnergy = TotalEnergy - 0.5*(u*u + v*v + w*w);
-
-            /*--- Compute the Cartesian gradients of the velocities and static energy
-                  in this integration point and also the divergence of the velocity. ---*/
-            const su2double dudx = rhoInv*(dRhoUDx - u*dRhoDx);
-            const su2double dudy = rhoInv*(dRhoUDy - u*dRhoDy);
-            const su2double dudz = rhoInv*(dRhoUDz - u*dRhoDz);
-
-            const su2double dvdx = rhoInv*(dRhoVDx - v*dRhoDx);
-            const su2double dvdy = rhoInv*(dRhoVDy - v*dRhoDy);
-            const su2double dvdz = rhoInv*(dRhoVDz - v*dRhoDz);
-
-            const su2double dwdx = rhoInv*(dRhoWDx - w*dRhoDx);
-            const su2double dwdy = rhoInv*(dRhoWDy - w*dRhoDy);
-            const su2double dwdz = rhoInv*(dRhoWDz - w*dRhoDz);
-
-            const su2double dStaticEnergyDx = rhoInv*(dRhoEDx - TotalEnergy*dRhoDx)
-                                            - u*dudx - v*dvdx - w*dwdx;
-            const su2double dStaticEnergyDy = rhoInv*(dRhoEDy - TotalEnergy*dRhoDy)
-                                            - u*dudy - v*dvdy - w*dwdy;
-            const su2double dStaticEnergyDz = rhoInv*(dRhoEDz - TotalEnergy*dRhoDz)
-                                            - u*dudz - v*dvdz - w*dwdz;
-
-            const su2double divVel = dudx + dvdy + dwdz;
-
-            /*--- Compute the pressure and the laminar viscosity. ---*/
-            FluidModel->SetTDState_rhoe(sol[0], StaticEnergy);
-            const su2double Pressure     = FluidModel->GetPressure();
-            const su2double ViscosityLam = FluidModel->GetLaminarViscosity();
-
-            /*--- If an SGS model is used the eddy viscosity must be computed. ---*/
-            su2double ViscosityTurb = 0.0;
-            if( SGSModelUsed ) {
-              const su2double lenScale = volElem[lInd].lenScale/nPoly;
-              ViscosityTurb = SGSModel->ComputeEddyViscosity_3D(sol[0], dudx, dudy, dudz,
-                                                                dvdx, dvdy, dvdz, dwdx,
-                                                                dwdy, dwdz, lenScale,
-                                                                volElem[lInd].wallDistance[i]);
-            }
-
             /* Compute the total viscosity and heat conductivity. Note that the heat
                conductivity is divided by the Cv, because gradients of internal energy
                are computed and not temperature. */
-            const su2double Viscosity = ViscosityLam + ViscosityTurb;
-            const su2double kOverCv = ViscosityLam *factHeatFlux_Lam
-                                    + ViscosityTurb*factHeatFlux_Turb;
+            const su2double Viscosity = muLamInt[i] + muTurbInt[i];
+            const su2double kOverCv = muLamInt[i] *factHeatFlux_Lam
+                                    + muTurbInt[i]*factHeatFlux_Turb;
 
             /*--- Set the value of the second viscosity and compute the divergence
                   term in the viscous normal stresses. ---*/
             const su2double lambda     = -TWO3*Viscosity;
-            const su2double lamDivTerm =  lambda*divVel;
+            const su2double lamDivTerm =  lambda*(dudxInt[i] + dvdyInt[i] + dwdzInt[i]);
 
             /*--- Compute the viscous stress tensor and minus the heatflux vector. ---*/
-            const su2double tauxx = 2.0*Viscosity*dudx + lamDivTerm;
-            const su2double tauyy = 2.0*Viscosity*dvdy + lamDivTerm;
-            const su2double tauzz = 2.0*Viscosity*dwdz + lamDivTerm;
+            const su2double tauxx = 2.0*Viscosity*dudxInt[i] + lamDivTerm;
+            const su2double tauyy = 2.0*Viscosity*dvdyInt[i] + lamDivTerm;
+            const su2double tauzz = 2.0*Viscosity*dwdzInt[i] + lamDivTerm;
 
-            const su2double tauxy = Viscosity*(dudy + dvdx);
-            const su2double tauxz = Viscosity*(dudz + dwdx);
-            const su2double tauyz = Viscosity*(dvdz + dwdy);
+            const su2double tauxy = Viscosity*(dudyInt[i] + dvdxInt[i]);
+            const su2double tauxz = Viscosity*(dudzInt[i] + dwdxInt[i]);
+            const su2double tauyz = Viscosity*(dvdzInt[i] + dwdyInt[i]);
 
-            const su2double qx = kOverCv*dStaticEnergyDx;
-            const su2double qy = kOverCv*dStaticEnergyDy;
-            const su2double qz = kOverCv*dStaticEnergyDz;
+            const su2double qx = kOverCv*dedxInt[i];
+            const su2double qy = kOverCv*dedyInt[i];
+            const su2double qz = kOverCv*dedzInt[i];
 
             /* Compute the relative velocities w.r.t. the grid. */
-            const su2double uRel = u - gridVelX[i];
-            const su2double vRel = v - gridVelY[i];
-            const su2double wRel = w - gridVelZ[i];
+            const su2double uRel = uInt[i] - gridVelX[i];
+            const su2double vRel = vInt[i] - gridVelY[i];
+            const su2double wRel = wInt[i] - gridVelZ[i];
 
             /* Compute the viscous normal stress minus the pressure. */
-            const su2double tauxxMP = tauxx - Pressure;
-            const su2double tauyyMP = tauyy - Pressure;
-            const su2double tauzzMP = tauzz - Pressure;
+            const su2double tauxxMP = tauxx - pInt[i];
+            const su2double tauyyMP = tauyy - pInt[i];
+            const su2double tauzzMP = tauzz - pInt[i];
 
-            /* Set the pointer for the fluxes in this integration point. */
-            su2double *flux = fluxes + nDim*iNPad + llNVar;
+            /*--- Fluxes in r-direction. Use drhodxInt, dudxInt, etc for
+                  temporary storage of these fluxes. ---*/
+            const su2double rUr = rhoInt[i]*(uRel*wDrdx + vRel*wDrdy + wRel*wDrdz);
 
-            /*--- Fluxes in r-direction. */
-            const su2double Ur = uRel*wDrdx + vRel*wDrdy + wRel*wDrdz;
+            drhodxInt[i] = rUr;
+            dudxInt[i]   = uInt[i]*rUr - tauxxMP*wDrdx - tauxy*wDrdy - tauxz*wDrdz;
+            dvdxInt[i]   = vInt[i]*rUr - tauxy*wDrdx - tauyyMP*wDrdy - tauyz*wDrdz;
+            dwdxInt[i]   = wInt[i]*rUr - tauxz*wDrdx - tauyz*wDrdy - tauzzMP*wDrdz;
+            dedxInt[i]   = EInt[i]*rUr - (uInt[i]*tauxxMP + vInt[i]*tauxy + wInt[i]*tauxz + qx)*wDrdx
+                                       - (uInt[i]*tauxy + vInt[i]*tauyyMP + wInt[i]*tauyz + qy)*wDrdy
+                                       - (uInt[i]*tauxz + vInt[i]*tauyz + wInt[i]*tauzzMP + qz)*wDrdz;
 
-            flux[0] = sol[0]*Ur;
-            flux[1] = sol[1]*Ur - tauxxMP*wDrdx - tauxy*wDrdy - tauxz*wDrdz;
-            flux[2] = sol[2]*Ur - tauxy*wDrdx - tauyyMP*wDrdy - tauyz*wDrdz;
-            flux[3] = sol[3]*Ur - tauxz*wDrdx - tauyz*wDrdy - tauzzMP*wDrdz;
-            flux[4] = sol[4]*Ur - (u*tauxxMP + v*tauxy + w*tauxz + qx)*wDrdx
-                                - (u*tauxy + v*tauyyMP + w*tauyz + qy)*wDrdy
-                                - (u*tauxz + v*tauyz + w*tauzzMP + qz)*wDrdz;
+            /*--- Fluxes in s-direction. Use drhodyInt, dudyInt, etc for
+                  temporary storage of these fluxes. ---*/
+            const su2double rUs = rhoInt[i]*(uRel*wDsdx + vRel*wDsdy + wRel*wDsdz);
 
-            /*--- Fluxes in s-direction. */
+            drhodyInt[i] = rUs;
+            dudyInt[i]   = uInt[i]*rUs - tauxxMP*wDsdx - tauxy*wDsdy - tauxz*wDsdz;
+            dvdyInt[i]   = vInt[i]*rUs - tauxy*wDsdx - tauyyMP*wDsdy - tauyz*wDsdz;
+            dwdyInt[i]   = wInt[i]*rUs - tauxz*wDsdx - tauyz*wDsdy - tauzzMP*wDsdz;
+            dedyInt[i]   = EInt[i]*rUs - (uInt[i]*tauxxMP + vInt[i]*tauxy + wInt[i]*tauxz + qx)*wDsdx
+                                       - (uInt[i]*tauxy + vInt[i]*tauyyMP + wInt[i]*tauyz + qy)*wDsdy
+                                       - (uInt[i]*tauxz + vInt[i]*tauyz + wInt[i]*tauzzMP + qz)*wDsdz;
+
+            /*--- Fluxes in t-direction. Use drhodzInt, dudzInt, etc for
+                  temporary storage of these fluxes. ---*/
+            const su2double rUt = rhoInt[i]*(uRel*wDtdx + vRel*wDtdy + wRel*wDtdz);
+
+            drhodzInt[i] = rUt;
+            dudzInt[i]   = uInt[i]*rUt - tauxxMP*wDtdx - tauxy*wDtdy - tauxz*wDtdz;
+            dvdzInt[i]   = vInt[i]*rUt - tauxy*wDtdx - tauyyMP*wDtdy - tauyz*wDtdz;
+            dwdzInt[i]   = wInt[i]*rUt - tauxz*wDtdx - tauyz*wDtdy - tauzzMP*wDtdz;
+            dedzInt[i]   = EInt[i]*rUt - (uInt[i]*tauxxMP + vInt[i]*tauxy + wInt[i]*tauxz + qx)*wDtdx
+                                       - (uInt[i]*tauxy + vInt[i]*tauyyMP + wInt[i]*tauyz + qy)*wDtdy
+                                       - (uInt[i]*tauxz + vInt[i]*tauyz + wInt[i]*tauzzMP + qz)*wDtdz;
+          }
+
+          /* Copy the fluxes in the correct place in the array fluxes. */
+          for(unsigned short i=0; i<nInt; ++i) {
+
+            /* Set the pointer for the fluxes in r-direction for this
+               integration point and copy the data. */
+            su2double *flux = fluxes + nDim*i*NPad + llNVar;
+
+            flux[0] = drhodxInt[i]; flux[1] = dudxInt[i]; flux[2] = dvdxInt[i];
+            flux[3] = dwdxInt[i];   flux[4] = dedxInt[i];
+
+            /* Set the pointer for the fluxes in s-direction for this
+               integration point and copy the data. */
             flux = flux + NPad;
-            const su2double Us = uRel*wDsdx + vRel*wDsdy + wRel*wDsdz;
 
-            flux[0] = sol[0]*Us;
-            flux[1] = sol[1]*Us - tauxxMP*wDsdx - tauxy*wDsdy - tauxz*wDsdz;
-            flux[2] = sol[2]*Us - tauxy*wDsdx - tauyyMP*wDsdy - tauyz*wDsdz;
-            flux[3] = sol[3]*Us - tauxz*wDsdx - tauyz*wDsdy - tauzzMP*wDsdz;
-            flux[4] = sol[4]*Us - (u*tauxxMP + v*tauxy + w*tauxz + qx)*wDsdx
-                                - (u*tauxy + v*tauyyMP + w*tauyz + qy)*wDsdy
-                                - (u*tauxz + v*tauyz + w*tauzzMP + qz)*wDsdz;
+            flux[0] = drhodyInt[i]; flux[1] = dudyInt[i]; flux[2] = dvdyInt[i];
+            flux[3] = dwdyInt[i];   flux[4] = dedyInt[i];
 
-            /*--- Fluxes in t-direction. */
+            /* Set the pointer for the fluxes in t-direction for this
+               integration point and copy the data. */
             flux = flux + NPad;
-            const su2double Ut = uRel*wDtdx + vRel*wDtdy + wRel*wDtdz;
 
-            flux[0] = sol[0]*Ut;
-            flux[1] = sol[1]*Ut - tauxxMP*wDtdx - tauxy*wDtdy - tauxz*wDtdz;
-            flux[2] = sol[2]*Ut - tauxy*wDtdx - tauyyMP*wDtdy - tauyz*wDtdz;
-            flux[3] = sol[3]*Ut - tauxz*wDtdx - tauyz*wDtdy - tauzzMP*wDtdz;
-            flux[4] = sol[4]*Ut - (u*tauxxMP + v*tauxy + w*tauxz + qx)*wDtdx
-                                - (u*tauxy + v*tauyyMP + w*tauyz + qy)*wDtdy
-                                - (u*tauxz + v*tauyz + w*tauzzMP + qz)*wDtdz;
+            flux[0] = drhodzInt[i]; flux[1] = dudzInt[i]; flux[2] = dvdzInt[i];
+            flux[3] = dwdzInt[i];   flux[4] = dedzInt[i];
+          }
 
-            /*--- If needed, compute the body forces in this integration point.
-                  Note that the source terms are multiplied with minus the
-                  integration weight in order to be consistent with the
-                  formulation of the residual. Note that for the energy source
-                  term the absolute velocity must be taken and not the
-                  relative. ---*/
-            if( body_force ) {
-              su2double *source         = sources + iNPad + llNVar;
-              const su2double weightJac = weights[i]*JacInt[i];
+          /*--- Check for a body force. ---*/
+          if( body_force ) {
 
-              source[0] =  0.0;
-              source[1] = -weightJac*body_force_vector[0];
-              source[2] = -weightJac*body_force_vector[1];
-              source[3] = -weightJac*body_force_vector[2];
-              source[4] = -weightJac*(u*body_force_vector[0] + v*body_force_vector[1]
-                        +             w*body_force_vector[2]);
-            }
+            /* Loop over the integration points. Note that the source terms are
+               multiplied with minus the integration weight in order to be consistent
+               with the formulation of the residual. Note that for the energy source
+               term the absolute velocity must be taken and not the relative.
+               Use rhoInt, uInt, etc. as temporary storage. */
+             for(int i=0; i<nInt; ++i) {
+
+               const su2double u = uInt[i], v = vInt[i], w = wInt[i];
+               const su2double weightJac = weights[i]*JacInt[i];
+
+               rhoInt[i] =  0.0;
+               uInt[i]   = -weightJac*body_force_vector[0];
+               vInt[i]   = -weightJac*body_force_vector[1];
+               wInt[i]   = -weightJac*body_force_vector[2];
+               EInt[i]   = -weightJac*(u*body_force_vector[0] + v*body_force_vector[1]
+                         +             w*body_force_vector[2]);
+             }
+
+             /* Copy the source terms to the correct place in the array sources. */
+             for(int i=0; i<nInt; ++i) {
+               su2double *src = sources + i*NPad + llNVar;
+
+               src[0] = rhoInt[i]; src[1] = uInt[i]; src[2] = vInt[i];
+               src[3] = wInt[i];   src[4] = EInt[i];
+             }
           }
         }
 
@@ -13084,8 +13169,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
 
         /* Set the pointer to the coordinates in this integration point and
            call the function to compute the source terms for the manufactured
-           solution. Note that this is an inviscid computation, so for
-           viscosity and thermal conductivity a zero is passed. */
+           solution. */
         const su2double *coor = volElem[lInd].coorIntegrationPoints.data() + i*nDim;
 
         su2double sourceMan[5];
@@ -13773,8 +13857,8 @@ void CFEM_DG_NSSolver::ViscousNormalFluxIntegrationPoint_2D(const su2double *sol
   /*--- Compute the eddy viscosity, if needed. ---*/
   su2double ViscosityTurb = 0.0;
   if( SGSModelUsed )
-    ViscosityTurb = SGSModel->ComputeEddyViscosity_2D(sol[0], dudx, dudy, dvdx,
-                                                      dvdy, lenScale_LES, wallDist);
+    SGSModel->ComputeEddyViscosity_2D(1, sol, &dudx, &dudy, &dvdx, &dvdy,
+                                      lenScale_LES, &wallDist, &ViscosityTurb);
 
   /* Compute the total viscosity and heat conductivity. Note that the heat
      conductivity is divided by the Cv, because gradients of internal energy
@@ -13869,10 +13953,9 @@ void CFEM_DG_NSSolver::ViscousNormalFluxIntegrationPoint_3D(const su2double *sol
   /*--- Compute the eddy viscosity, if needed. ---*/
   su2double ViscosityTurb = 0.0;
   if( SGSModelUsed )
-    ViscosityTurb = SGSModel->ComputeEddyViscosity_3D(sol[0], dudx, dudy, dudz,
-                                                      dvdx, dvdy, dvdz, dwdx,
-                                                      dwdy, dwdz, lenScale_LES,
-                                                      wallDist);
+    SGSModel->ComputeEddyViscosity_3D(1, sol, &dudx, &dudy, &dudz, &dvdx,
+                                      &dvdy, &dvdz, &dwdx, &dwdy, &dwdz,
+                                      lenScale_LES, &wallDist, &ViscosityTurb);
 
   /* Compute the total viscosity and heat conductivity. Note that the heat
      conductivity is divided by the Cv, because gradients of internal energy

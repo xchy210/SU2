@@ -133,14 +133,14 @@ void CIdealGas::SetTDState_rhoT (su2double rho, su2double T ) {
 
 void CIdealGas::ComputeDerivativeNRBC_Prho(su2double P, su2double rho ){
 
-	su2double dPdT_rho,dPdrho_T, dPds_rho;
+  su2double dPdT_rho,dPdrho_T, dPds_rho;
 
-	SetTDState_Prho(P, rho);
+  SetTDState_Prho(P, rho);
 
-	dPdT_rho= Gas_Constant*rho;
-	dPdrho_T= Gas_Constant*Temperature;
+  dPdT_rho= Gas_Constant*rho;
+  dPdrho_T= Gas_Constant*Temperature;
 
-	dhdrho_P= -dPdrho_e/dPde_rho -P/rho/rho;
+  dhdrho_P= -dPdrho_e/dPde_rho -P/rho/rho;
   dhdP_rho= 1.0/dPde_rho +1.0/rho;
   dPds_rho= rho*rho*(SoundSpeed2 - dPdrho_T)/dPdT_rho;
   dsdP_rho= 1.0/dPds_rho;
@@ -148,11 +148,25 @@ void CIdealGas::ComputeDerivativeNRBC_Prho(su2double P, su2double rho ){
 
 }
 
+void CIdealGas::GetPressure_from_rhoe(const int       nEntities,
+                                      const su2double *rho,
+                                      const su2double *e,
+                                      su2double       *p) {
 
+  /* Loop over the number of entities and compute the
+     pressure from the density and the internal energy. */
+  for(int i=0; i<nEntities; ++i)
+    p[i] = Gamma_Minus_One*rho[i]*e[i];
+}
 
+void CIdealGas::GetTemperature_from_rhoe(const int       nEntities,
+                                         const su2double *rho,
+                                         const su2double *e,
+                                         su2double       *T) {
 
-
-
-
-
-
+  /* Loop over the number of entities and compute the
+     temperature from the internal energy. */
+  const su2double tmp = Gamma_Minus_One/Gas_Constant;
+  for(int i=0; i<nEntities; ++i)
+    T[i] = tmp*e[i];
+}

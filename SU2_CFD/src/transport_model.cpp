@@ -49,6 +49,12 @@ CViscosityModel::CViscosityModel(void) {
 
 CViscosityModel::~CViscosityModel(void) { }
 
+void CViscosityModel::ComputeViscosity(const int nEntities,
+                                       su2double *mu) {
+
+  SU2_MPI::Error("Function must be overloaded by the derived class.", CURRENT_FUNCTION);
+}
+
 
 CConstantViscosity::CConstantViscosity(void) : CViscosityModel() { }
 
@@ -64,7 +70,13 @@ CConstantViscosity::CConstantViscosity(su2double mu_const) : CViscosityModel() {
 
 CConstantViscosity::~CConstantViscosity(void) { }
 
+void CConstantViscosity::ComputeViscosity(const int nEntities,
+                                          su2double *mu) {
 
+  /* Loop over the number of entities and set the viscosity. */
+  for(int i=0; i<nEntities; ++i)
+    mu[i] = Mu;
+}
 
 
 CSutherland::CSutherland(void) : CViscosityModel() {
@@ -89,6 +101,21 @@ void CSutherland::SetViscosity(su2double T, su2double rho) {
   const su2double TnonDim = T/T_ref;
   Mu = Mu_ref*TnonDim*sqrt(TnonDim)*((T_ref + S)/(T + S));
 
+}
+
+void CSutherland::ComputeViscosity(const int nEntities,
+                                   su2double *mu) {
+
+  /* Loop over the number of entities and set the viscosity.
+     Note that on entry the temperature is stored in mu. */
+  const su2double TRefInv = 1.0/T_ref;
+  for(int i=0; i<nEntities; ++i) {
+
+    const su2double T = mu[i];
+    const su2double TnonDim = T*TRefInv;
+
+    mu[i] = Mu_ref*TnonDim*sqrt(TnonDim)*((T_ref + S)/(T + S));
+  }
 }
 
 void CSutherland::SetDerViscosity(su2double T, su2double rho) {
@@ -133,6 +160,78 @@ void CPolynomialViscosity::SetViscosity(su2double T, su2double rho) {
   for (unsigned short iVar = 1; iVar < nPolyCoeffs; iVar++)
     Mu += b[iVar]*pow(T,iVar);
   
+}
+
+void CPolynomialViscosity::ComputeViscosity(const int nEntities,
+                                            su2double *mu) {
+
+  /* Test for the number of polynomial coefficients,
+     such that an explicit loop unrolling can be done. */
+  switch( nPolyCoeffs ) {
+
+    case 1: {
+
+      /* Constant viscosity. Loop over the entities and set it. */
+      for(int i=0; i<nEntities; ++i) mu[i] = b[0];
+      break;
+    }
+
+    case 2: {
+
+      /* Linear polynomials are used. Loop over the number of entities and compute
+         the viscosity. Note that on entry the temperature is stored in mu. */
+      for(int i=0; i<nEntities; ++i) {
+        const su2double T = mu[i];
+        mu[i] = b[0] + T*b[1];
+      }
+
+      break;
+    }
+
+    case 3: {
+
+      /* Quadratic polynomials are used. Loop over the number of entities and compute
+         the viscosity. Note that on entry the temperature is stored in mu. */
+      for(int i=0; i<nEntities; ++i) {
+        const su2double T = mu[i];
+        mu[i] = b[0] + T*(b[1] + T*b[2]);
+      }
+
+      break;
+    }
+
+    case 4: {
+
+      /* Cubic polynomials are used. Loop over the number of entities and compute
+         the viscosity. Note that on entry the temperature is stored in mu. */
+      for(int i=0; i<nEntities; ++i) {
+        const su2double T = mu[i];
+        mu[i] = b[0] + T*(b[1] + T*(b[2] + T*b[3]));
+      }
+
+      break;
+    }
+
+    case 5: {
+
+      /* Quartic polynomials are used. Loop over the number of entities and compute
+         the viscosity. Note that on entry the temperature is stored in mu. */
+      for(int i=0; i<nEntities; ++i) {
+        const su2double T = mu[i];
+        mu[i] = b[0] + T*(b[1] + T*(b[2] + T*(b[3] + T*b[4])));
+      }
+
+      break;
+    }
+
+    default: {
+
+      /* Optimized code for the given polynomial degree not
+         implemented yet. .*/
+      SU2_MPI::Error("No optimized code for this polynomial degree.",
+                     CURRENT_FUNCTION); 
+    }
+  }
 }
 
 /*-------------------------------------------------*/

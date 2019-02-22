@@ -116,3 +116,31 @@ void CFluidModel::SetThermalConductivityModel (CConfig *config) {
   
 }
 
+void CFluidModel::GetPressure_from_rhoe(const int       nEntities,
+                                        const su2double *rho,
+                                        const su2double *e,
+                                        su2double       *p) {
+
+  SU2_MPI::Error("Function must be overloaded by the derived class.", CURRENT_FUNCTION);
+}
+
+void CFluidModel::GetTemperature_from_rhoe(const int       nEntities,
+                                           const su2double *rho,
+                                           const su2double *e,
+                                           su2double       *T) {
+
+  SU2_MPI::Error("Function must be overloaded by the derived class.", CURRENT_FUNCTION);
+}
+
+
+void CFluidModel::GetLaminarViscosity_from_rhoe(const int       nEntities,
+                                                const su2double *rho,
+                                                const su2double *e,
+                                                su2double       *muLam) {
+
+  /* Compute the temperature. Use muLam as temporary storage. */
+  GetTemperature_from_rhoe(nEntities, rho, e, muLam);
+
+  /* Compute the laminar viscosities. */
+  LaminarViscosity->ComputeViscosity(nEntities, muLam);
+}

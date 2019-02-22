@@ -117,6 +117,7 @@ libSU2Core_sources = \
   ../src/output_su2.cpp \
   ../src/output_paraview.cpp \
   ../src/python_wrapper_structure.cpp \
+  ../src/sgs_model.cpp \
   ../src/solver_adjoint_mean.cpp \
   ../src/solver_adjoint_turbulent.cpp \
   ../src/solver_adjoint_discrete.cpp \
