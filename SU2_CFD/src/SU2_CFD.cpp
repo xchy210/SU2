@@ -47,6 +47,8 @@
 
 using namespace std;
 
+double timingTot;
+
 int main(int argc, char *argv[]) {
   
   unsigned short nZone, nDim;
@@ -64,6 +66,8 @@ int main(int argc, char *argv[]) {
 #else
   SU2_Comm MPICommunicator(0);
 #endif
+
+  timingTot = 0.0;
 
   /*--- Uncomment the following line if runtime NaN catching is desired. ---*/
   // feenableexcept(FE_INVALID | FE_OVERFLOW);
@@ -213,6 +217,9 @@ int main(int argc, char *argv[]) {
   free(buffptr);
   SU2_MPI::Finalize();
 #endif
+
+
+  cout << endl << endl << "Timing result: " << timingTot << endl << endl;
   
   return EXIT_SUCCESS;
   

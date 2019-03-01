@@ -155,6 +155,7 @@ void CIdealGas::GetPressure_from_rhoe(const int       nEntities,
 
   /* Loop over the number of entities and compute the
      pressure from the density and the internal energy. */
+  #pragma ivdep
   for(int i=0; i<nEntities; ++i)
     p[i] = Gamma_Minus_One*rho[i]*e[i];
 }
