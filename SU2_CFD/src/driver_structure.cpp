@@ -1126,13 +1126,13 @@ void CDriver::Geometrical_Preprocessing_DGFEM() {
 
       /*--- Compute the coordinates of the integration points. ---*/
       if (rank == MASTER_NODE) cout << "Computing coordinates of the integration points." << endl;
-      DGMesh->CoordinatesIntegrationPoints();
+      DGMesh->CoordinatesIntegrationPoints(config_container[iZone]);
 
       /*--- Compute the coordinates of the location of the solution DOFs. This is different
             from the grid points when a different polynomial degree is used to represent the
             geometry and solution. ---*/
       if (rank == MASTER_NODE) cout << "Computing coordinates of the solution DOFs." << endl;
-      DGMesh->CoordinatesSolDOFs();
+      DGMesh->CoordinatesSolDOFs(config_container[iZone]);
 
       /*--- Initialize the static mesh movement, if necessary. ---*/
       const unsigned short Kind_Grid_Movement = config_container[iZone]->GetKind_GridMovement(iZone);

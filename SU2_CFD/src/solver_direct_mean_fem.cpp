@@ -218,7 +218,7 @@ CFEM_DG_EulerSolver::CFEM_DG_EulerSolver(CGeometry *geometry, CConfig *config, u
   }
 
   /*--- Determine the size of the work array. ---*/
-  const unsigned short nPadGemm = config->GetSizeMatMulPadding();
+  const unsigned short nPadGemm = nVar;
   if( config->GetViscous() ) {
 
     /* Viscous simulation. */
@@ -3180,12 +3180,12 @@ void CFEM_DG_EulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***s
     for(unsigned short j=0; j<volElem[i].nDOFsSol; ++j) {
 
       /* Set the pointers to the coordinates and solution of this DOF. */
-      const su2double *coor = volElem[i].coorSolDOFs.data() + j*nDim;
+      const su2double *coor = volElem[i].coorSolDOFs + j;
       su2double *solDOF     = VecSolDOFs.data() + nVar*(volElem[i].offsetDOFsSolLocal + j);
 
       /* Compute the coordinates relative to the center of the vortex. */
       const su2double dx = coor[0] - x0Vortex;
-      const su2double dy = coor[1] - y0Vortex;
+      const su2double dy = coor[volElem[i].nDOFsSol] - y0Vortex;
 
       /* Compute the components of the velocity. */
       su2double f  = 1.0 - (dx*dx + dy*dy)/(RVortex*RVortex);
@@ -3233,9 +3233,13 @@ void CFEM_DG_EulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***s
     /* Loop over the DOFs of this element. */
     for(unsigned short j=0; j<volElem[i].nDOFsSol; ++j) {
 
-      /* Set the pointers to the coordinates and solution of this DOF. */
-      const su2double *coor = volElem[i].coorSolDOFs.data() + j*nDim;
-      su2double *solDOF     = VecSolDOFs.data() + nVar*(volElem[i].offsetDOFsSolLocal + j);
+      /* Copy the coordinates in an array. */
+      su2double coor[] = {0.0, 0.0, 0.0};
+      for(unsigned short iDim=0; iDim<nDim; ++iDim)
+        coor[iDim] = volElem[i].coorSolDOFs[j+iDim*volElem[i].nDOFsSol];
+
+      /* Set the pointer to the solution of this DOF. */
+      su2double *solDOF = VecSolDOFs.data() + nVar*(volElem[i].offsetDOFsSolLocal + j);
 
       /* Compute the conservative flow variables of the Ringleb solution for the
          given coordinates. Note that it is possible to run this case in both 2D
@@ -3269,12 +3273,12 @@ void CFEM_DG_EulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***s
     for(unsigned short j=0; j<volElem[i].nDOFsSol; ++j) {
 
       /* Set the pointers to the coordinates and solution of this DOF. */
-      const su2double *coor = volElem[i].coorSolDOFs.data() + j*nDim;
+      const su2double *coor = volElem[i].coorSolDOFs + j;
       su2double *solDOF     = VecSolDOFs.data() + nVar*(volElem[i].offsetDOFsSolLocal + j);
 
       /*--- Set the exact solution in this DOF. ---*/
-      const double xTilde = coor[0]*cosFlowAngle - coor[1]*sinFlowAngle;
-      const double yTilde = coor[0]*sinFlowAngle + coor[1]*cosFlowAngle;
+      const double xTilde = coor[0]*cosFlowAngle - coor[volElem[i].nDOFsSol]*sinFlowAngle;
+      const double yTilde = coor[0]*sinFlowAngle + coor[volElem[i].nDOFsSol]*cosFlowAngle;
 
       solDOF[0]      =  1.0;
       solDOF[1]      =  cosFlowAngle*yTilde*yTilde;
@@ -3316,26 +3320,28 @@ void CFEM_DG_EulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***s
     for(unsigned short j=0; j<volElem[i].nDOFsSol; ++j) {
 
       /* Set the pointers to the coordinates and solution of this DOF. */
-      const su2double *coor = volElem[i].coorSolDOFs.data() + j*nDim;
+      const su2double *coor = volElem[i].coorSolDOFs + j;
       su2double *solDOF     = VecSolDOFs.data() + nVar*(volElem[i].offsetDOFsSolLocal + j);
 
+      su2double coorX = coor[0];
+      su2double coorY = coor[volElem[i].nDOFsSol];
       su2double coorZ = 0.0;
-      if (nDim == 3) coorZ = coor[2];
+      if (nDim == 3) coorZ = coor[2*volElem[i].nDOFsSol];
 
       /* Compute the primitive variables. */
       su2double rho = tgvDensity;
-      su2double u   =  tgvVelocity * (sin(coor[0]/tgvLength)*
-                                      cos(coor[1]/tgvLength)*
-                                      cos(coorZ  /tgvLength));
-      su2double v   = -tgvVelocity * (cos(coor[0]/tgvLength)*
-                                      sin(coor[1]/tgvLength)*
-                                      cos(coorZ  /tgvLength));
+      su2double u   =  tgvVelocity * (sin(coorX/tgvLength)*
+                                      cos(coorY/tgvLength)*
+                                      cos(coorZ/tgvLength));
+      su2double v   = -tgvVelocity * (cos(coorX/tgvLength)*
+                                      sin(coorY/tgvLength)*
+                                      cos(coorZ/tgvLength));
       su2double factorA = cos(2.0*coorZ/tgvLength) + 2.0;
-      su2double factorB = cos(2.0*coor[0]/tgvLength) + cos(2.0*coor[1]/tgvLength);
+      su2double factorB = cos(2.0*coorX/tgvLength) + cos(2.0*coorY/tgvLength);
       su2double p   = tgvPressure+tgvDensity*(pow(tgvVelocity,2.0)/16.0)*factorA*factorB;
 
       /* Compute the conservative variables. Note that both 2D and 3D
-       cases are treated correctly. */
+         cases are treated correctly. */
       solDOF[0]      = rho;
       solDOF[1]      = rho*u;
       solDOF[2]      = rho*v;
@@ -3361,9 +3367,13 @@ void CFEM_DG_EulerSolver::SetInitialCondition(CGeometry **geometry, CSolver ***s
     /* Loop over the DOFs of this element. */
     for(unsigned short j=0; j<volElem[i].nDOFsSol; ++j) {
 
-      /* Set the pointers to the coordinates and solution of this DOF. */
-      const su2double *coor = volElem[i].coorSolDOFs.data() + j*nDim;
-      su2double *solDOF     = VecSolDOFs.data() + nVar*(volElem[i].offsetDOFsSolLocal + j);
+      /* Copy the coordinates in an array. */
+      su2double coor[] = {0.0, 0.0, 0.0};
+      for(unsigned short iDim=0; iDim<nDim; ++iDim)
+        coor[iDim] = volElem[i].coorSolDOFs[j+iDim*volElem[i].nDOFsSol];
+
+      /* Set the pointer to the solution of this DOF. */
+      su2double *solDOF = VecSolDOFs.data() + nVar*(volElem[i].offsetDOFsSolLocal + j);
 
       /* Compute the solution. */
       DetermineManufacturedSolution(nDim, Gamma, RGas,  coor, solDOF);
@@ -3528,16 +3538,12 @@ void CFEM_DG_EulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_co
               const unsigned short nInt = standardElementsSol[ind].GetNIntegration();
 
               /* Adapt the coordinates of the volume integration points. */
-              for(unsigned short i=0; i<nInt; ++i) {
-                su2double *coor = volElem[l].coorIntegrationPoints.data() + i*nDim;
-                coor[1] += dB2;
-              }
+              for(unsigned short i=0; i<nInt; ++i)
+                volElem[l].coorIntegrationPoints[i+nInt] += dB2;
 
               /* Adapt the coordinates of the solution DOFs. */
-              for(unsigned short i=0; i<volElem[l].nDOFsSol; ++i) {
-                su2double *coor = volElem[l].coorSolDOFs.data() + i*nDim;
-                coor[1] += dB2;
-              }
+              for(unsigned short i=0; i<volElem[l].nDOFsSol; ++i)
+                volElem[l].coorSolDOFs[i+volElem[l].nDOFsSol] += dB2;
             }
 
             /* Loop over the internal matching faces. */
@@ -3593,13 +3599,13 @@ void CFEM_DG_EulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_co
 
             /* Compute the grid velocity in the integration points. */
             for(unsigned short i=0; i<nInt; ++i) {
-              su2double *gridVel = volElem[l].gridVelocities.data() + i;
+              su2double *gridVel = volElem[l].gridVelocities + i;
               gridVel[nInt] = db2Newdt;
             }
 
             /* Compute the grid velocities for the solution DOFs. */
             for(unsigned short i=0; i<volElem[l].nDOFsSol; ++i) {
-              su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i;
+              su2double *gridVel = volElem[l].gridVelocitiesSolDOFs + i;
               gridVel[volElem[l].nDOFsSol] = db2Newdt;
             }
           }
@@ -3867,7 +3873,7 @@ void CFEM_DG_EulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_con
 
           case 2: {
             /* 2D simulation. Set the pointers for the grid velocities. */
-            const su2double *gridVelX = volElem[l].gridVelocitiesSolDOFs.data();
+            const su2double *gridVelX = volElem[l].gridVelocitiesSolDOFs;
             const su2double *gridVelY = gridVelX + volElem[l].nDOFsSol;
 
             /*--- Loop over the DOFs of this element and determine
@@ -3900,7 +3906,7 @@ void CFEM_DG_EulerSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_con
 
           case 3: {
             /* 3D simulation. Set the pointers for the grid velocities. */
-            const su2double *gridVelX = volElem[l].gridVelocitiesSolDOFs.data();
+            const su2double *gridVelX = volElem[l].gridVelocitiesSolDOFs;
             const su2double *gridVelY = gridVelX + volElem[l].nDOFsSol;
             const su2double *gridVelZ = gridVelY + volElem[l].nDOFsSol;
 
@@ -4418,12 +4424,11 @@ void CFEM_DG_EulerSolver::ADER_DG_PredictorStep(CConfig             *config,
       in the matrix products to obtain good gemm performance. A solution entity
       can be a time integration point (to compute the fluxes) or a time DOF
       in the actual iteration process. */
-  const unsigned short NPad       = config->GetSizeMatMulPadding();
+  const unsigned short NPad       = nVar;
   const unsigned short nTimeSimul = NPad/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short NPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short NPadMin = NPad;
 
   /* Determine the number of time integration points that are treated
      simultaneously for better gemm performance as well as the number of
@@ -4967,7 +4972,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
     /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
        THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs;
     const su2double *gridVelY = gridVelX + nDOFs;
 
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
@@ -5025,7 +5030,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
           in the metric terms are the Jacobians.
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdx = elem->metricTerms + nInt;
     const su2double *drdy = drdx + nInt;
     const su2double *dsdx = drdy + nInt;
     const su2double *dsdy = dsdx + nInt;
@@ -5076,7 +5081,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig           
       /*--- Easier storage of the Jacobians.
             THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
             THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-      const su2double *Jac = elem->metricTerms.data();
+      const su2double *Jac = elem->metricTerms;
 
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
@@ -5156,7 +5161,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
     /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
        THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs;
     const su2double *gridVelY = gridVelX + nDOFs;
     const su2double *gridVelZ = gridVelY + nDOFs;
 
@@ -5228,7 +5233,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
           in the metric terms are the Jacobians.
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdx = elem->metricTerms + nInt;
     const su2double *drdy = drdx + nInt;
     const su2double *drdz = drdy + nInt;
     const su2double *dsdx = drdz + nInt;
@@ -5295,7 +5300,7 @@ void CFEM_DG_EulerSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig           
       /*--- Easier storage of the Jacobians.
             THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
             THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-      const su2double *Jac = elem->metricTerms.data();
+      const su2double *Jac = elem->metricTerms;
 
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
@@ -5387,7 +5392,7 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
     /*--- Easier storage of the metric terms. 
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *Jac  = elem->metricTerms.data();
+    const su2double *Jac  = elem->metricTerms;
     const su2double *drdx = Jac  + nInt;
     const su2double *drdy = drdx + nInt;
     const su2double *dsdx = drdy + nInt;
@@ -5396,7 +5401,7 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig        
     /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
        THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelX = elem->gridVelocities;
     const su2double *gridVelY = gridVelX + nInt;
 
     /*--- Loop over the integration points. ---*/
@@ -5539,7 +5544,7 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
     /*--- Easier storage of the metric terms.
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *Jac  = elem->metricTerms.data();
+    const su2double *Jac  = elem->metricTerms;
     const su2double *drdx = Jac  + nInt;
     const su2double *drdy = drdx + nInt;
     const su2double *drdz = drdy + nInt;
@@ -5553,7 +5558,7 @@ void CFEM_DG_EulerSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig        
     /* Set the pointers for the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA FOR
        THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelX = elem->gridVelocities;
     const su2double *gridVelY = gridVelX + nInt;
     const su2double *gridVelZ = gridVelY + nInt;
 
@@ -5782,12 +5787,11 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
 
   /* Determine the number of elements that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nElemSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /* Set the number of bytes that must be copied in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
@@ -5862,14 +5866,14 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
           const unsigned long  lInd   = l + ll;
 
           /* Easier storage of the metric terms. */
-          const su2double *Jac  = volElem[lInd].metricTerms.data();
+          const su2double *Jac  = volElem[lInd].metricTerms;
           const su2double *drdx = Jac  + nInt;
           const su2double *drdy = drdx + nInt;
           const su2double *dsdx = drdy + nInt;
           const su2double *dsdy = dsdx + nInt;
 
           /* Set the pointers for the grid velocities. */
-          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelX = volElem[lInd].gridVelocities;
           const su2double *gridVelY = gridVelX + nInt;
 
           /* Loop over the integration points of the elements to compute the fluxes. */
@@ -5955,7 +5959,7 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
           const unsigned long  lInd   = l + ll;
 
           /* Easier storage of the metric terms. */
-          const su2double *Jac  = volElem[lInd].metricTerms.data();
+          const su2double *Jac  = volElem[lInd].metricTerms;
           const su2double *drdx = Jac  + nInt;
           const su2double *drdy = drdx + nInt;
           const su2double *drdz = drdy + nInt;
@@ -5967,7 +5971,7 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
           const su2double *dtdz = dtdy + nInt;
 
           /* Set the pointers for the grid velocities. */
-          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelX = volElem[lInd].gridVelocities;
           const su2double *gridVelY = gridVelX + nInt;
           const su2double *gridVelZ = gridVelY + nInt;
 
@@ -6100,12 +6104,14 @@ void CFEM_DG_EulerSolver::Volume_Residual(CConfig             *config,
         /* Determine the integration weight multiplied by the Jacobian. */
         const su2double weightJac = weights[i]*Jac[i];
 
-        /* Set the pointer to the coordinates in this integration point and
-           call the function to compute the source terms for the manufactured
+        /* Store the coordinates in a 1D array. */
+        su2double coor[] = {0.0, 0.0, 0.0};
+        for(unsigned short iDim=0; iDim<nDim; ++iDim)
+          coor[iDim] = volElem[lInd].coorIntegrationPoints[i+iDim*nInt];
+
+        /* Call the function to compute the source terms for the manufactured
            solution. Note that this is an inviscid computation, so for
            viscosity and thermal conductivity a zero is passed. */
-        const su2double *coor = volElem[lInd].coorIntegrationPoints.data() + i*nDim;
-
         su2double sourceMan[5];
         SourceTermManufacturedSolution(nDim, Gamma, RGas, 0.0, 0.0, coor, sourceMan);
 
@@ -6255,12 +6261,11 @@ void CFEM_DG_EulerSolver::ResidualFaces(CConfig             *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /* Set the number of bytes that must be copied in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
@@ -6747,12 +6752,11 @@ void CFEM_DG_EulerSolver::Pressure_Forces(CGeometry *geometry, CConfig *config) 
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Get the information of the angle of attack, reference area, etc. ---*/
   const su2double Alpha        = config->GetAoA()*PI_NUMBER/180.0;
@@ -7183,8 +7187,13 @@ void CFEM_DG_EulerSolver::ExplicitRK_Iteration(CGeometry *geometry, CSolver **so
 
     unsigned int i = 0;
     for(unsigned short j=0; j<volElem[l].nDOFsSol; ++j) {
+
+      /* Copy the coordinates in an array. */
+      su2double coor[] = {0.0, 0.0, 0.0};
+      for(unsigned short iDim=0; iDim<nDim; ++iDim)
+        coor[iDim] = volElem[l].coorSolDOFs[j+iDim*volElem[l].nDOFsSol];
+
       const unsigned long globalIndex = volElem[l].offsetDOFsSolGlobal + j;
-      const su2double *coor = volElem[l].coorSolDOFs.data() + j*nDim;
 
       for(unsigned short iVar=0; iVar<nVar; ++iVar, ++i) {
         solDOFs[i] = solDOFsOld[i] - tmp*res[i];
@@ -7285,8 +7294,13 @@ void CFEM_DG_EulerSolver::ClassicalRK4_Iteration(CGeometry *geometry, CSolver **
 
     unsigned int i = 0;
     for(unsigned short j=0; j<volElem[l].nDOFsSol; ++j) {
+
+      /* Copy the coordinates in an array. */
+      su2double coor[] = {0.0, 0.0, 0.0};
+      for(unsigned short iDim=0; iDim<nDim; ++iDim)
+        coor[iDim] = volElem[l].coorSolDOFs[j+iDim*volElem[l].nDOFsSol];
+
       const unsigned long globalIndex = volElem[l].offsetDOFsSolGlobal + j;
-      const su2double *coor = volElem[l].coorSolDOFs.data() + j*nDim;
 
       for(unsigned short iVar=0; iVar<nVar; ++iVar, ++i) {
 
@@ -8089,12 +8103,11 @@ void CFEM_DG_EulerSolver::BC_Euler_Wall(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -8153,12 +8166,11 @@ void CFEM_DG_EulerSolver::BC_Far_Field(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -8223,12 +8235,11 @@ void CFEM_DG_EulerSolver::BC_Sym_Plane(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nVar;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -8353,12 +8364,11 @@ void CFEM_DG_EulerSolver::BC_Supersonic_Outlet(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -8418,12 +8428,11 @@ void CFEM_DG_EulerSolver::BC_Inlet(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nVar;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -8482,12 +8491,11 @@ void CFEM_DG_EulerSolver::BC_Outlet(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -8546,12 +8554,11 @@ void CFEM_DG_EulerSolver::BC_Riemann(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -8609,12 +8616,11 @@ void CFEM_DG_EulerSolver::BC_Custom(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -9755,12 +9761,11 @@ void CFEM_DG_NSSolver::Friction_Forces(CGeometry *geometry, CConfig *config) {
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /* Constant factor present in the heat flux vector. */
   const su2double factHeatFlux_Lam = Gamma/Prandtl_Lam;
@@ -10493,12 +10498,11 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
 
   /* Determine the number of elements that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nElemSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /* Set the number of bytes that must be copied in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
@@ -10591,14 +10595,14 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               const unsigned long  lInd   = l + ll;
 
               /* Set the pointers for the metric terms of the DOFs. */
-              const su2double *JacDOF  = volElem[lInd].metricTermsSolDOFs.data();
+              const su2double *JacDOF  = volElem[lInd].metricTermsSolDOFs;
               const su2double *drdxDOF = JacDOF  + nDOFs;
               const su2double *drdyDOF = drdxDOF + nDOFs;
               const su2double *dsdxDOF = drdyDOF + nDOFs;
               const su2double *dsdyDOF = dsdxDOF + nDOFs;
 
               /* Set the pointers for the grid velocities. */
-              const su2double *gridVelX = volElem[lInd].gridVelocitiesSolDOFs.data();
+              const su2double *gridVelX = volElem[lInd].gridVelocitiesSolDOFs;
               const su2double *gridVelY = gridVelX + nDOFs;
 
               /* Compute the length scale of this element and initialize the
@@ -10713,7 +10717,7 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               const unsigned long  lInd   = l + ll;
 
                /* Set the pointers for the metric terms of the DOFs. */
-              const su2double *JacDOF  = volElem[lInd].metricTermsSolDOFs.data();
+              const su2double *JacDOF  = volElem[lInd].metricTermsSolDOFs;
               const su2double *drdxDOF = JacDOF  + nDOFs;
               const su2double *drdyDOF = drdxDOF + nDOFs;
               const su2double *drdzDOF = drdyDOF + nDOFs;
@@ -10725,7 +10729,7 @@ void CFEM_DG_NSSolver::SetTime_Step(CGeometry *geometry, CSolver **solver_contai
               const su2double *dtdzDOF = dtdyDOF + nDOFs;
 
               /* Set the pointers for the grid velocities. */
-              const su2double *gridVelX = volElem[lInd].gridVelocitiesSolDOFs.data();
+              const su2double *gridVelX = volElem[lInd].gridVelocitiesSolDOFs;
               const su2double *gridVelY = gridVelX + nDOFs;
               const su2double *gridVelZ = gridVelY + nDOFs;
 
@@ -10953,7 +10957,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
        THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
        MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE
        CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *JacDOF  = elem->metricTermsSolDOFs.data();
+    const su2double *JacDOF  = elem->metricTermsSolDOFs;
     const su2double *drdxDOF = JacDOF  + nDOFs;
     const su2double *drdyDOF = drdxDOF + nDOFs;
     const su2double *dsdxDOF = drdyDOF + nDOFs;
@@ -10962,7 +10966,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
     /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
        FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs;
     const su2double *gridVelY = gridVelX + nDOFs;
 
     /*--- Loop over the DOFs to compute the Cartesian fluxes in the DOFs. ---*/
@@ -11079,7 +11083,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
           in the metric terms are the Jacobians.
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdx = elem->metricTerms + nInt;
     const su2double *drdy = drdx + nInt;
     const su2double *dsdx = drdy + nInt;
     const su2double *dsdy = dsdx + nInt;
@@ -11130,7 +11134,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_2D(CConfig              
       /*--- Easier storage of the Jacobians.
             THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
             THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-      const su2double *Jac = elem->metricTerms.data();
+      const su2double *Jac = elem->metricTerms;
 
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
@@ -11229,7 +11233,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
        THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL
        MOTION IS SPECIFIED, THE DATA FOR THIS DOF FOR THE
        CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *JacDOF  = elem->metricTermsSolDOFs.data();
+    const su2double *JacDOF  = elem->metricTermsSolDOFs;
     const su2double *drdxDOF = JacDOF  + nDOFs;
     const su2double *drdyDOF = drdxDOF + nDOFs;
     const su2double *drdzDOF = drdyDOF + nDOFs;
@@ -11243,7 +11247,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
     /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
        FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocitiesSolDOFs.data();
+    const su2double *gridVelX = elem->gridVelocitiesSolDOFs;
     const su2double *gridVelY = gridVelX + nDOFs;
     const su2double *gridVelZ = gridVelY + nDOFs;
 
@@ -11402,7 +11406,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
           in the metric terms are the Jacobians.
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *drdx = elem->metricTerms.data() + nInt;
+    const su2double *drdx = elem->metricTerms + nInt;
     const su2double *drdy = drdx + nInt;
     const su2double *drdz = drdy + nInt;
     const su2double *dsdx = drdz + nInt;
@@ -11469,7 +11473,7 @@ void CFEM_DG_NSSolver::ADER_DG_AliasedPredictorResidual_3D(CConfig              
       /*--- Easier storage of the Jacobians.
             THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
             THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-      const su2double *Jac = elem->metricTerms.data();
+      const su2double *Jac = elem->metricTerms;
 
       /*--- Loop over the integration points of the element. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
@@ -11593,7 +11597,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
     /*--- Easier storage of the metric terms.
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *JacInt  = elem->metricTerms.data();
+    const su2double *JacInt  = elem->metricTerms;
     const su2double *drdxInt = JacInt  + nInt;
     const su2double *drdyInt = drdxInt + nInt;
     const su2double *dsdxInt = drdyInt + nInt;
@@ -11602,7 +11606,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
     /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
        FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelX = elem->gridVelocities;
     const su2double *gridVelY = gridVelX + nInt;
 
     /*--- Loop over the integration points. ---*/
@@ -11670,7 +11674,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_2D(CConfig           
          HIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
          THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
          INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms2ndDer = elem->metricTerms2ndDer.data()
+      const su2double *metricTerms2ndDer = elem->metricTerms2ndDer
                                          + i*nMetric2ndDerPerPoint;
 
       /* Compute the Cartesian second derivatives of the independent solution
@@ -11936,7 +11940,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
     /*--- Easier storage of the metric terms.
           THIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
           THE DATA FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. ---*/
-    const su2double *JacInt = elem->metricTerms.data();
+    const su2double *JacInt = elem->metricTerms;
     const su2double *drdxInt = JacInt  + nInt;
     const su2double *drdyInt = drdxInt + nInt;
     const su2double *drdzInt = drdyInt + nInt;
@@ -11950,7 +11954,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
     /* Set the pointer to the grid velocities. THIS IS A TEMPORARY
        IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED, THE DATA
        FOR THIS DOF FOR THE CURRENT TIME INTEGRATION POINT MUST BE TAKEN. */
-    const su2double *gridVelX = elem->gridVelocities.data();
+    const su2double *gridVelX = elem->gridVelocities;
     const su2double *gridVelY = gridVelX + nInt;
     const su2double *gridVelZ = gridVelY + nInt;
 
@@ -12040,7 +12044,7 @@ void CFEM_DG_NSSolver::ADER_DG_NonAliasedPredictorResidual_3D(CConfig           
          HIS IS A TEMPORARY IMPLEMENTATION. WHEN AN ACTUAL MOTION IS SPECIFIED,
          THE DATA FOR THIS SPATIAL INTEGRATION POINT FOR THE CURRENT TIME
          INTEGRATION POINT MUST BE TAKEN. */
-      const su2double *metricTerms2ndDer = elem->metricTerms2ndDer.data()
+      const su2double *metricTerms2ndDer = elem->metricTerms2ndDer
                                          + i*nMetric2ndDerPerPoint;
 
       /* Compute the Cartesian second derivatives of the independent solution
@@ -12447,7 +12451,7 @@ void CFEM_DG_NSSolver::Shock_Capturing_DG_Persson(const unsigned long elemBeg,
                              + nVar*volElem[l].offsetDOFsSolThisTimeLevel;
 
     /* Easier storage of the pointer for the grid velocities. */
-    const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data();
+    const su2double *gridVel = volElem[l].gridVelocitiesSolDOFs;
 
     /* Temporary storage of mach number for DOFs in this element. */
     su2double *machSolDOFs = workArray;
@@ -12561,12 +12565,11 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
 
   /* Determine the number of elements that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nElemSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /* Set the number of bytes that must be copied in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
@@ -12651,14 +12654,14 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
           const unsigned long  lInd   = l + ll;
 
           /* Easier storage of the metric terms. */
-          const su2double *JacInt  = volElem[lInd].metricTerms.data();
+          const su2double *JacInt  = volElem[lInd].metricTerms;
           const su2double *drdxInt = JacInt  + nInt;
           const su2double *drdyInt = drdxInt + nInt;
           const su2double *dsdxInt = drdyInt + nInt;
           const su2double *dsdyInt = dsdxInt + nInt;
 
           /* Easier storage of the grid velocities. */
-          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelX = volElem[lInd].gridVelocities;
           const su2double *gridVelY = gridVelX + nInt;
 
           /* Loop over the integration points of the elements to compute the fluxes. */
@@ -12852,7 +12855,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
           const unsigned long  lInd   = l + ll;
 
           /* Easier storage of the metric terms. */
-          const su2double *JacInt  = volElem[lInd].metricTerms.data();
+          const su2double *JacInt  = volElem[lInd].metricTerms;
           const su2double *drdxInt = JacInt  + nInt;
           const su2double *drdyInt = drdxInt + nInt;
           const su2double *drdzInt = drdyInt + nInt;
@@ -12864,7 +12867,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
           const su2double *dtdzInt = dtdyInt + nInt;
 
           /* Easier storage of the grid velocities. */
-          const su2double *gridVelX = volElem[lInd].gridVelocities.data();
+          const su2double *gridVelX = volElem[lInd].gridVelocities;
           const su2double *gridVelY = gridVelX + nInt;
           const su2double *gridVelZ = gridVelY + nInt;
 
@@ -12965,7 +12968,7 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
             SGSModel->ComputeEddyViscosity_3D(nInt, rhoInt, dudxInt, dudyInt, dudzInt,
                                               dvdxInt, dvdyInt, dvdzInt, dwdxInt,
                                               dwdyInt, dwdzInt, lenScale,
-                                              volElem[lInd].wallDistance.data(),
+                                              volElem[lInd].wallDistance,
                                               muTurbInt);
           }
 
@@ -13167,11 +13170,13 @@ void CFEM_DG_NSSolver::Volume_Residual(CConfig             *config,
         /* Determine the integration weight multiplied by the Jacobian. */
         const su2double weightJac = weights[i]*Jac[i];
 
-        /* Set the pointer to the coordinates in this integration point and
-           call the function to compute the source terms for the manufactured
-           solution. */
-        const su2double *coor = volElem[lInd].coorIntegrationPoints.data() + i*nDim;
+        /* Store the coordinates in a 1D array. */
+        su2double coor[] = {0.0, 0.0, 0.0};
+        for(unsigned short iDim=0; iDim<nDim; ++iDim)
+          coor[iDim] = volElem[lInd].coorIntegrationPoints[i+iDim*nInt];
 
+        /* Call the function to compute the source terms for the manufactured
+           solution. */
         su2double sourceMan[5];
         SourceTermManufacturedSolution(nDim, Gamma, RGas, ViscosityLam,
                                        ThermalConductivity, coor, sourceMan);
@@ -13238,12 +13243,11 @@ void CFEM_DG_NSSolver::ResidualFaces(CConfig             *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /* Set the number of bytes that must be copied in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
@@ -14497,12 +14501,11 @@ void CFEM_DG_NSSolver::BC_Euler_Wall(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -14563,12 +14566,11 @@ void CFEM_DG_NSSolver::BC_Far_Field(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -14638,12 +14640,11 @@ void CFEM_DG_NSSolver::BC_Sym_Plane(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -15042,12 +15043,11 @@ void CFEM_DG_NSSolver::BC_Supersonic_Outlet(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -15109,12 +15109,11 @@ void CFEM_DG_NSSolver::BC_Inlet(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -15175,12 +15174,11 @@ void CFEM_DG_NSSolver::BC_Outlet(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -15252,12 +15250,11 @@ void CFEM_DG_NSSolver::BC_HeatFlux_Wall(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -15389,12 +15386,11 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -15490,12 +15486,11 @@ void CFEM_DG_NSSolver::BC_Riemann(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix
@@ -15565,12 +15560,11 @@ void CFEM_DG_NSSolver::BC_Custom(CConfig                  *config,
 
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
-  const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+  const unsigned short nPadInput  = nVar;
   const unsigned short nFaceSimul = nPadInput/nVar;
 
-  /* Determine the minimum padded size in the matrix multiplications, which
-     corresponds to 64 byte alignment. */
-  const unsigned short nPadMin = 64/sizeof(passivedouble);
+  /* Determine the minimum padded size in the matrix multiplications. */
+  const unsigned short nPadMin = nPadInput;
 
   /*--- Loop over the requested range of surface faces. Multiple faces
         are treated simultaneously to improve the performance of the matrix

@@ -146,7 +146,7 @@ void CMeshFEM_DG::ComputeWall_Distance(CConfig *config) {
     const unsigned short nInt = standardElementsGrid[ind].GetNIntegration();
 
     /* Allocate the memory for the wall distance of this element. */
-    volElem[l].wallDistance.resize(nInt);
+    volElem[l].wallDistance = (su2double *) config->AllocateMemory(nInt*sizeof(su2double));
 
     /* Check for an empty tree. In that case the wall distance is set to zero. */
     if( WallADT.IsEmpty() ) {
@@ -161,7 +161,10 @@ void CMeshFEM_DG::ComputeWall_Distance(CConfig *config) {
             and determine the wall distance. ---*/
       for(unsigned short i=0; i<nInt; ++i) {
 
-        const su2double *coor = volElem[l].coorIntegrationPoints.data() + i*nDim;
+        su2double coor[] = {0.0, 0.0, 0.0};
+        for(unsigned short iDim=0; iDim<nDim; ++iDim)
+          coor[iDim] = volElem[l].coorIntegrationPoints[i+iDim*nInt];
+
         unsigned short markerID;
         unsigned long  elemID;
         int            rankID;
@@ -186,7 +189,7 @@ void CMeshFEM_DG::ComputeWall_Distance(CConfig *config) {
     const unsigned short nDOFsSol  = volElem[l].nDOFsSol;
 
     /* Allocate the memory for the wall distance of the solution DOFs. */
-    volElem[l].wallDistanceSolDOFs.resize(nDOFsSol);
+    volElem[l].wallDistanceSolDOFs = (su2double *) config->AllocateMemory(nDOFsSol*sizeof(su2double));
 
     /* Check for an empty tree. In that case the wall distance is set to zero. */
     if( WallADT.IsEmpty() ) {
@@ -201,7 +204,10 @@ void CMeshFEM_DG::ComputeWall_Distance(CConfig *config) {
             and determine the wall distance. ---*/
       for(unsigned short i=0; i<nDOFsSol; ++i) {
 
-        const su2double *coor = volElem[l].coorSolDOFs.data() + i*nDim;
+        su2double coor[] = {0.0, 0.0, 0.0};
+        for(unsigned short iDim=0; iDim<nDim; ++iDim)
+          coor[iDim] = volElem[l].coorSolDOFs[i+iDim*nDOFsSol];
+
         unsigned short markerID;
         unsigned long  elemID;
         int            rankID;

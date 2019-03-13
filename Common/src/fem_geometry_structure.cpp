@@ -228,6 +228,34 @@ bool CPointFEM::operator==(const CPointFEM &other) const {
          periodIndexToDonor == other.periodIndexToDonor);
 }
 
+CVolumeElementFEM::CVolumeElementFEM(void) {
+
+  /* Initialize the pointers to NULL. */
+  metricTerms           = NULL;
+  metricTermsSolDOFs    = NULL;
+  metricTerms2ndDer     = NULL;
+  gridVelocities        = NULL;
+  gridVelocitiesSolDOFs = NULL;
+  coorIntegrationPoints = NULL;
+  coorSolDOFs           = NULL;
+  wallDistance          = NULL;
+  wallDistanceSolDOFs   = NULL;
+}
+
+CVolumeElementFEM::~CVolumeElementFEM(void) { 
+
+  /* Release the memory for the allocated member variables. */
+  CConfig::FreeMemory(metricTerms);
+  CConfig::FreeMemory(metricTermsSolDOFs);
+  CConfig::FreeMemory(metricTerms2ndDer);
+  CConfig::FreeMemory(gridVelocities);
+  CConfig::FreeMemory(gridVelocitiesSolDOFs);
+  CConfig::FreeMemory(coorIntegrationPoints);
+  CConfig::FreeMemory(coorSolDOFs);
+  CConfig::FreeMemory(wallDistance);
+  CConfig::FreeMemory(wallDistanceSolDOFs);
+}
+
 void CVolumeElementFEM::GetCornerPointsAllFaces(unsigned short &numFaces,
                                                 unsigned short nPointsPerFace[],
                                                 unsigned long  faceConn[6][4]) {
@@ -334,17 +362,6 @@ CMeshFEM::CMeshFEM(CGeometry *geometry, CConfig *config) {
   /*--- The new FEM mesh class has the same problem dimension/zone. ---*/
   nDim  = geometry->GetnDim();
   nZone = geometry->GetnZone();
-
-  /*--- Determine the number of variables stored per DOF.              ---*/
-  /*--- This is specifically taylored towards perfect gas computations ---*/
-  /*--- and must be generalized later. As this number is also needed   ---*/
-  /*--- in the solver, it is worthwhile to create a separate function  ---*/
-  /*--- for this purpose.                                              ---*/
-  const bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
-
-  unsigned short nVar;
-  if( compressible ) nVar = nDim + 2;
-  else               nVar = nDim + 1;
 
   /*--- Determine a mapping from the global point ID to the local index
         of the points.            ---*/
@@ -1178,21 +1195,9 @@ CMeshFEM::CMeshFEM(CGeometry *geometry, CConfig *config) {
   /*---           a halo element. However, the residual of these internal    ---*/
   /*---           elements do not receive a contribution computed on a       ---*/
   /*---           different rank.                                            ---*/
-  /*---         - Some of the elements that do not need to send their data   ---*/
-  /*---           to other ranks may still be put in that part to increase   ---*/
-  /*---           the efficiency when treating element simultaneously, see   ---*/
-  /*---           next point.                                                ---*/
-  /*---         - Elements of the same type are put contiguously in memory   ---*/
-  /*---           as much as possible to facilitate the simultaneous         ---*/
-  /*---           treatment in the matrix multiplications to increase        ---*/
-  /*---           performance.                                               ---*/
   /*---         - A reverse Cuthill McKee renumbering takes place to obtain  ---*/
   /*---           better cache performance for the face residuals.           ---*/
   /*----------------------------------------------------------------------------*/
-
-  /* Determine the number of elements/faces that are treated simultaneously */
-  /* in the matrix products to obtain good gemm performance.                */
-  const unsigned short nElemSimul = config->GetSizeMatMulPadding()/nVar;
 
   /* Determine the number of different element types present. */
   map<unsigned short, unsigned short> mapElemTypeToInd;
@@ -1233,67 +1238,6 @@ CMeshFEM::CMeshFEM(CGeometry *geometry, CConfig *config) {
       ++nCommElem[OEI->GetTimeLevel()][ind];
     else
       ++nInternalElem[OEI->GetTimeLevel()][ind];
-  }
-
-  /* Loop again over the owned elements and check if elements, which do not
-     have to send their solution, should be flagged as such in order to improve
-     the gemm performance. */
-  for(vector<CReorderElements>::iterator OEI =ownedElements.begin();
-                                         OEI!=ownedElements.end(); ++OEI) {
-
-    /* Check for an internal element, i.e. an element for which the solution
-       does not need to be communicated. */
-    if( !OEI->GetCommSolution() ) {
-
-      /* Determine the time level and the index of the element type. */
-      const unsigned short tLev = OEI->GetTimeLevel();
-
-      const unsigned short elType = OEI->GetElemType();
-      map<unsigned short, unsigned short>::const_iterator MI = mapElemTypeToInd.find(elType);
-      const unsigned short ind = MI->second +1;
-
-      /* Determine whether or not this element must be moved from internal to
-         comm elements to improve performance. Change the appropriate data
-         when this must happen. */
-      if(nInternalElem[tLev][ind]%nElemSimul && nCommElem[tLev][ind]%nElemSimul) {
-        OEI->SetCommSolution(true);
-        --nInternalElem[tLev][ind];
-        ++nCommElem[tLev][ind];
-      }
-    }
-  }
-
-  /* Check whether there are enough elements in every partition for every
-     time level to guarantee a good gemm performance. */
-  unsigned long nFullChunks = 0, nPartialChunks = 0;
-  for(unsigned short tLev=0; tLev<nTimeLevels; ++tLev) {
-    for(unsigned long j=1; j<nInternalElem[tLev].size(); ++j) {
-      nFullChunks += nInternalElem[tLev][j]/nElemSimul;
-      if(nInternalElem[tLev][j]%nElemSimul) ++nPartialChunks;
-    }
-
-    for(unsigned long j=1; j<nCommElem[tLev].size(); ++j) {
-      nFullChunks += nCommElem[tLev][j]/nElemSimul;
-      if(nCommElem[tLev][j]%nElemSimul) ++nPartialChunks;
-    }
-  }
-
-  unsigned long tooManyPartChunksLoc = 0;
-  if(5*nPartialChunks >= (nPartialChunks+nFullChunks)) tooManyPartChunksLoc = 1;
-
-  /* Determine the number of ranks which contain too many partial chunks.
-     The result only needs to be known on the master node. */
-  unsigned long nRanksTooManyPartChunks = tooManyPartChunksLoc;
-#ifdef HAVE_MPI
-  SU2_MPI::Reduce(&tooManyPartChunksLoc, &nRanksTooManyPartChunks, 1,
-                  MPI_UNSIGNED_LONG, MPI_SUM, MASTER_NODE, MPI_COMM_WORLD);
-#endif
-
-  if((rank == MASTER_NODE) && (nRanksTooManyPartChunks != 0) && (size > 1)) {
-    cout << endl << "                 WARNING" << endl;
-    cout << "There are " << nRanksTooManyPartChunks << " partitions for which "
-         << " the simultaneous treatment of volume elements is not optimal." << endl;
-    cout << "This could lead to a significant load imbalance." << endl;
   }
 
   /* Put nInternalElem and nCommElem in cumulative storage format. */
@@ -2512,7 +2456,7 @@ CMeshFEM_DG::CMeshFEM_DG(CGeometry *geometry, CConfig *config)
   : CMeshFEM(geometry, config) {
 }
 
-void CMeshFEM_DG::CoordinatesIntegrationPoints(void) {
+void CMeshFEM_DG::CoordinatesIntegrationPoints(CConfig *config) {
 
   /*--------------------------------------------------------------------*/
   /*--- Step 1: The integration points of the owned volume elements. ---*/
@@ -2527,8 +2471,9 @@ void CMeshFEM_DG::CoordinatesIntegrationPoints(void) {
     const unsigned short nInt = standardElementsGrid[ind].GetNIntegration();
     const su2double      *lag = standardElementsGrid[ind].GetBasisFunctionsIntegration();
 
-    /* Allocate the memory for the coordinates of the integration points. */
-    volElem[l].coorIntegrationPoints.resize(nDim*nInt);
+    /* Allocate the memory for the coordinates of the integration points.. */
+    const size_t sizeMemory = nDim*nInt*sizeof(su2double);
+    volElem[l].coorIntegrationPoints = (su2double *) config->AllocateMemory(sizeMemory);
 
     /* Store the grid DOFs of this element a bit easier. */
     const unsigned short nDOFs = volElem[l].nDOFsGrid;
@@ -2538,12 +2483,13 @@ void CMeshFEM_DG::CoordinatesIntegrationPoints(void) {
           the coordinates of the integration points. */
     for(unsigned short i=0; i<nInt; ++i) {
 
-      su2double *coor = volElem[l].coorIntegrationPoints.data() + i*nDim;
-      const unsigned short jj = i*nDOFs;
+      su2double *coor = volElem[l].coorIntegrationPoints + i;
+      const unsigned short ii = i*nDOFs;
       for(unsigned short j=0; j<nDim; ++j) {
-        coor[j] = 0.0;
+        const unsigned short jj = j*nInt;
+        coor[jj] = 0.0;
         for(unsigned short k=0; k<nDOFs; ++k)
-          coor[j] += lag[jj+k]*meshPoints[DOFs[k]].coor[j];
+          coor[jj] += lag[ii+k]*meshPoints[DOFs[k]].coor[j];
       }
     }
   }
@@ -2627,7 +2573,7 @@ void CMeshFEM_DG::CoordinatesIntegrationPoints(void) {
   }
 }
 
-void CMeshFEM_DG::CoordinatesSolDOFs(void) {
+void CMeshFEM_DG::CoordinatesSolDOFs(CConfig *config) {
 
   /*--- Loop over the owned elements to compute the coordinates
         of the solution DOFs. ---*/
@@ -2643,7 +2589,8 @@ void CMeshFEM_DG::CoordinatesSolDOFs(void) {
     const su2double     *lag = standardElementsGrid[ind].GetBasisFunctionsSolDOFs();
 
     /* Allocate the memory for the coordinates of the solution DOFs. */
-    volElem[l].coorSolDOFs.resize(nDim*nDOFsSol);
+    const size_t sizeMemory = nDim*nDOFsSol*sizeof(su2double);
+    volElem[l].coorSolDOFs = (su2double *) config->AllocateMemory(sizeMemory);
 
     /*--- Loop over the solution DOFs of this element and compute the
           coordinates. Note that in case the polynomial degree of the grid
@@ -2651,12 +2598,13 @@ void CMeshFEM_DG::CoordinatesSolDOFs(void) {
           and the interpolation boils down to a copy of the coordinates. ---*/
     for(unsigned short i=0; i<nDOFsSol; ++i) {
 
-      su2double *coor = volElem[l].coorSolDOFs.data() + i*nDim;
-      const unsigned short jj = i*nDOFsGrid;
+      su2double *coor = volElem[l].coorSolDOFs + i;
+      const unsigned short ii = i*nDOFsGrid;
       for(unsigned short j=0; j<nDim; ++j) {
-        coor[j] = 0.0;
+        const unsigned short jj = j*nDOFsSol;
+        coor[jj] = 0.0;
         for(unsigned short k=0; k<nDOFsGrid; ++k)
-          coor[j] += lag[jj+k]*meshPoints[DOFsGrid[k]].coor[j];
+          coor[jj] += lag[ii+k]*meshPoints[DOFsGrid[k]].coor[j];
       }
     }
   }
@@ -5313,7 +5261,7 @@ void CMeshFEM_DG::LengthScaleVolumeElements(void) {
 
     /* Easier storage of the Jacobians and determine the number of
        integration points for this element. */
-    const su2double      *Jac = volElem[i].metricTerms.data();
+    const su2double      *Jac = volElem[i].metricTerms;
     const unsigned short ind  = volElem[i].indStandardElement;
     const unsigned short nInt = standardElementsSol[ind].GetNIntegration();
 
@@ -5473,12 +5421,22 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
     /* Allocate the memory for the grid velocities. They are initialized to
        zero as default value, i.e. not moving. */
-    volElem[i].gridVelocities.assign(nDim*nInt, 0.0);
-    volElem[i].gridVelocitiesSolDOFs.assign(nDim*nDOFsSol, 0.0);
+    size_t sizeMemory = nDim*nInt*sizeof(su2double);
+    volElem[i].gridVelocities = (su2double *) config->AllocateMemory(sizeMemory);
+    for(unsigned short j=0; j<(nDim*nInt); ++j)
+      volElem[i].gridVelocities[j] = 0.0;
+
+    sizeMemory = nDim*nDOFsSol*sizeof(su2double);
+    volElem[i].gridVelocitiesSolDOFs = (su2double *) config->AllocateMemory(sizeMemory);
+    for(unsigned short j=0; j<(nDim*nDOFsSol); ++j)
+      volElem[i].gridVelocitiesSolDOFs[j] = 0.0;
 
     /* Allocate the memory for the metric terms of this element. */
-    volElem[i].metricTerms.resize(nMetricPerPoint*nInt);
-    volElem[i].metricTermsSolDOFs.resize(nMetricPerPoint*nDOFsSol);
+    sizeMemory = nMetricPerPoint*nInt*sizeof(su2double);
+    volElem[i].metricTerms = (su2double *) config->AllocateMemory(sizeMemory);
+
+    sizeMemory = nMetricPerPoint*nDOFsSol*sizeof(su2double);
+    volElem[i].metricTermsSolDOFs = (su2double *) config->AllocateMemory(sizeMemory);
 
     /* Get the pointer to the matrix storage of the basis functions
        and its derivatives. The first nDOFsGrid*nInt entries of this matrix
@@ -5574,7 +5532,7 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
          in the grid DOFs. */
       vector<su2double> metricGridDOFsTmp(nDOFsGrid*nMetricPerPoint);
       VolumeMetricTermsFromCoorGradients(nDOFsGrid, vecResultGridDOFs,
-                                         metricGridDOFsTmp);
+                                         metricGridDOFsTmp.data());
 
       /*--- The metric terms currently stored in metricGridDOFs are scaled
             with the Jacobian and also the Jacobian is part of the metric
@@ -5604,7 +5562,8 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
       /* Allocate the memory for the additional metric terms needed to
          compute the second derivatives. */
-      volElem[i].metricTerms2ndDer.resize(nInt*nMetric2ndDerPerPoint);
+      size_t sizeMemory = nInt*nMetric2ndDerPerPoint*sizeof(su2double);
+      volElem[i].metricTerms2ndDer = (su2double *) config->AllocateMemory(sizeMemory);
 
       /*--- Loop over the integration points to compute the additional metric
             terms needed for the second derivatives. This is a combination of
@@ -5615,7 +5574,7 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
           /* 2D computation. Set the pointers for the derivatives
              in the integration points. */
-          const su2double *JacInt  = volElem[i].metricTerms.data();
+          const su2double *JacInt  = volElem[i].metricTerms;
           const su2double *drdxInt = JacInt  + nInt;
           const su2double *drdyInt = drdxInt + nInt;
           const su2double *dsdxInt = drdyInt + nInt;
@@ -5628,7 +5587,7 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
                point starts. */
             const su2double *rDerMetric   = vecDerMetrics + j*(nMetricPerPoint-1);
             const su2double *sDerMetric   = rDerMetric + nInt*(nMetricPerPoint-1);
-            su2double       *metric2ndDer = volElem[i].metricTerms2ndDer.data()
+            su2double       *metric2ndDer = volElem[i].metricTerms2ndDer
                                           + j*nMetric2ndDerPerPoint;
 
             /* More readable abbreviations for the metric terms
@@ -5665,7 +5624,7 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
 
           /* 3D computation. Set the pointers for the derivatives
              in the integration points. */
-          const su2double *JacInt  = volElem[i].metricTerms.data();
+          const su2double *JacInt  = volElem[i].metricTerms;
           const su2double *drdxInt = JacInt  + nInt;
           const su2double *drdyInt = drdxInt + nInt;
           const su2double *drdzInt = drdyInt + nInt;
@@ -5684,7 +5643,7 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
             const su2double *rDerMetric   = vecDerMetrics + j*(nMetricPerPoint-1);
             const su2double *sDerMetric   = rDerMetric + nInt*(nMetricPerPoint-1);
             const su2double *tDerMetric   = sDerMetric + nInt*(nMetricPerPoint-1);
-            su2double       *metric2ndDer = volElem[i].metricTerms2ndDer.data()
+            su2double       *metric2ndDer = volElem[i].metricTerms2ndDer
                                           + j*nMetric2ndDerPerPoint;
 
             /* More readable abbreviations for the metric terms
@@ -5797,7 +5756,7 @@ void CMeshFEM_DG::MetricTermsVolumeElements(CConfig *config) {
     const su2double     *valInt = valMMInt[ind].data();
 
     /* Set the pointer to the Jacobians for readability. */
-    const su2double *Jac = volElem[i].metricTerms.data();
+    const su2double *Jac = volElem[i].metricTerms;
 
     /* Allocate the memory for the working vector for the construction
        of the mass matrix. */
@@ -6117,7 +6076,7 @@ void CMeshFEM_DG::TimeCoefficientsPredictorADER_DG(CConfig *config) {
 void CMeshFEM_DG::VolumeMetricTermsFromCoorGradients(
                                        const unsigned short nEntities,
                                        const su2double      *gradCoor,
-                                       vector<su2double>    &metricTerms) {
+                                       su2double            *metricTerms) {
 
   /*--- Convert the dxdr, dydr, etc., stored in coorGradients, to the
         required metric terms. Make a distinction between 2D and 3D. ---*/
@@ -6128,7 +6087,7 @@ void CMeshFEM_DG::VolumeMetricTermsFromCoorGradients(
       const unsigned short off = 2*nEntities;
 
       /* Set the pointers for the metric terms. */
-      su2double *Jac  = metricTerms.data();
+      su2double *Jac  = metricTerms;
       su2double *drdx = Jac  + nEntities;
       su2double *drdy = drdx + nEntities;
       su2double *dsdx = drdy + nEntities;
@@ -6155,7 +6114,7 @@ void CMeshFEM_DG::VolumeMetricTermsFromCoorGradients(
       unsigned short offS = 3*nEntities, offT = 6*nEntities;
 
       /* Set the pointers for the metric terms. */
-      su2double *Jac  = metricTerms.data();
+      su2double *Jac  = metricTerms;
       su2double *drdx = Jac  + nEntities;
       su2double *drdy = drdx + nEntities;
       su2double *drdz = drdy + nEntities;
@@ -6772,11 +6731,11 @@ void CMeshFEM_DG::InitStaticMeshMovement(CConfig              *config,
 
         /* Determine the grid velocities in the integration points. */
         for(unsigned short i=0; i<nInt; ++i) {
-          const su2double *coor    = volElem[l].coorIntegrationPoints.data() + i*nDim;
-          su2double       *gridVel = volElem[l].gridVelocities.data() + i;
+          const su2double *coor    = volElem[l].coorIntegrationPoints + i;
+          su2double       *gridVel = volElem[l].gridVelocities + i;
 
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
-            dist[iDim] = (coor[iDim]-Center[iDim])/L_Ref;
+            dist[iDim] = (coor[iDim*nInt]-Center[iDim])/L_Ref;
 
           gridVel[0]    = Omega[1]*dist[2] - Omega[2]*dist[1];
           gridVel[nInt] = Omega[2]*dist[0] - Omega[0]*dist[2];
@@ -6785,11 +6744,11 @@ void CMeshFEM_DG::InitStaticMeshMovement(CConfig              *config,
 
         /* Determine the grid velocities in the solution DOFs. */
         for(unsigned short i=0; i<nDOFs; ++i) {
-          const su2double *coor    = volElem[l].coorSolDOFs.data() + i*nDim;
-          su2double       *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i;
+          const su2double *coor    = volElem[l].coorSolDOFs + i;
+          su2double       *gridVel = volElem[l].gridVelocitiesSolDOFs + i;
 
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
-            dist[iDim] = (coor[iDim]-Center[iDim])/L_Ref;
+            dist[iDim] = (coor[iDim*nDOFs]-Center[iDim])/L_Ref;
 
           gridVel[0]     = Omega[1]*dist[2] - Omega[2]*dist[1];
           gridVel[nDOFs] = Omega[2]*dist[0] - Omega[0]*dist[2];
@@ -6888,13 +6847,13 @@ void CMeshFEM_DG::InitStaticMeshMovement(CConfig              *config,
         /* Set the grid velocity in both the integration points and
            the sol DOFs. */
         for(unsigned short i=0; i<nInt; ++i) {
-          su2double *gridVel = volElem[l].gridVelocities.data() + i;
+          su2double *gridVel = volElem[l].gridVelocities + i;
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
             gridVel[iDim*nInt] = vTrans[iDim];
         }
 
         for(unsigned short i=0; i<nDOFs; ++i) {
-          su2double *gridVel = volElem[l].gridVelocitiesSolDOFs.data() + i;
+          su2double *gridVel = volElem[l].gridVelocitiesSolDOFs + i;
           for(unsigned short iDim=0; iDim<nDim; ++iDim)
             gridVel[iDim*nDOFs] = vTrans[iDim];
         }

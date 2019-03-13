@@ -285,29 +285,30 @@ public:
   su2double shockArtificialViscosity;       /*!< \brief Artificial viscosity for a shock */
 
 
-  vector<su2double> metricTerms;            /*!< \brief Vector of the metric terms in the
-                                                        integration points of this element. */
-  vector<su2double> metricTermsSolDOFs;     /*!< \brief Vector of the metric terms in the
-                                                        solution DOFs of this element. */
-  vector<su2double> metricTerms2ndDer;      /*!< \brief Vector of the metric terms needed for the
-                                                        computation of the 2nd derivatives in the
-                                                        integration points. Only determined when
-                                                        needed (ADER-DG with non-aliased predictor
-                                                        for the Navier-Stokes equations). */
-  vector<su2double> gridVelocities;         /*!< \brief Vector of the grid velocities in the
-                                                        integration points of this element. */
-  vector<su2double> gridVelocitiesSolDOFs;  /*!< \brief Vector of the grid velocities in the
-                                                        solution DOFs of this element. */
+  su2double *metricTerms;            /*!< \brief Array of the metric terms in the integration
+                                                 points of this element. */
+  su2double *metricTermsSolDOFs;     /*!< \brief Array of the metric terms in the solution
+                                                 DOFs of this element. */
+  su2double *metricTerms2ndDer;      /*!< \brief Array of the metric terms needed for the
+                                                 computation of the 2nd derivatives in the
+                                                 integration points. Only determined when
+                                                 needed (ADER-DG with non-aliased predictor
+                                                 for the Navier-Stokes equations). */
+  su2double *gridVelocities;         /*!< \brief Array of the grid velocities in the
+                                                 integration points of this element. */
+  su2double *gridVelocitiesSolDOFs;  /*!< \brief Array of the grid velocities in the
+                                                 solution DOFs of this element. */
+
   vector<su2double> massMatrix;             /*!< \brief Mass matrix for this element. */
   vector<su2double> invMassMatrix;          /*!< \brief Inverse mass matrix for this element. */
   vector<su2double> lumpedMassMatrix;       /*!< \brief Lumped mass matrix for this element. */
 
-  vector<su2double> coorIntegrationPoints;  /*!< \brief The coordinates of the integration points of this element. */
-  vector<su2double> coorSolDOFs;            /*!< \brief The coordinates of the solution DOFs of this element. */
-  vector<su2double> wallDistance;           /*!< \brief The wall distance to the viscous walls for
-                                                        the integration points of this element. */
-  vector<su2double> wallDistanceSolDOFs;    /*!< \brief The wall distance to the viscous walls for
-                                                        the solution DOFs of this element. */
+  su2double *coorIntegrationPoints;  /*!< \brief The coordinates of the integration points of this element. */
+  su2double *coorSolDOFs;            /*!< \brief The coordinates of the solution DOFs of this element. */
+  su2double *wallDistance;           /*!< \brief The wall distance to the viscous walls for
+                                                 the integration points of this element. */
+  su2double *wallDistanceSolDOFs;    /*!< \brief The wall distance to the viscous walls for
+                                                 the solution DOFs of this element. */
 
   /*!
    * \brief Constructor of the class. Initialize the pointers to NULL.
@@ -909,13 +910,15 @@ public:
 
  /*!
   * \brief Function to compute the coordinates of the integration points.
+  * \param[in] config - Definition of the particular problem.
   */
-  void CoordinatesIntegrationPoints(void);
+  void CoordinatesIntegrationPoints(CConfig *config);
 
  /*!
   * \brief Function to compute the coordinates of solution DOFs.
+  * \param[in] config - Definition of the particular problem.
   */
-  void CoordinatesSolDOFs(void);
+  void CoordinatesSolDOFs(CConfig *config);
 
  /*!
   * \brief Function to compute the distance to the nearest viscous wall.
@@ -1372,11 +1375,11 @@ private:
   * \param[in]  gradCoor     - The gradients of the coordinates (w.r.t. the
                                parametric coordinates) from which the metric
                                terms must be computed.
-  * \param[out] metricTerms  - Vector in which the metric terms must be stored.
+  * \param[out] metricTerms  - Array in which the metric terms must be stored.
   */
   void VolumeMetricTermsFromCoorGradients(const unsigned short nEntities,
                                           const su2double      *gradCoor,
-                                          vector<su2double>    &metricTerms);
+                                          su2double            *metricTerms);
 };
 
 #include "fem_geometry_structure.inl"

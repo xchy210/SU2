@@ -48,10 +48,6 @@
 #include "geometry_structure.hpp"
 #include "vector_structure.hpp"
 
-#ifdef HAVE_MKL
-#include "mkl.h"
-#endif
-
 using namespace std;
 
 const su2double eps = numeric_limits<passivedouble>::epsilon(); /*!< \brief machine epsilon */

@@ -19294,8 +19294,8 @@ void COutput::MergeCoordinates_FEM(CConfig *config, CGeometry *geometry) {
       const unsigned long globalIndex = volElem[l].offsetDOFsSolGlobal + j;
       globalID.push_back(globalIndex);
 
-      const su2double *coor = volElem[l].coorSolDOFs.data() + j*nDim;
-      for(unsigned short k=0; k<nDim; ++k) DOFsCoords.push_back(coor[k]);
+      const su2double *coor = volElem[l].coorSolDOFs + j;
+      for(unsigned short k=0; k<nDim; ++k) DOFsCoords.push_back(coor[k*volElem[l].nDOFsSol]);
 
       nLocalPoint++;
     }
@@ -20901,9 +20901,9 @@ void COutput::LoadLocalData_FEM(CConfig *config, CGeometry *geometry, CSolver **
 
       /*--- Load the coordinate values of the solution DOFs. ---*/
 
-      const su2double *coor = volElem[l].coorSolDOFs.data() + j*nDim;
+      const su2double *coor = volElem[l].coorSolDOFs + j;
       for(unsigned short k=0; k<nDim; ++k) {
-        Local_Data[jPoint][iVar] = coor[k];
+        Local_Data[jPoint][iVar] = coor[k*volElem[l].nDOFsSol];
         iVar++;
       }
 

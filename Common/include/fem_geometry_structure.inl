@@ -68,10 +68,6 @@ inline CSortBoundaryFaces::CSortBoundaryFaces() { }
 
 inline CSortBoundaryFaces::~CSortBoundaryFaces() { }
 
-inline CVolumeElementFEM::CVolumeElementFEM(void) { }
-
-inline CVolumeElementFEM::~CVolumeElementFEM(void) { }
-
 inline CPointFEM::CPointFEM(void) { coor[0] = coor[1] = coor[2] = 0.0; }
 
 inline CPointFEM::~CPointFEM(void) { }

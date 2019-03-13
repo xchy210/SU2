@@ -1944,8 +1944,8 @@ void CConfig::SetConfig_Options(unsigned short val_iZone, unsigned short val_nZo
   /* DESCRIPTION: Only compute the exact Jacobian of the spatial discretization (NO, YES) */
   addBoolOption("JACOBIAN_SPATIAL_DISCRETIZATION_ONLY", Jacobian_Spatial_Discretization_Only, false);
 
-  /* DESCRIPTION: Number of aligned bytes for the matrix multiplications. Multiple of 64. (128 by default) */
-  addUnsignedShortOption("ALIGNED_BYTES_MATMUL", byteAlignmentMatMul, 128);
+  /* DESCRIPTION: Byte alignment for the memory allocation. Multiple of 8. (64 by default) */
+  addUnsignedShortOption("BYTE_ALIGNMENT", byteAlignment, 64);
 
   /*!\par CONFIG_CATEGORY: FEA solver \ingroup Config*/
   /*--- Options related to the FEA solver ---*/
@@ -3743,18 +3743,12 @@ void CConfig::SetPostprocessing(unsigned short val_software, unsigned short val_
     RK_Alpha_Step = new su2double[1]; RK_Alpha_Step[0] = 1.0;
   }
 
-  /* Check if the byte alignment of the matrix multiplications is a
-     multiple of 64. */
-  if( byteAlignmentMatMul%64 ) {
+  /* Check if the byte alignment of the matrix multiplications is a multiple of 8. */
+  if( byteAlignment%8 ) {
     if(rank == MASTER_NODE)
-      cout << "ALIGNED_BYTES_MATMUL must be a multiple of 64." << endl;
+      cout << "BYTE_ALIGNMENT must be a multiple of 8." << endl;
     exit(EXIT_FAILURE);
   }
-
-  /* Determine the value of sizeMatMulPadding, which is the matrix size in
-     the vectorization direction when padding is applied to have optimal
-     performance in the matrix multiplications. */
-  sizeMatMulPadding = byteAlignmentMatMul/sizeof(passivedouble);
 
   /* Correct the number of time levels for time accurate local time
      stepping, if needed.  */
@@ -5780,8 +5774,7 @@ void CConfig::SetOutput(unsigned short val_software, unsigned short val_izone) {
       cout << "Quadrature factor for elements with constant Jacobian:     " << Quadrature_Factor_Straight << endl;
       cout << "Quadrature factor for elements with non-constant Jacobian: " << Quadrature_Factor_Curved << endl;
 
-      cout << "Byte alignment matrix multiplications:      " << byteAlignmentMatMul << endl;
-      cout << "Padded matrix size for optimal performance: " << sizeMatMulPadding << endl;
+      cout << "Byte alignment memory allocation: " << byteAlignment << endl;
     }
 
     cout << endl <<"---------------------- Time Numerical Integration -----------------------" << endl;
