@@ -286,6 +286,26 @@ void CFEMStandardElementBase::Copy(const CFEMStandardElementBase &other) {
   wIntegration = other.wIntegration;
 }
 
+unsigned short CFEMStandardElementBase::CreatePaddedValue(const unsigned short nEntities)
+{
+  /*--- Check whether padding is actually needed. ---*/
+  unsigned short nEntitiesPad = nEntities;
+  if( nEntities%8 ) {
+
+    /*--- Determine the closest value of nEntities,
+          which is a multiple of 8. ---*/
+    nEntitiesPad += 8 - (nEntities%8);
+
+    /*--- Determine the additional amount of work done for the padding and decide
+          whether or not it is worthwhile to do the padding. ---*/
+    const unsigned short addEntities = nEntitiesPad - nEntities;
+    if(100*addEntities >= 25*nEntities) nEntitiesPad = nEntities;
+  }
+
+  /*--- Return the value of  nEntitiesPad. ---*/
+  return nEntitiesPad;
+}
+
 void CFEMStandardElementBase::DerivativesBasisFunctionsAdjacentElement(
                                         unsigned short    VTK_TypeElem,
                                         unsigned short    nPolyElem,
