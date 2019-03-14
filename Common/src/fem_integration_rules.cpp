@@ -45,6 +45,9 @@ void CFEMStandardElementBase::IntegrationPointsLine(void) {
   wIntegration.resize(nIntegration);
 
   GaussLegendrePoints1D(rIntegration, wIntegration);
+
+  /* Create a (possibly) padded value of nIntegration to increase gemm performance. */
+  nIntegrationPad = CreatePaddedValue(nIntegration);
 }
 
 void CFEMStandardElementBase::IntegrationPointsQuadrilateral(void) {
@@ -72,6 +75,9 @@ void CFEMStandardElementBase::IntegrationPointsQuadrilateral(void) {
       wIntegration[ii] = GLWeights[i]*GLWeights[j];
     }
   }
+
+  /* Create a (possibly) padded value of nIntegration to increase gemm performance. */
+  nIntegrationPad = CreatePaddedValue(nIntegration);
 }
 
 void CFEMStandardElementBase::IntegrationPointsPrism(void) {
@@ -110,6 +116,9 @@ void CFEMStandardElementBase::IntegrationPointsPrism(void) {
       wIntegration[ii] = wTriangle[j]*GLWeights[k];
     }
   }
+
+  /* Create a (possibly) padded value of nIntegration to increase gemm performance. */
+  nIntegrationPad = CreatePaddedValue(nIntegration);
 }
 
 void CFEMStandardElementBase::IntegrationPointsHexahedron(void) {
@@ -141,6 +150,9 @@ void CFEMStandardElementBase::IntegrationPointsHexahedron(void) {
       }
     }
   }
+
+  /* Create a (possibly) padded value of nIntegration to increase gemm performance. */
+  nIntegrationPad = CreatePaddedValue(nIntegration);
 }
 
 void CFEMStandardElementBase::IntegrationPointsTriangle(void) {
@@ -2031,6 +2043,9 @@ void CFEMStandardElementBase::IntegrationPointsTriangle(void) {
       break;
     }
   }
+
+  /* Create a (possibly) padded value of nIntegration to increase gemm performance. */
+  nIntegrationPad = CreatePaddedValue(nIntegration);
 }
 
 void CFEMStandardElementBase::IntegrationPointsTetrahedron(void) {
@@ -3285,6 +3300,9 @@ void CFEMStandardElementBase::IntegrationPointsTetrahedron(void) {
       break;
     }
   }
+
+  /* Create a (possibly) padded value of nIntegration to increase gemm performance. */
+  nIntegrationPad = CreatePaddedValue(nIntegration);
 }
 
 void CFEMStandardElementBase::IntegrationPointsPyramid(void) {
@@ -3329,4 +3347,7 @@ void CFEMStandardElementBase::IntegrationPointsPyramid(void) {
       }
     }
   }
+
+  /* Create a (possibly) padded value of nIntegration to increase gemm performance. */
+  nIntegrationPad = CreatePaddedValue(nIntegration);
 }

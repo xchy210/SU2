@@ -48,9 +48,11 @@ using namespace std;
  */
 class CFEMStandardElementBase {
 protected:
-  unsigned short VTK_Type;     /*!< \brief Element type using the VTK convention. */
-  unsigned short orderExact;   /*!< \brief Polynomial order that must be integrated exactly by the integration rule. */
-  unsigned short nIntegration; /*!< \brief Number of points used in the numerical integration. */
+  unsigned short VTK_Type;        /*!< \brief Element type using the VTK convention. */
+  unsigned short orderExact;      /*!< \brief Polynomial order that must be integrated exactly by the integration rule. */
+  unsigned short nIntegration;    /*!< \brief Number of points used in the numerical integration. */
+  unsigned short nIntegrationPad; /*!< \brief Number of integration points, possibly padded
+                                              to increase the gemm performance. */ 
 
   bool constJacobian;          /*!< \brief Whether or not the element has a constant Jacobian. */
 
@@ -183,6 +185,15 @@ protected:
   * \param[in] other - Object, whose data is copied.
   */
   void Copy(const CFEMStandardElementBase &other);
+
+  /*!
+  * \brief Function, which determines a possibly padded value for the input value
+           to increase the gemm performance.
+  * \param[in] nEntities - Number of entities that must be padded. This value typically
+                           corresponds to the number of DOFs or integration points.
+  * \return  The (possibly) padded value of nEntities.
+  */
+  unsigned short CreatePaddedValue(const unsigned short nEntities);
 
   /*!
   * \brief Function, which computes the values of the derivatives of the basis functions
@@ -792,6 +803,8 @@ private:
 
   unsigned short nPoly;        /*!< \brief Polynomial degree of the element. */
   unsigned short nDOFs;        /*!< \brief Number of DOFs of the element. */
+  unsigned short nDOFsPad;     /*!< \brief Number of DOFs, possibly padded
+                                           to increase performance. */
 
   unsigned short VTK_Type1;    /*!< \brief VTK type for elements of type 1 in subConn1ForPlotting. */
   unsigned short VTK_Type2;    /*!< \brief VTK type for elements of type 2 in subConn2ForPlotting. */

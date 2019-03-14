@@ -274,10 +274,11 @@ void CFEMStandardElementBase::CheckSumLagrangianBasisFunctions(
 
 void CFEMStandardElementBase::Copy(const CFEMStandardElementBase &other) {
 
-  VTK_Type      = other.VTK_Type;
-  nIntegration  = other.nIntegration;
-  constJacobian = other.constJacobian;
-  orderExact    = other.orderExact;
+  VTK_Type        = other.VTK_Type;
+  nIntegration    = other.nIntegration;
+  nIntegrationPad = other.nIntegrationPad;
+  constJacobian   = other.constJacobian;
+  orderExact      = other.orderExact;
 
   rIntegration = other.rIntegration;
   sIntegration = other.sIntegration;
@@ -1822,7 +1823,7 @@ su2double CFEMStandardElementBase::ViscousPenaltyParameter(
 void CFEMStandardElementBase::GaussLegendrePoints1D(vector<su2double> &GLPoints,
                                                     vector<su2double> &GLWeights) {
 
-  /* The class used to determine the integration points operate on passivedoubles.
+  /* The class used to determine the integration points operates on passivedoubles.
      Allocate the memory for the help vectors. */
   vector<passivedouble> GLPointsPas(GLPoints.size());
   vector<passivedouble> GLWeightsPas(GLWeights.size());
@@ -1943,6 +1944,9 @@ CFEMStandardElement::CFEMStandardElement(unsigned short          val_VTK_Type,
     case PRISM:         DataStandardPrism();         break;
     case HEXAHEDRON:    DataStandardHexahedron();    break;
   }
+
+  /* Create a (possibly) padded value of nDOFs to increase gemm performance. */
+  nDOFsPad = CreatePaddedValue(nDOFs);
 
   /*--------------------------------------------------------------------------*/
   /*--- Create the data of the basis functions and its derivatives in the  ---*/
