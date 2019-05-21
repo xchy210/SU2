@@ -13656,6 +13656,43 @@ void COutput::SetResult_Files_Parallel(CSolver *****solver_container,
       WriteRestart_Parallel_ASCII(config[iZone], geometry[iZone][iInst][MESH_0], solver_container[iZone][iInst][MESH_0], iZone, iInst);
     }
 
+    /*--- Write an Inria format restart file. ---*/
+    if(config[iZone]->GetError_Estimate() && config[iZone]->GetKind_SU2() == SU2_MET){
+      if (rank == MASTER_NODE) cout << "Writing Inria restart file." << endl;
+      SetInriaRestart(config[iZone], geometry[iZone][iInst][MESH_0], solver_container[iZone][iInst][MESH_0], iZone);
+      if (rank == MASTER_NODE) cout << "Writing Inria sensor files." << endl;
+      WriteInriaOutputs(config[iZone], geometry[iZone][iInst][MESH_0], solver_container[iZone][iInst][MESH_0], iZone);
+    }
+
+    /*--- Write an Inria format mesh file.
+          Note: currently only for serial. ---*/
+    if (rank == MASTER_NODE) {
+      if ( config[iZone]->GetWrt_InriaMesh()  && size == 1 ) {
+    
+        if (rank == MASTER_NODE) cout <<"Sorting volumetric grid connectivity." << endl;
+          
+        SortVolumetricConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], TRIANGLE     , true);
+        SortVolumetricConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], QUADRILATERAL, true);
+        SortVolumetricConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], TETRAHEDRON  , true);
+        SortVolumetricConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], HEXAHEDRON   , true);
+        SortVolumetricConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], PRISM        , true);
+        SortVolumetricConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], PYRAMID      , true);
+          
+        
+        /*--- Sort surface grid connectivity. ---*/
+          
+        if (rank == MASTER_NODE) cout <<"Sorting surface grid connectivity." << endl;
+          
+        SortSurfaceConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], LINE         );
+        SortSurfaceConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], TRIANGLE     );
+        SortSurfaceConnectivity(config[iZone], geometry[iZone][iInst][MESH_0], QUADRILATERAL);
+
+        if (rank == MASTER_NODE) cout << "Writing Inria mesh." << endl;
+          
+        SetInriaMesh(config[iZone], geometry[iZone][iInst][MESH_0]);
+      }
+    }
+
     /*--- Write a slice on a structured mesh if requested. ---*/
 
     if (config[iZone]->GetWrt_Slice()) {
@@ -14074,6 +14111,27 @@ void COutput::LoadLocalData_Flow(CConfig *config, CGeometry *geometry, CSolver *
       nVar_Par +=1;
       Variable_Names.push_back("Roe_Dissipation");
     }
+
+    /*--- Plot the metric tensor. ---*/
+
+    if(config->GetError_Estimate() && config->GetKind_SU2() == SU2_MET){
+
+      if(nDim == 2){
+        Variable_Names.push_back("Aniso_Metric[0]");
+        Variable_Names.push_back("Aniso_Metric[1]");
+        Variable_Names.push_back("Aniso_Metric[2]");
+        nVar_Par += 3;
+      }
+      else{
+        Variable_Names.push_back("Aniso_Metric[0]");
+        Variable_Names.push_back("Aniso_Metric[1]");
+        Variable_Names.push_back("Aniso_Metric[2]");
+        Variable_Names.push_back("Aniso_Metric[3]");
+        Variable_Names.push_back("Aniso_Metric[4]");
+        Variable_Names.push_back("Aniso_Metric[5]");
+        nVar_Par += 6;
+      }
+    }
     
     /*--- New variables get registered here before the end of the loop. ---*/
     
@@ -14326,6 +14384,20 @@ void COutput::LoadLocalData_Flow(CConfig *config, CGeometry *geometry, CSolver *
         
         if (config->GetKind_RoeLowDiss() != NO_ROELOWDISS){
           Local_Data[jPoint][iVar] = solver[FLOW_SOL]->node[iPoint]->GetRoe_Dissipation(); iVar++;
+        }
+
+        /*--- Load data for the metric. ---*/
+
+        if (config->GetError_Estimate() && config->GetKind_SU2() == SU2_MET){
+
+          unsigned short iMetr, nMetr;
+          if(nDim == 2) nMetr = 3;
+          else          nMetr = 6;
+            
+          for(iMetr = 0; iMetr < nMetr; iMetr++){
+            Local_Data[jPoint][iVar] = solver[FLOW_SOL]->node[iPoint]->GetAnisoMetr(iMetr);
+            iVar++;
+          }
         }
         
         /*--- New variables can be loaded to the Local_Data structure here,
@@ -15145,6 +15217,27 @@ void COutput::LoadLocalData_AdjFlow(CConfig *config, CGeometry *geometry, CSolve
     /*--- All adjoint solvers write the surface sensitivity. ---*/
     
     nVar_Par += 1; Variable_Names.push_back("Surface_Sensitivity");
+
+    /*--- Plot the metric if performing error estimation. ---*/
+
+    if(config->GetError_Estimate() && config->GetKind_SU2() == SU2_MET){
+
+      if(nDim == 2){
+        Variable_Names.push_back("Aniso_Metric[0]");
+        Variable_Names.push_back("Aniso_Metric[1]");
+        Variable_Names.push_back("Aniso_Metric[2]");
+        nVar_Par += 3;
+      }
+      else{
+        Variable_Names.push_back("Aniso_Metric[0]");
+        Variable_Names.push_back("Aniso_Metric[1]");
+        Variable_Names.push_back("Aniso_Metric[2]");
+        Variable_Names.push_back("Aniso_Metric[3]");
+        Variable_Names.push_back("Aniso_Metric[4]");
+        Variable_Names.push_back("Aniso_Metric[5]");
+        nVar_Par += 6;
+      }
+    }
     
     /*--- For the continouus adjoint, we write either convective scheme's
      dissipation sensor (centered) or limiter (uwpind) for adj. density. ---*/
@@ -15340,6 +15433,19 @@ void COutput::LoadLocalData_AdjFlow(CConfig *config, CGeometry *geometry, CSolve
         /*--- Load data for the surface sensitivity. ---*/
         
         Local_Data[iPoint][iVar] = Aux_Sens[iPoint]; iVar++;
+
+        /*--- Load data for the metric. ---*/
+
+        if (config->GetError_Estimate() && config->GetKind_SU2() == SU2_MET){
+          unsigned short iMetr, nMetr;
+          if(nDim == 2) nMetr = 3;
+          else          nMetr = 6;
+            
+          for(iMetr = 0; iMetr < nMetr; iMetr++){
+            Local_Data[jPoint][iVar] = solver[FLOW_SOL]->node[iPoint]->GetAnisoMetr(iMetr);
+            iVar++;
+          }
+        }
         
         /*--- Load data for the convective scheme sensor. ---*/
         

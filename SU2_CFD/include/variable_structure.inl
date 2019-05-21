@@ -141,6 +141,52 @@ inline su2double *CVariable::GetResidual_Sum(void) { return Residual_Sum; }
 
 inline su2double *CVariable::GetResidual_Old(void) { return Residual_Old; }
 
+inline void CVariable::SetAdapParam(su2double val_adap_param) { AdapParam = val_adap_param; }
+
+inline void CVariable::AddAdapParam(su2double val_adap_param) { AdapParam += val_adap_param; }
+
+inline su2double CVariable::GetAdapParam(void) { return AdapParam; }
+
+inline void CVariable::SetAnisoSens(su2double val_sens) { AnisoSens = val_sens; }
+
+inline void CVariable::AddAnisoSens(su2double val_sens) { AnisoSens += val_sens; }
+
+inline su2double CVariable::GetAnisoSens(void) { return AnisoSens; }
+
+inline void CVariable::SetAnisoGrad(unsigned short val_var, su2double val_sens_grad) { AnisoGrad[val_var] = val_sens_grad; }
+
+inline void CVariable::AddAnisoGrad(unsigned short val_var, su2double val_sens_grad) { AnisoGrad[val_var] += val_sens_grad; }
+
+inline su2double *CVariable::GetAnisoGrad(void) { return AnisoGrad; }
+
+inline su2double CVariable::GetAnisoGrad(unsigned short val_var) { return AnisoGrad[val_var]; }
+
+inline void CVariable::SetAnisoHess(unsigned short val_var, su2double val_sens_hess) { AnisoHess[val_var] = val_sens_hess; }
+
+inline void CVariable::AddAnisoHess(unsigned short val_var, su2double val_sens_hess) { AnisoHess[val_var] += val_sens_hess; }
+
+inline void CVariable::ScaleAnisoHess(su2double val_scale, unsigned short val_nHess) { 
+	for(unsigned short iHess = 0; iHess < val_nHess; iHess++)
+		AnisoHess[iHess] *= val_scale; 
+}
+
+inline su2double *CVariable::GetAnisoHess(void) { return AnisoHess; }
+
+inline su2double CVariable::GetAnisoHess(unsigned short val_var) { return AnisoHess[val_var]; }
+
+inline void CVariable::SetAnisoMetr(unsigned short val_var, su2double val_sens_metr) { AnisoMetr[val_var] = val_sens_metr; }
+
+inline void CVariable::AddAnisoMetr(unsigned short val_var, su2double val_sens_metr) { AnisoMetr[val_var] += val_sens_metr; }
+
+inline void CVariable::ScaleAnisoMetr(su2double val_scale, unsigned short val_nMetr) { 
+	for(unsigned short iMetr = 0; iMetr < val_nMetr; iMetr++)
+		AnisoMetr[iMetr] *= val_scale; 
+}
+
+inline su2double *CVariable::GetAnisoMetr(void) { return AnisoMetr; }
+
+inline su2double CVariable::GetAnisoMetr(unsigned short val_var) { return AnisoMetr[val_var]; }
+
 inline void CVariable::SetGradient(unsigned short val_var, unsigned short val_dim, su2double val_value) { Gradient[val_var][val_dim] = val_value; }
 
 inline void CVariable::AddGradient(unsigned short val_var, unsigned short val_dim, su2double val_value) { Gradient[val_var][val_dim] += val_value; }

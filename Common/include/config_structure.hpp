@@ -801,6 +801,7 @@ private:
   Wrt_Limiters,              /*!< \brief Write residuals to solution file */
   Wrt_SharpEdges,              /*!< \brief Write residuals to solution file */
   Wrt_Halo,                   /*!< \brief Write rind layers in solution files */
+  Wrt_InriaMesh,              /*!< \brief Write mesh in the Inria format */
   Wrt_Performance,            /*!< \brief Write the performance summary at the end of a calculation.  */
   Wrt_InletFile,                   /*!< \brief Write a template inlet profile file */
   Wrt_Slice,                   /*!< \brief Write 1D slice of a 2D cartesian solution */
@@ -1149,7 +1150,7 @@ private:
 
   ofstream *ConvHistFile;       /*!< \brief Store the pointer to each history file */
   bool Time_Domain;             /*!< \brief Determines if the multizone problem is solved in time-domain */
-  unsigned long Outer_Iter,    /*!< \brief Determines the number of outer iterations in the multizone problem */
+  unsigned long Outer_Iter,     /*!< \brief Determines the number of outer iterations in the multizone problem */
   Inner_Iter,                   /*!< \brief Determines the number of inner iterations in each multizone block */
   Time_Iter,                    /*!< \brief Determines the number of time iterations in the multizone problem */
   Iter,                         /*!< \brief Determines the number of pseudo-time iterations in a single-zone problem */
@@ -1163,11 +1164,27 @@ private:
   bool Multizone_Residual;      /*!< \brief Determines if memory should be allocated for the multizone residual. */
   
   bool using_uq;                /*!< \brief Using uncertainty quantification with SST model */
-  su2double uq_delta_b;            /*!< \brief Parameter used to perturb eigenvalues of Reynolds Stress Matrix */
+  su2double uq_delta_b;         /*!< \brief Parameter used to perturb eigenvalues of Reynolds Stress Matrix */
   unsigned short eig_val_comp;  /*!< \brief Parameter used to determine type of eigenvalue perturbation */
   su2double uq_urlx;            /*!< \brief Under-relaxation factor */
   bool uq_permute;              /*!< \brief Permutation of eigenvectors */
 
+  bool interpolate_solution;                  /*!< \brief Determines if solution interpolation is taking place */
+  string Target_Mesh_FileName;                /*!< \brief File name of target mesh for interpolation */
+  string Interpolated_Restart_FileName,       /*!< \brief File name of interpolated solution that is output */
+         Interpolated_Solution_FileName,      /*!< \brief File name of interpolated solution that is input */
+         Interpolated_Restart_Adj_FileName,   /*!< \brief File name of interpolated adjoint solution that is output */
+         Interpolated_Solution_Adj_FileName;  /*!< \brief File name of interpolated adjoint solution that is input */
+  bool use_target_mesh;                       /*!< \brief Determines if the target mesh should be used (for geometry initilization) */
+
+  bool error_estimate;               /*!< \brief Determines if error estimation is taking place */
+  string ECC_Restart_FileName,       /*!< \brief File name of higher order interpolated solution that is output */
+         ECC_Solution_FileName,      /*!< \brief File name of higher order interpolated solution that is input */
+         ECC_Restart_Adj_FileName,   /*!< \brief File name of higher order interpolated adjoint solution that is output */
+         ECC_Solution_Adj_FileName;  /*!< \brief File name of higher order interpolated adjoint solution that is input */
+  unsigned short Kind_Aniso_Sensor;  /*!< \brief Sensor used for anistropy */
+  unsigned long  Mesh_Complexity;    /*!< \brief Constraint mesh complexity */
+  
   /*--- all_options is a map containing all of the options. This is used during config file parsing
    to track the options which have not been set (so the default values can be used). Without this map
    there would be no list of all the config file options. ---*/
@@ -3343,6 +3360,17 @@ public:
   bool GetWrt_Halo(void);
 
   /*!
+   * \brief Get information about writing an Inria format mesh.
+   * \return <code>TRUE</code> means that an Inria mesh will be written.
+   */
+  bool GetWrt_InriaMesh(void);
+
+  /*!
+   * \brief Set information about writing an Inria format mesh.
+   */
+  void SetWrt_InriaMesh(bool val_wrt_inriamesh);
+
+  /*!
    * \brief Get information about writing the performance summary at the end of a calculation.
    * \return <code>TRUE</code> means that the performance summary will be written at the end of a calculation.
    */
@@ -5497,6 +5525,11 @@ public:
   bool GetRestart(void);
 
   /*!
+   * \brief Sets restart information
+   */
+  void SetRestart(bool val_restart);
+
+  /*!
    * \brief Flag for whether binary SU2 native restart files are written.
    * \return Flag for whether binary SU2 native restart files are written, if <code>TRUE</code> then the code will output binary restart files.
    */
@@ -5562,6 +5595,11 @@ public:
    * \return File name of the input grid.
    */
   string GetMesh_FileName(void);
+
+  /*!
+   * \brief set name of the input grid.
+   */
+  void SetMesh_FileName(string val_filename);
   
   /*!
    * \brief Get name of the output grid, this parameter is important for grid
@@ -5575,6 +5613,11 @@ public:
    * \return Name of the file with the solution of the flow problem.
    */
   string GetSolution_FlowFileName(void);
+
+  /*!
+   * \brief Set the name of the file with the solution of the flow problem.
+   */
+  void SetSolution_FlowFileName(string val_filename);
   
   /*!
    * \brief Get the name of the file with the solution of the adjoint flow problem
@@ -5583,6 +5626,12 @@ public:
    *         drag objective function.
    */
   string GetSolution_AdjFileName(void);
+
+  /*!
+   * \brief Set the name of the file with the solution of the adjoint flow problem
+   *      with drag objective function.
+   */
+  void SetSolution_AdjFileName(string val_filename);
   
   /*!
    * \brief Get the name of the file with the solution of the structural problem.
@@ -5715,12 +5764,22 @@ public:
    * \return Name of the restart file for the flow variables.
    */
   string GetRestart_FlowFileName(void);
+
+  /*!
+   * \brief Set the name of the restart file for the flow variables.
+   */
+  void SetRestart_FlowFileName(string val_filename);
   
   /*!
    * \brief Get the name of the restart file for the adjoint variables (drag objective function).
    * \return Name of the restart file for the adjoint variables (drag objective function).
    */
   string GetRestart_AdjFileName(void);
+
+  /*!
+   * \brief Set the name of the restart file for the adjoint variables (drag objective function).
+   */
+  void SetRestart_AdjFileName(string val_filename);
   
   /*!
    * \brief Get the name of the restart file for the structural variables.
@@ -8777,6 +8836,11 @@ public:
    * \return direct differentiation method.
    */
   unsigned short GetDirectDiff();
+
+  /*!
+   * \brief Set the indicator whether we are solving an discrete adjoint problem.
+   */
+  void SetDiscrete_Adjoint(bool val_discadj);
   
   /*!
    * \brief Get the indicator whether we are solving an discrete adjoint problem.
@@ -9442,6 +9506,95 @@ public:
    */
   bool GetWrt_ForcesBreakdown(void);
 
+  /*!
+   * \brief Check if solution interpolation is being carried out
+   * \return <code>TRUE<\code> if solution interpolation is taking place
+  */
+  bool GetInterpolate_Solution(void);
+
+  /*!
+   * \brief Get name of the target grid.
+   * \return File name of the target grid.
+   */
+  string GetTarget_Mesh_FileName(void);
+
+  /*!
+   * \brief Get name of the interpolated solution file name
+   * \return File name of the interpolated solution output
+   */
+  string GetInterpolated_Restart_FileName(void);
+
+  /*!
+   * \brief Get name of the interpolated solution file name
+   * \return File name of the interpolated solution input
+   */
+  string GetInterpolated_Solution_FileName(void);
+
+  /*!
+   * \brief Get name of the interpolated solution file name
+   * \return File name of the interpolated adjoint solution output
+   */
+  string GetInterpolated_Restart_Adj_FileName(void);
+
+  /*!
+   * \brief Get name of the interpolated solution file name
+   * \return File name of the interpolated adjoint solution input
+   */
+  string GetInterpolated_Solution_Adj_FileName(void);
+
+  /*!
+   * \brief Get name of the higher order interpolated solution file name
+   * \return File name of the higher order interpolated solution output
+   */
+  string GetECC_Restart_FileName(void);
+
+  /*!
+   * \brief Get name of the higher order interpolated solution file name
+   * \return File name of the higher order interpolated solution input
+   */
+  string GetECC_Solution_FileName(void);
+
+  /*!
+   * \brief Get name of the higher order interpolated solution file name
+   * \return File name of the higher order interpolated adjoint solution output
+   */
+  string GetECC_Restart_Adj_FileName(void);
+
+  /*!
+   * \brief Get name of the higher order interpolated solution file name
+   * \return File name of the higher order interpolated adjoint solution input
+   */
+  string GetECC_Solution_Adj_FileName(void);
+
+  /*!
+   * \brief Get if the target mesh file name should be returned
+   * \return File name of the target grid.
+   */
+  bool GetUsing_Target_Mesh(void);
+
+  /*!
+   * \brief Get if the target mesh file name should be returned
+   * \return File name of the target grid.
+   */
+  void SetUsing_Target_Mesh(bool val_using_target_mesh);
+
+  /*!
+   * \brief Check if error estimation is being carried out
+   * \return <code>TRUE<\code> if error estimation is taking place
+  */
+  bool GetError_Estimate(void);
+
+  /*!
+   * \brief Get type of sensor used for anisotropy
+   * \return Flag for field variable to be used as sensor
+   */
+  unsigned short GetKind_Aniso_Sensor(void);
+
+  /*!
+   * \brief Get constraint complexity
+   * \return Mesh complexity
+   */
+  unsigned long GetMesh_Complexity(void);
 };
 
 #include "config_structure.inl"

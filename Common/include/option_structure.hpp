@@ -101,12 +101,13 @@ inline string StringToUpperCase(const string & str) {
  * \brief different software components of SU2
  */
 enum SU2_COMPONENT {
-  SU2_CFD = 1,	/*!< \brief Running the SU2_CFD software. */
-  SU2_DEF = 2,	/*!< \brief Running the SU2_DEF software. */
-  SU2_DOT = 3,	/*!< \brief Running the SU2_DOT software. */
-  SU2_MSH = 4,	/*!< \brief Running the SU2_MSH software. */
-  SU2_GEO = 5,	/*!< \brief Running the SU2_GEO software. */
-  SU2_SOL = 6 	/*!< \brief Running the SU2_SOL software. */
+  SU2_CFD     = 1,	/*!< \brief Running the SU2_CFD software. */
+  SU2_DEF     = 2,	/*!< \brief Running the SU2_DEF software. */
+  SU2_DOT     = 3,	/*!< \brief Running the SU2_DOT software. */
+  SU2_MSH     = 4,	/*!< \brief Running the SU2_MSH software. */
+  SU2_GEO     = 5,	/*!< \brief Running the SU2_GEO software. */
+  SU2_SOL     = 6, 	/*!< \brief Running the SU2_SOL software. */
+  SU2_MET     = 7   /*!< \brief Running the SU2_MET software. */
 };
 
 const unsigned int EXIT_DIVERGENCE = 2; /*!< \brief Exit code (divergence). */
@@ -1580,6 +1581,19 @@ static const map<string, ENUM_ADAPT> Adapt_Map = CCreateMap<string, ENUM_ADAPT>
 ("SMOOTHING", SMOOTHING)
 ("SUPERSONIC_SHOCK", SUPERSONIC_SHOCK)
 ("PERIODIC", PERIODIC);
+
+/*!
+ * \brief types of grid adaptation/refinement
+ */
+enum ENUM_ANISO_SENSOR {
+  ANISO_MACH = 0,      /*!< \brief Use Mach field for anisotropy. */
+  ANISO_PRES = 1,      /*!< \brief Use pressure field for anisotropy. */
+  ANISO_MACH_PRES = 2  /*!< \brief Use Mach and pressure fields for anisotropy. */
+};
+static const map<string, ENUM_ANISO_SENSOR> Aniso_Sensor_Map = CCreateMap<string, ENUM_ANISO_SENSOR>
+("MACH", ANISO_MACH)
+("PRES", ANISO_PRES)
+("MACH_PRES", ANISO_MACH_PRES);
 
 /*!
  * \brief types of input file formats

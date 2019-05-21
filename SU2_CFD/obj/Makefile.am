@@ -84,8 +84,10 @@ libSU2Core_sources = \
   ../include/variable_structure.inl \
   ../include/transfer_structure.hpp \
   ../include/transfer_structure.inl \
+  ../include/error_estimation_structure.hpp \
   ../src/data_manufactured_solutions.cpp \
   ../src/definition_structure.cpp \
+  ../src/error_estimation_structure.cpp \
   ../src/fluid_model.cpp \
   ../src/fluid_model_pig.cpp \
   ../src/fluid_model_pvdw.cpp \
@@ -115,6 +117,7 @@ libSU2Core_sources = \
   ../src/output_physics.cpp \
   ../src/output_tecplot.cpp \
   ../src/output_fieldview.cpp \
+  ../src/output_inria.cpp \
   ../src/output_su2.cpp \
   ../src/output_paraview.cpp \
   ../src/python_wrapper_structure.cpp \

@@ -1,8 +1,9 @@
 /*!
- * \file adt_structure.inl
- * \brief In-Line subroutines of the <i>adt_structure.hpp</i> file.
- * \author E. van der Weide
- * \version 6.2.0 "Falcon"
+ * \file SU2_MET.hpp
+ * \brief Headers of the main subroutines of the code SU2_MET.
+ *        The subroutines and functions are in the <i>SU2_MET.cpp</i> file.
+ * \author B. Munguía
+ * \version 6.1.0 "Falcon"
  *
  * The current SU2 release has been coordinated by the
  * SU2 International Developers Society <www.su2devsociety.org>
@@ -18,7 +19,7 @@
  *  - Prof. Edwin van der Weide's group at the University of Twente.
  *  - Lab. of New Concepts in Aeronautics at Tech. Institute of Aeronautics.
  *
- * Copyright 2012-2019, Francisco D. Palacios, Thomas D. Economon,
+ * Copyright 2012-2018, Francisco D. Palacios, Thomas D. Economon,
  *                      Tim Albring, and the SU2 contributors.
  *
  * SU2 is free software; you can redistribute it and/or
@@ -34,41 +35,18 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
- 
+
 #pragma once
 
-inline CADTComparePointClass::~CADTComparePointClass() {}
+#include "../../Common/include/mpi_structure.hpp"
 
-inline bool CADTComparePointClass::operator()(const unsigned long p0,
-                                              const unsigned long p1) const {
-  return pointCoor[nDim*p0+splitDirection] < pointCoor[nDim*p1+splitDirection];
-}
+#include <ctime>
 
-inline CBBoxTargetClass::CBBoxTargetClass() {}
+#include "../../SU2_CFD/include/error_estimation_structure.hpp"
+#include "../../SU2_CFD/include/solver_structure.hpp"
+#include "../../SU2_CFD/include/output_structure.hpp"
+#include "../../Common/include/geometry_structure.hpp"
+#include "../../Common/include/config_structure.hpp"
 
-inline CBBoxTargetClass::~CBBoxTargetClass() {}
 
-inline CBBoxTargetClass::CBBoxTargetClass(const CBBoxTargetClass &other) {Copy(other);}
-
-inline CBBoxTargetClass& CBBoxTargetClass::operator=(const CBBoxTargetClass &other) {Copy(other); return (*this);}
-
-inline CADTNodeClass::CADTNodeClass() {}
-
-inline CADTNodeClass::~CADTNodeClass() {}
-
-inline CADTNodeClass::CADTNodeClass(const CADTNodeClass &other) {Copy(other);}
-
-inline CADTNodeClass& CADTNodeClass::operator=(const CADTNodeClass &other) {Copy(other); return (*this);}
-
-inline CADTBaseClass::CADTBaseClass() {}
-
-inline CADTBaseClass::~CADTBaseClass() {}
-
-inline bool CADTBaseClass::IsEmpty(void) const { return isEmpty;}
-
-inline CADTPointsOnlyClass::~CADTPointsOnlyClass() {}
-
-inline CADTElemClass::CADTElemClass() {}
-
-inline CADTElemClass::~CADTElemClass() {}
-
+using namespace std;

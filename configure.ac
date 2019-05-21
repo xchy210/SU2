@@ -121,6 +121,9 @@ AC_ARG_ENABLE(DEF,
 AC_ARG_ENABLE(SOL,
    	AS_HELP_STRING([--disable-SOL], [build the SU2_SOL executable (default = yes)]),
 	[build_SOL=$enableval], [build_SOL="yes"])
+AC_ARG_ENABLE(MET,
+    AS_HELP_STRING([--disable-], [build the SU2_MET executable (default = no)]),
+    [build_MET=$enableval], [build_MET="no"])
 AC_ARG_ENABLE(GEO,
    	AS_HELP_STRING([--disable-GEO], [build the SU2_GEO executable (default = yes)]),
 	[build_GEO=$enableval], [build_GEO="yes"])
@@ -179,6 +182,17 @@ AM_CONDITIONAL(BUILD_TECIOMPI, test x$enabletecio = xyes -a x$have_MPI = xyes)
 AC_CONFIG_FILES([externals/tecio/Makefile])
 AC_CONFIG_FILES([externals/tecio/teciosrc/Makefile])
 AC_CONFIG_FILES([externals/tecio/teciompisrc/Makefile])
+
+# Inria
+CONFIGURE_INRIA
+if (test $enableinria = yes); then
+  su2_externals_INCLUDES="-DHAVE_INRIA $INRIA_INCLUDE $su2_externals_INCLUDES"
+  su2_externals_LIBS="$INRIA_LIB $su2_externals_LIBS"
+else
+  su2_externals_INCLUDES="$su2_externals_INCLUDES"
+fi
+AM_CONDITIONAL(BUILD_INRIA, test x$enableinria = xyes)
+AC_CONFIG_FILES([externals/libMeshb/Makefile])
 
 # Metis
 CONFIGURE_METIS
@@ -315,6 +329,7 @@ fi
 if test $build_REVERSE == "yes"
 then
   build_DOT=yes
+  build_MET=yes
 fi
 ###########################
 
@@ -323,6 +338,7 @@ AM_CONDITIONAL([BUILD_DOT],[test $build_DOT != "no"])
 AM_CONDITIONAL([BUILD_MSH],[test $build_MSH != "no"])
 AM_CONDITIONAL([BUILD_DEF],[test $build_DEF != "no"])
 AM_CONDITIONAL([BUILD_SOL],[test $build_SOL != "no"])
+AM_CONDITIONAL([BUILD_MET],[test $build_MET != "no"])
 AM_CONDITIONAL([BUILD_GEO],[test $build_GEO != "no"])
 AM_CONDITIONAL([BUILD_PY],[test $build_PY != "no"])
 AM_CONDITIONAL([BUILD_PY_WRAPPER], [test $build_PY_WRAPPER != "no"])
@@ -337,6 +353,7 @@ AC_OUTPUT(Makefile \
 	SU2_MSH/obj/Makefile \
 	SU2_DEF/obj/Makefile \
 	SU2_SOL/obj/Makefile \
+  SU2_MET/obj/Makefile \
 	SU2_GEO/obj/Makefile \
 	SU2_PY/Makefile \
 	SU2_PY/pySU2/Makefile)
@@ -399,6 +416,7 @@ Build Configuration Summary:
     Metis support:        $enablemetis
     Parmetis support:     $enableparmetis
     TecIO support:        $enabletecio
+    libMeshb support:     $enableinria
     CGNS support:         $enablecgns
     Mutation++ support:   $have_Mutationpp
     MKL support:          $have_MKL
@@ -416,6 +434,7 @@ Build Configuration Summary:
     Build SU2_MSH:        $build_MSH
     Build SU2_DEF:        $build_DEF
     Build SU2_SOL:        $build_SOL
+    Build SU2_MET:        $build_MET
     Build SU2_GEO:        $build_GEO
     Build Py Wrapper:     $build_PY_WRAPPER
 

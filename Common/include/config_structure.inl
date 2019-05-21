@@ -1413,6 +1413,8 @@ inline unsigned short CConfig::GetUnsteady_Simulation(void) { return Unsteady_Si
 
 inline bool CConfig::GetRestart(void) {	return Restart; }
 
+inline void CConfig::SetRestart(bool val_restart) { Restart = val_restart; }
+
 inline bool CConfig::GetWrt_Binary_Restart(void) {	return Wrt_Binary_Restart; }
 
 inline bool CConfig::GetRead_Binary_Restart(void) {	return Read_Binary_Restart; }
@@ -1558,6 +1560,8 @@ inline unsigned short CConfig::GetnObj(void) { return nObj;}
 
 inline string CConfig::GetMesh_FileName(void) { return Mesh_FileName; }
 
+inline void CConfig::SetMesh_FileName(string val_filename) { Mesh_FileName = val_filename; }
+
 inline string CConfig::GetMesh_Out_FileName(void) { return Mesh_Out_FileName; }
 
 inline unsigned short CConfig::GetMesh_FileFormat(void) { return Mesh_FileFormat; }
@@ -1574,7 +1578,11 @@ inline string CConfig::GetBreakdown_FileName(void) { return Breakdown_FileName; 
 
 inline string CConfig::GetSolution_FlowFileName(void) { return Solution_FlowFileName; }
 
+inline void CConfig::SetSolution_FlowFileName(string val_filename) { Solution_FlowFileName = val_filename; }
+
 inline string CConfig::GetSolution_AdjFileName(void) { return Solution_AdjFileName; }
+
+inline void CConfig::SetSolution_AdjFileName(string val_filename) { Solution_AdjFileName = val_filename; }
 
 inline string CConfig::GetSolution_FEMFileName(void) { return Solution_FEMFileName; }
 
@@ -1596,9 +1604,13 @@ inline string CConfig::GetHeat_FileName(void) { return Heat_FileName; }
 
 inline string CConfig::GetRestart_FlowFileName(void) { return Restart_FlowFileName; }
 
+inline void CConfig::SetRestart_FlowFileName(string val_filename) { Restart_FlowFileName = val_filename; }
+
 inline string CConfig::GetRestart_HeatFileName(void) { return Restart_HeatFileName; }
 
 inline string CConfig::GetRestart_AdjFileName(void) { return Restart_AdjFileName; }
+
+inline void CConfig::SetRestart_AdjFileName(string val_filename) { Restart_AdjFileName = val_filename; }
 
 inline string CConfig::GetRestart_FEMFileName(void) { return Restart_FEMFileName; }
 
@@ -1799,6 +1811,10 @@ inline bool CConfig::GetWrt_Surface(void) { return Wrt_Surface; }
 inline bool CConfig::GetWrt_SharpEdges(void) { return Wrt_SharpEdges; }
 
 inline bool CConfig::GetWrt_Halo(void) { return Wrt_Halo; }
+
+inline bool CConfig::GetWrt_InriaMesh(void) { return Wrt_InriaMesh; }
+
+inline void CConfig::SetWrt_InriaMesh(bool val_wrt_inriamesh) { Wrt_InriaMesh = val_wrt_inriamesh; }
 
 inline bool CConfig::GetWrt_Performance(void) { return Wrt_Performance; }
 
@@ -2054,6 +2070,8 @@ inline unsigned short CConfig::GetDynamic_LoadTransfer(void) { return Dynamic_Lo
 
 inline unsigned short CConfig::GetDirectDiff() { return DirectDiff;}
 
+inline void CConfig::SetDiscrete_Adjoint(bool val_discadj) { DiscreteAdjoint = val_discadj; }
+
 inline bool CConfig::GetDiscrete_Adjoint() { return DiscreteAdjoint;}
 
 inline unsigned short CConfig::GetRiemann_Solver_FEM(void) {return Riemann_Solver_FEM;}
@@ -2176,3 +2194,33 @@ inline unsigned short CConfig::GetEig_Val_Comp(void) {return eig_val_comp; }
 inline su2double CConfig::GetUQ_URLX(void) {return uq_urlx; }
 
 inline bool CConfig::GetUQ_Permute(void) { return uq_permute; }
+
+inline bool CConfig::GetInterpolate_Solution(void) { return interpolate_solution; }
+
+inline bool CConfig::GetError_Estimate(void) { return error_estimate; }
+
+inline string CConfig::GetTarget_Mesh_FileName(void) { return Target_Mesh_FileName; }
+
+inline string CConfig::GetInterpolated_Restart_FileName(void) { return Interpolated_Restart_FileName; }
+
+inline string CConfig::GetInterpolated_Solution_FileName(void) { return Interpolated_Solution_FileName; }
+
+inline string CConfig::GetInterpolated_Restart_Adj_FileName(void) { return Interpolated_Restart_Adj_FileName; }
+
+inline string CConfig::GetInterpolated_Solution_Adj_FileName(void) { return Interpolated_Solution_Adj_FileName; }
+
+inline string CConfig::GetECC_Restart_FileName(void) { return ECC_Restart_FileName; }
+
+inline string CConfig::GetECC_Solution_FileName(void) { return ECC_Solution_FileName; }
+
+inline string CConfig::GetECC_Restart_Adj_FileName(void) { return ECC_Restart_Adj_FileName; }
+
+inline string CConfig::GetECC_Solution_Adj_FileName(void) { return ECC_Solution_Adj_FileName; }
+
+inline bool CConfig::GetUsing_Target_Mesh(void) { return use_target_mesh; }
+
+inline void CConfig::SetUsing_Target_Mesh(bool val_using_target_mesh) { use_target_mesh = val_using_target_mesh; }
+
+inline unsigned short CConfig::GetKind_Aniso_Sensor(void) { return Kind_Aniso_Sensor; }
+
+inline unsigned long CConfig::GetMesh_Complexity(void) { return Mesh_Complexity; }
