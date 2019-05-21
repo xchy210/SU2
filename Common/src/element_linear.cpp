@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * \file element_linear.cpp
  * \brief Definition of the linear element structure for structural applications
  * \author R. Sanchez

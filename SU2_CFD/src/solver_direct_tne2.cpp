@@ -5475,10 +5475,12 @@ void CTNE2EulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solution_contain
 
   su2double *U_domain = new su2double[nVar];      su2double *U_outlet = new su2double[nVar];
   su2double *V_domain = new su2double[nPrimVar];  su2double *V_outlet = new su2double[nPrimVar];
-  //su2double *U_domain; su2double *U_outlet= new su2double[nVar];
-  //su2double *V_domain;  su2double *V_outlet= new su2double[nPrimVar];
   su2double *Normal   = new su2double[nDim];
   su2double *Ys       = new su2double[nSpecies];
+
+  /*--- Initialize Matrices ---*/
+  for (iVar = 0; iVar < nVar; iVar++) U_outlet[iVar] = 0.0;
+  for (iVar = 0; iVar < nPrimVar; iVar++) V_outlet[iVar] = 0.0;
 
   /*--- Pass structure of the primitive variable vector to CNumerics ---*/
   conv_numerics->SetRhosIndex   ( node[0]->GetRhosIndex()    );
@@ -5555,8 +5557,6 @@ void CTNE2EulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solution_contain
       /*--- Current solution at this boundary node ---*/
       for (iVar = 0; iVar < nVar; iVar++)     U_domain[iVar] = node[iPoint]->GetSolution(iVar);
       for (iVar = 0; iVar < nPrimVar; iVar++) V_domain[iVar] = node[iPoint]->GetPrimVar(iVar);
-      //V_domain = node[iPoint]-> GetPrimVar();
-      //U_domain = node[iPoint]-> GetSolution();
 
       /*--- Build the fictitious intlet state based on characteristics ---*/
 
@@ -5734,6 +5734,7 @@ void CTNE2EulerSolver::BC_Outlet(CGeometry *geometry, CSolver **solution_contain
         }
 
       }
+
 
       /*--- Set various quantities in the solver class ---*/
       conv_numerics->SetConservative(U_domain, U_outlet);

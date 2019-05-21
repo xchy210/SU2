@@ -550,17 +550,17 @@ void CNumerics::GetInviscidProjFlux(su2double *val_U,
     /*--- iDim = 0 (x-direction) ---*/
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
       val_Proj_Flux[iSpecies]  = (rhos[iSpecies]*u) * val_normal[0];
-		val_Proj_Flux[nSpecies]    = (rho*u*u + P)      * val_normal[0];
-		val_Proj_Flux[nSpecies+1]  = (rho*u*v)          * val_normal[0];
-		val_Proj_Flux[nSpecies+2]  = (rho*u*H)          * val_normal[0];
+    val_Proj_Flux[nSpecies]    = (rho*u*u + P)      * val_normal[0];
+    val_Proj_Flux[nSpecies+1]  = (rho*u*v)          * val_normal[0];
+    val_Proj_Flux[nSpecies+2]  = (rho*u*H)          * val_normal[0];
     val_Proj_Flux[nSpecies+3]  = (rhoEve*u)         * val_normal[0];
 
     /*---- iDim = 1 (y-direction) ---*/
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
       val_Proj_Flux[iSpecies] += (rhos[iSpecies]*v) * val_normal[1];
-		val_Proj_Flux[nSpecies]   += (rho*v*u)          * val_normal[1];
-		val_Proj_Flux[nSpecies+1] += (rho*v*v + P)      * val_normal[1];
-		val_Proj_Flux[nSpecies+2] += (rho*v*H)          * val_normal[1];
+    val_Proj_Flux[nSpecies]   += (rho*v*u)          * val_normal[1];
+    val_Proj_Flux[nSpecies+1] += (rho*v*v + P)      * val_normal[1];
+    val_Proj_Flux[nSpecies+2] += (rho*v*H)          * val_normal[1];
     val_Proj_Flux[nSpecies+3] += (rhoEve*v)         * val_normal[1];
 	}
 	else {
@@ -568,28 +568,28 @@ void CNumerics::GetInviscidProjFlux(su2double *val_U,
     /*--- iDim = 0 (x-direction) ---*/
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
       val_Proj_Flux[iSpecies]  = (rhos[iSpecies]*u) * val_normal[0];
-		val_Proj_Flux[nSpecies]    = (rho*u*u + P)      * val_normal[0];
-		val_Proj_Flux[nSpecies+1]  = (rho*u*v)          * val_normal[0];
-		val_Proj_Flux[nSpecies+2]  = (rho*u*w)          * val_normal[0];
-		val_Proj_Flux[nSpecies+3]  = (rho*u*H)          * val_normal[0];
+    val_Proj_Flux[nSpecies]    = (rho*u*u + P)      * val_normal[0];
+    val_Proj_Flux[nSpecies+1]  = (rho*u*v)          * val_normal[0];
+    val_Proj_Flux[nSpecies+2]  = (rho*u*w)          * val_normal[0];
+    val_Proj_Flux[nSpecies+3]  = (rho*u*H)          * val_normal[0];
     val_Proj_Flux[nSpecies+4]  = (rhoEve*u)         * val_normal[0];
 
     /*--- iDim = 0 (y-direction) ---*/
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
       val_Proj_Flux[iSpecies] += (rhos[iSpecies]*v) * val_normal[1];
-		val_Proj_Flux[nSpecies]   += (rho*v*u)          * val_normal[1];
-		val_Proj_Flux[nSpecies+1] += (rho*v*v + P)      * val_normal[1];
-		val_Proj_Flux[nSpecies+2] += (rho*v*w)          * val_normal[1];
-		val_Proj_Flux[nSpecies+3] += (rho*v*H)          * val_normal[1];
+    val_Proj_Flux[nSpecies]   += (rho*v*u)          * val_normal[1];
+    val_Proj_Flux[nSpecies+1] += (rho*v*v + P)      * val_normal[1];
+    val_Proj_Flux[nSpecies+2] += (rho*v*w)          * val_normal[1];
+    val_Proj_Flux[nSpecies+3] += (rho*v*H)          * val_normal[1];
     val_Proj_Flux[nSpecies+4] += (rhoEve*v)         * val_normal[1];
 
     /*--- iDim = 0 (z-direction) ---*/
     for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
       val_Proj_Flux[iSpecies] += (rhos[iSpecies]*w) * val_normal[2];
-		val_Proj_Flux[nSpecies]   += (rho*w*u)          * val_normal[2];
-		val_Proj_Flux[nSpecies+1] += (rho*w*v)          * val_normal[2];
-		val_Proj_Flux[nSpecies+2] += (rho*w*w + P)      * val_normal[2];
-		val_Proj_Flux[nSpecies+3] += (rho*w*H)          * val_normal[2];
+    val_Proj_Flux[nSpecies]   += (rho*w*u)          * val_normal[2];
+    val_Proj_Flux[nSpecies+1] += (rho*w*v)          * val_normal[2];
+    val_Proj_Flux[nSpecies+2] += (rho*w*w + P)      * val_normal[2];
+    val_Proj_Flux[nSpecies+3] += (rho*w*H)          * val_normal[2];
     val_Proj_Flux[nSpecies+4] += (rhoEve*w)         * val_normal[2];
 	}
 

@@ -543,9 +543,6 @@ void CUpwAUSM_TNE2::ComputeResidual(su2double *val_residual,
 
   /*--- Pull stored primitive variables ---*/
   // Primitives: [rho1,...,rhoNs, T, Tve, u, v, w, P, rho, h, a, c]
-  if (RHOS_INDEX != 0){
-    cout << "delete me:  " << RHOS_INDEX << endl;
-  }
   for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
     rhos_i[iSpecies] = V_i[RHOS_INDEX+iSpecies];
     rhos_j[iSpecies] = V_j[RHOS_INDEX+iSpecies];
@@ -1067,90 +1064,6 @@ void CUpwAUSMPLUSUP2_TNE2::ComputeResidual(su2double *val_residual, su2double **
 
   for (iDim = 0; iDim < nDim; iDim++)
     val_residual[nSpecies+iDim] += pF*UnitNormal[iDim]*Area;
-
-  /*--- Roe's Jacobian -> checking if there is an improvement over TNE2 AUSM Jacobian---*/
-  //if (implicit){
-  //
-  //  /*--- Compute Roe Variables ---*/
-  //  R    = sqrt(abs(V_j[RHO_INDEX]/V_i[RHO_INDEX]));
-  //  for (iVar = 0; iVar < nVar; iVar++)
-  //    RoeU[iVar] = (R*U_j[iVar] + U_i[iVar])/(R+1);
-  //  for (iVar = 0; iVar < nPrimVar; iVar++)
-  //    RoeV[iVar] = (R*V_j[iVar] + V_i[iVar])/(R+1);
-
-  //  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-  //    RoeEve[iSpecies] = var->CalcEve(config, RoeV[TVE_INDEX], iSpecies);
-
-  /*--- Calculate derivatives of pressure ---*/
-  //    var->CalcdPdU(RoeV, RoeEve, config, RoedPdU);
-
-  /*--- Calculate dual grid tangent vectors for P & invP ---*/
-  //    CreateBasis(UnitNormal);
-
-  /*--- Compute projected P, invP, and Lambda ---*/
-  //  GetPMatrix(RoeU, RoeV, RoedPdU, UnitNormal, l, m, P_Tensor);
-  //  GetPMatrix_inv(RoeU, RoeV, RoedPdU, UnitNormal, l, m, invP_Tensor);
-
-  //  RoeSoundSpeed = sqrt((1.0+RoedPdU[nSpecies+nDim])*
-  //      RoeV[P_INDEX]/RoeV[RHO_INDEX]);
-
-  /*--- Compute projected velocities ---*/
-  //  ProjVelocity = 0.0; ProjVelocity_i = 0.0; ProjVelocity_j = 0.0;
-  //  for (iDim = 0; iDim < nDim; iDim++) {
-  //    ProjVelocity   += RoeV[VEL_INDEX+iDim] * UnitNormal[iDim];
-  //    ProjVelocity_i += V_i[VEL_INDEX+iDim]  * UnitNormal[iDim];
-  //    ProjVelocity_j += V_j[VEL_INDEX+iDim]  * UnitNormal[iDim];
-  //  }
-
-  /*--- Calculate eigenvalues ---*/
-  //  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-  //    Lambda[iSpecies] = ProjVelocity;
-  //  for (iDim = 0; iDim < nDim-1; iDim++)
-  //    Lambda[nSpecies+iDim] = ProjVelocity;
-  //  Lambda[nSpecies+nDim-1] = ProjVelocity + RoeSoundSpeed;
-  //  Lambda[nSpecies+nDim]   = ProjVelocity - RoeSoundSpeed;
-  //  Lambda[nSpecies+nDim+1] = ProjVelocity;
-
-  /*--- Harten and Hyman (1983) entropy correction ---*/
-  //  for (iSpecies = 0; iSpecies < nSpecies; iSpecies++)
-  //    Epsilon[iSpecies] = 4.0*max(0.0, max(Lambda[iDim]-ProjVelocity_i,
-  //                                         ProjVelocity_j-Lambda[iDim] ));
-  //  for (iDim = 0; iDim < nDim-1; iDim++)
-  //    Epsilon[nSpecies+iDim] = 4.0*max(0.0, max(Lambda[iDim]-ProjVelocity_i,
-  //                                              ProjVelocity_j-Lambda[iDim] ));
-  //  Epsilon[nSpecies+nDim-1] = 4.0*max(0.0, max(Lambda[nSpecies+nDim-1]-(ProjVelocity_i+V_i[A_INDEX]),
-  //                                     (ProjVelocity_j+V_j[A_INDEX])-Lambda[nSpecies+nDim-1]));
-  //  Epsilon[nSpecies+nDim]   = 4.0*max(0.0, max(Lambda[nSpecies+nDim]-(ProjVelocity_i-V_i[A_INDEX]),
-  //                                     (ProjVelocity_j-V_j[A_INDEX])-Lambda[nSpecies+nDim]));
-  //  Epsilon[nSpecies+nDim+1] = 4.0*max(0.0, max(Lambda[iDim]-ProjVelocity_i,
-  //                                              ProjVelocity_j-Lambda[iDim] ));
-  //  for (iVar = 0; iVar < nVar; iVar++)
-  //    if ( fabs(Lambda[iVar]) < Epsilon[iVar] )
-  //      Lambda[iVar] = (Lambda[iVar]*Lambda[iVar] + Epsilon[iVar]*Epsilon[iVar])/(2.0*Epsilon[iVar]);
-  //    else
-  //      Lambda[iVar] = fabs(Lambda[iVar]);
-
-  //  for (iVar = 0; iVar < nVar; iVar++)
-  //    Lambda[iVar] = fabs(Lambda[iVar]);
-
-  /*--- Calculate inviscid projected Jacobians ---*/
-  // Note: Scaling value is 0.5 because inviscid flux is based on 0.5*(Fc_i+Fc_j)
-  //  GetInviscidProjJac(U_i, V_i, dPdU_i, Normal, 0.5, val_Jacobian_i);
-  //  GetInviscidProjJac(U_j, V_j, dPdU_j, Normal, 0.5, val_Jacobian_j);
-
-  /*--- Roe's Flux approximation ---*/
-  //  for (iVar = 0; iVar < nVar; iVar++) {
-  //    for (jVar = 0; jVar < nVar; jVar++) {
-
-  /*--- Compute |Proj_ModJac_Tensor| = P x |Lambda| x inverse P ---*/
-  //      Proj_ModJac_Tensor_ij = 0.0;
-  //      for (kVar = 0; kVar < nVar; kVar++)
-  //        Proj_ModJac_Tensor_ij += P_Tensor[iVar][kVar]*Lambda[kVar]*invP_Tensor[kVar][jVar];
-  //      val_Jacobian_i[iVar][jVar] += 0.5*Proj_ModJac_Tensor_ij*Area;
-  //      val_Jacobian_j[iVar][jVar] -= 0.5*Proj_ModJac_Tensor_ij*Area;
-  //    }
-  //  }
-  //}
 
   /*--- AUSM's Jacobian....requires tiny CFL's (this must be fixed) ---*/
   if (implicit) {
