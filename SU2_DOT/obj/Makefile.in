@@ -137,6 +137,7 @@ bin_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
 @BUILD_NORMAL_TRUE@  ../../SU2_CFD/src/libSU2Core_a-output_cgns.$(OBJEXT) \
 @BUILD_NORMAL_TRUE@  ../../SU2_CFD/src/libSU2Core_a-output_tecplot.$(OBJEXT) \
 @BUILD_NORMAL_TRUE@  ../../SU2_CFD/src/libSU2Core_a-output_fieldview.$(OBJEXT) \
+@BUILD_NORMAL_TRUE@  ../../SU2_CFD/src/libSU2Core_a-output_inria.$(OBJEXT) \
 @BUILD_NORMAL_TRUE@  ../../SU2_CFD/src/libSU2Core_a-output_su2.$(OBJEXT) \
 @BUILD_NORMAL_TRUE@  ../../SU2_CFD/src/libSU2Core_a-output_paraview.$(OBJEXT) \
 @BUILD_NORMAL_TRUE@  ../../SU2_CFD/src/libSU2Core_a-variable_structure.$(OBJEXT) \
@@ -148,17 +149,19 @@ bin_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
 @BUILD_REVERSE_TRUE@  ../../SU2_CFD/src/libSU2Core_AD_a-output_cgns.$(OBJEXT) \
 @BUILD_REVERSE_TRUE@  ../../SU2_CFD/src/libSU2Core_AD_a-output_tecplot.$(OBJEXT) \
 @BUILD_REVERSE_TRUE@  ../../SU2_CFD/src/libSU2Core_AD_a-output_fieldview.$(OBJEXT) \
+@BUILD_REVERSE_TRUE@  ../../SU2_CFD/src/libSU2Core_AD_a-output_inria.$(OBJEXT) \
 @BUILD_REVERSE_TRUE@  ../../SU2_CFD/src/libSU2Core_AD_a-output_su2.$(OBJEXT) \
 @BUILD_REVERSE_TRUE@  ../../SU2_CFD/src/libSU2Core_AD_a-output_paraview.$(OBJEXT) \
 @BUILD_REVERSE_TRUE@  ../../SU2_CFD/src/libSU2Core_AD_a-variable_structure.$(OBJEXT) \
-@BUILD_REVERSE_TRUE@  ../../Common/lib/libSU2_AD.a
+@BUILD_REVERSE_TRUE@   ../../Common/lib/libSU2_AD.a
 
 subdir = SU2_DOT/obj
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/cgns.m4 \
 	$(top_srcdir)/m4/codi.m4 $(top_srcdir)/m4/compiler.m4 \
-	$(top_srcdir)/m4/metis.m4 $(top_srcdir)/m4/parmetis.m4 \
-	$(top_srcdir)/m4/tecio.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libMeshb.m4 $(top_srcdir)/m4/metis.m4 \
+	$(top_srcdir)/m4/parmetis.m4 $(top_srcdir)/m4/tecio.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -291,6 +294,9 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
+INRIA_CPPFLAGS = @INRIA_CPPFLAGS@
+INRIA_INCLUDE = @INRIA_INCLUDE@
+INRIA_LIB = @INRIA_LIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@

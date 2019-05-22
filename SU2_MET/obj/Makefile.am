@@ -71,6 +71,7 @@ ___bin_SU2_MET_LDADD += \
   ../../SU2_CFD/src/libSU2Core_AD_a-numerics_adjoint_turbulent.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-numerics_direct_heat.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-numerics_direct_mean.$(OBJEXT) \
+  ../../SU2_CFD/src/libSU2Core_AD_a-numerics_direct_tne2.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-numerics_direct_mean_inc.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-numerics_direct_transition.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-numerics_direct_turbulent.$(OBJEXT) \
@@ -94,6 +95,7 @@ ___bin_SU2_MET_LDADD += \
   ../../SU2_CFD/src/libSU2Core_AD_a-solver_adjoint_elasticity.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-solver_direct_heat.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-solver_direct_mean.$(OBJEXT) \
+  ../../SU2_CFD/src/libSU2Core_AD_a-solver_direct_tne2.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-solver_direct_mean_fem.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-solver_direct_mean_inc.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-solver_direct_transition.$(OBJEXT) \
@@ -110,6 +112,7 @@ ___bin_SU2_MET_LDADD += \
   ../../SU2_CFD/src/libSU2Core_AD_a-variable_adjoint_elasticity.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-variable_direct_heat.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-variable_direct_mean.$(OBJEXT) \
+  ../../SU2_CFD/src/libSU2Core_AD_a-variable_direct_tne2.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-variable_direct_mean_inc.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-variable_direct_transition.$(OBJEXT) \
   ../../SU2_CFD/src/libSU2Core_AD_a-variable_direct_turbulent.$(OBJEXT) \

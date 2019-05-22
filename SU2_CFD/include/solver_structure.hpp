@@ -1476,6 +1476,13 @@ public:
    */
   virtual void Wave_Strength(CGeometry *geometry, CConfig *config);
   
+    /*!
+   * \brief A virtual member.
+   * \param[in] geometry - Geometrical definition of the problem.
+   * \param[in] config - Definition of the particular problem.
+   */
+  virtual void SetPrimitive_Gradient(CConfig *config);
+
   /*!
    * \brief A virtual member.
    * \param[in] geometry - Geometrical definition of the problem.
@@ -1489,6 +1496,13 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   virtual void SetPrimitive_Gradient_LS(CGeometry *geometry, CConfig *config);
+
+  /*!
+   * \brief A virtual member.
+   * \param[in] geometry - Geometrical definition of the problem.
+   * \param[in] config - Definition of the particular problem.
+   */
+  virtual void SetPrimitive_Gradient_LS(CGeometry *geometry, CConfig *config, unsigned long val_Point);
 
   /*!
    * \brief A virtual member.

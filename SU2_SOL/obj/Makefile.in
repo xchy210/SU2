@@ -133,8 +133,9 @@ subdir = SU2_SOL/obj
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/cgns.m4 \
 	$(top_srcdir)/m4/codi.m4 $(top_srcdir)/m4/compiler.m4 \
-	$(top_srcdir)/m4/metis.m4 $(top_srcdir)/m4/parmetis.m4 \
-	$(top_srcdir)/m4/tecio.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libMeshb.m4 $(top_srcdir)/m4/metis.m4 \
+	$(top_srcdir)/m4/parmetis.m4 $(top_srcdir)/m4/tecio.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -152,6 +153,7 @@ ___bin_SU2_SOL_DEPENDENCIES =  \
 	../../SU2_CFD/src/libSU2Core_a-output_cgns.o \
 	../../SU2_CFD/src/libSU2Core_a-output_tecplot.o \
 	../../SU2_CFD/src/libSU2Core_a-output_fieldview.o \
+	../../SU2_CFD/src/libSU2Core_a-output_inria.o \
 	../../SU2_CFD/src/libSU2Core_a-output_su2.o \
 	../../SU2_CFD/src/libSU2Core_a-output_paraview.o \
 	../../SU2_CFD/src/libSU2Core_a-variable_structure.o \
@@ -259,6 +261,9 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
+INRIA_CPPFLAGS = @INRIA_CPPFLAGS@
+INRIA_INCLUDE = @INRIA_INCLUDE@
+INRIA_LIB = @INRIA_LIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -385,6 +390,7 @@ ___bin_SU2_SOL_LDADD =  \
 	../../SU2_CFD/src/libSU2Core_a-output_cgns.o \
 	../../SU2_CFD/src/libSU2Core_a-output_tecplot.o \
 	../../SU2_CFD/src/libSU2Core_a-output_fieldview.o \
+	../../SU2_CFD/src/libSU2Core_a-output_inria.o \
 	../../SU2_CFD/src/libSU2Core_a-output_su2.o \
 	../../SU2_CFD/src/libSU2Core_a-output_paraview.o \
 	../../SU2_CFD/src/libSU2Core_a-variable_structure.o \

@@ -128,15 +128,17 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 @BUILD_TECIO_TRUE@am__append_1 = tecio
-@BUILD_METIS_TRUE@am__append_2 = metis
-@BUILD_METIS_TRUE@@BUILD_PARMETIS_TRUE@am__append_3 = parmetis
-@BUILD_CGNS_TRUE@am__append_4 = cgns
+@BUILD_INRIA_TRUE@am__append_2 = libMeshb
+@BUILD_METIS_TRUE@am__append_3 = metis
+@BUILD_METIS_TRUE@@BUILD_PARMETIS_TRUE@am__append_4 = parmetis
+@BUILD_CGNS_TRUE@am__append_5 = cgns
 subdir = externals
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/cgns.m4 \
 	$(top_srcdir)/m4/codi.m4 $(top_srcdir)/m4/compiler.m4 \
-	$(top_srcdir)/m4/metis.m4 $(top_srcdir)/m4/parmetis.m4 \
-	$(top_srcdir)/m4/tecio.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libMeshb.m4 $(top_srcdir)/m4/metis.m4 \
+	$(top_srcdir)/m4/parmetis.m4 $(top_srcdir)/m4/tecio.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -197,7 +199,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = tecio metis parmetis cgns
+DIST_SUBDIRS = tecio libMeshb metis parmetis cgns
 am__DIST_COMMON = $(srcdir)/Makefile.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
@@ -253,6 +255,9 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
+INRIA_CPPFLAGS = @INRIA_CPPFLAGS@
+INRIA_INCLUDE = @INRIA_INCLUDE@
+INRIA_LIB = @INRIA_LIB@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -365,7 +370,7 @@ top_srcdir = @top_srcdir@
 
 # Build any requested libraries from the provided source
 SUBDIRS = $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4)
+	$(am__append_4) $(am__append_5)
 all: all-recursive
 
 .SUFFIXES:
