@@ -42,7 +42,8 @@ def amg_call(config):
     cmd += ' > %s' % config['amg_log']
     os.system(cmd)
 
-def amg_ecc_call(config):
+
+def amg_call_met(config):
     
     cmd = ''
     cmd = "amg -in %s -met %s -p 2 \
@@ -64,11 +65,14 @@ def amg_ecc_call(config):
 
 def amg_call_python(mesh, config):
     
-    remesh_options              = {}
-    remesh_options['Lp']        = 2
-    remesh_options['gradation'] = config['hgrad']
-    remesh_options['target']    = config['size']
-    remesh_options['logfile']   = config['amg_log']
+    remesh_options                = {}
+    remesh_options['Lp']          = 2
+    remesh_options['gradation']   = config['hgrad']
+    remesh_options['target']      = config['size']
+    remesh_options['logfile']     = config['amg_log']
+    remesh_options['sol_in']      = config['sol_in']
+    remesh_options['sol_itp_in']  = config['sol_itp_in']
+    remesh_options['metric_in']   = config['metric_in']
     
     Dim = mesh['dimension']
     
@@ -92,7 +96,8 @@ def amg_call_python(mesh, config):
     
     mesh['Triangles'] = mesh['Triangles'].tolist()
     mesh['Edges']     = mesh['Edges'].tolist()    
-    mesh['sensor']    = mesh['sensor'].flatten().tolist()
+
+    if 'sensor' in mesh: mesh['sensor'] = mesh['sensor'].flatten().tolist()
     
     try:
         mesh_new = pyamg.adapt_mesh(mesh, remesh_options)        
@@ -101,6 +106,7 @@ def amg_call_python(mesh, config):
         raise
     
     return mesh_new
+    
     
 # --- Read mesh using amgio module
 def read_mesh(mesh_name, solution_name):

@@ -42,19 +42,17 @@ enum BCVAR  { bcMach, bcTemp, bcPres, bcDens, bcGoal };
 
 void COutput::SetInriaRestart(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned short val_iZone) {
   
+#ifdef HAVE_INRIA
+  
   /*--- Local variables ---*/
 	
-  unsigned short nZone = geometry->GetnZone();
-  unsigned short Kind_Solver  = config->GetKind_Solver();
-  unsigned short iVar, iDim, nDim = geometry->GetnDim();
+  unsigned short iVar, nDim = geometry->GetnDim();
   unsigned short nVar_Buf = nVar_Par-nDim;
-  unsigned long iPoint, iExtIter = config->GetExtIter();
-  bool grid_movement = config->GetGrid_Movement();
-  bool dynamic_fem = (config->GetDynamic_Analysis() == DYNAMIC);
+  unsigned long iPoint;
   bool fem = (config->GetKind_Solver() == FEM_ELASTICITY);
   string filename;
   
-  unsigned long OutSol,i, npoin = geometry->GetGlobal_nPointDomain();
+  unsigned long OutSol, npoin = geometry->GetGlobal_nPointDomain();
   unsigned long myPoint, offset, Global_Index;
   int VarTyp[GmfMaxTyp];
   passivedouble bufDbl[GmfMaxTyp];
@@ -63,25 +61,26 @@ void COutput::SetInriaRestart(CConfig *config, CGeometry *geometry, CSolver **so
 	
   /*--- Retrieve filename from config ---*/
   
-  if ((config->GetContinuous_Adjoint()) || (config->GetDiscrete_Adjoint())) {
-    filename = config->GetRestart_AdjFileName();
-    filename = config->GetObjFunc_Extension(filename);
-  } else if (fem){
-    filename = config->GetRestart_FEMFileName();
-  } else {
-    filename = config->GetRestart_FlowFileName();
-  }
+  // if ((config->GetContinuous_Adjoint()) || (config->GetDiscrete_Adjoint())) {
+  //   filename = config->GetRestart_AdjFileName();
+  //   filename = config->GetObjFunc_Extension(filename);
+  // } else if (fem){
+  //   filename = config->GetRestart_FEMFileName();
+  // } else {
+  //   filename = config->GetRestart_FlowFileName();
+  // }
 	
 	/*--- Get output name *.solb ---*/
 	
-  strcpy(BasNam, filename.c_str());
-  ptr = strstr(BasNam,".dat");	
-  if ( ptr != NULL )
-    BasNam[ptr-BasNam]='\0';
-  ptr = strstr(BasNam,".solb");	
-  if ( ptr != NULL )
-    BasNam[ptr-BasNam]='\0';
-  SPRINTF (OutNam, "%s.solb", BasNam);
+  // strcpy(BasNam, filename.c_str());
+  // ptr = strstr(BasNam,".dat");	
+  // if ( ptr != NULL )
+  //   BasNam[ptr-BasNam]='\0';
+  // ptr = strstr(BasNam,".solb");	
+  // if ( ptr != NULL )
+  //   BasNam[ptr-BasNam]='\0';
+  // SPRINTF (OutNam, "%s.solb", BasNam);
+  SPRINTF (OutNam, "current.restart.solb");
 
   /*--- Open the restart file and write the solution. ---*/
 	
@@ -146,7 +145,13 @@ void COutput::SetInriaRestart(CConfig *config, CGeometry *geometry, CSolver **so
       printf("Cannot close solution file %s.", OutNam);
       printf("Now exiting...\n\n");
       exit(EXIT_FAILURE);
-	}  
+	}
+  
+#else // Not built with Inria support
+  
+  cout << "GMF file requested but SU2 was built without GMF support. No file written" << "\n";
+  
+#endif
 	
 }
 
@@ -157,26 +162,25 @@ void COutput::SetInriaRestart(CConfig *config, CGeometry *geometry, CSolver **so
 */
 void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned short val_iZone) {
   
+#ifdef HAVE_INRIA
+  
   /*--- Local variables ---*/
 	
   unsigned short nZone = geometry->GetnZone();
   unsigned short Kind_Solver  = config->GetKind_Solver();
-  unsigned short iVar, iDim, nDim = geometry->GetnDim();
-  unsigned short nVar_First, nVar_Second, nVar_Consv_Par;
-  unsigned long iPoint, iExtIter = config->GetExtIter();
+  unsigned short iVar, nDim = geometry->GetnDim();
+  unsigned short nVar_First = 0, nVar_Second = 0, nVar_Consv_Par;
+  unsigned long iPoint;
   unsigned long FirstIndex = NONE, SecondIndex = NONE;
-  bool grid_movement = config->GetGrid_Movement();
-  bool dynamic_fem = (config->GetDynamic_Analysis() == DYNAMIC);
   bool fem = (config->GetKind_Solver() == FEM_ELASTICITY);
   string filename;
   
   unsigned long OutMach, OutPres, OutMetr;
-  unsigned long i, npoin = geometry->GetGlobal_nPointDomain();
+  unsigned long npoin = geometry->GetGlobal_nPointDomain();
   unsigned long myPoint, offset, Global_Index;
   int VarTyp[GmfMaxTyp];
   passivedouble bufDbl[GmfMaxTyp];
-  char OutNam[1024], BasNam[1024];
-  char *ptr=NULL;
+  char OutNam[1024];
 	
   int NbrVar, idxVar;
 
@@ -262,9 +266,11 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
 	
   /*--- Open the restart file and write the solution. ---*/
 
+  if(config->GetWrt_Aniso_Sensor()){
+
   /*--- Write MACH ---*/
 
-  SPRINTF (OutNam, "mach.solb");
+  SPRINTF (OutNam, "current.mach.solb");
   OutMach = GmfOpenMesh(OutNam,GmfWrite,GmfDouble,nDim);
 	
   if ( !OutMach ) {
@@ -322,7 +328,7 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
 	
   /*--- Write PRES ---*/
 
-  SPRINTF (OutNam, "pres.solb");
+  SPRINTF (OutNam, "current.pres.solb");
   OutPres = GmfOpenMesh(OutNam,GmfWrite,GmfDouble,nDim);
 	
   if ( !OutPres ) {
@@ -380,13 +386,15 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
     exit(EXIT_FAILURE);
   }
 
-  /*--- Write metric ---*/
+  } // End Wrt_Aniso_Sensor
+
+  /*--- Write METR ---*/
 
   if(config->GetError_Estimate() && config->GetKind_SU2() == SU2_MET){
 
     /*--- Write metric tensor ---*/
 
-    SPRINTF (OutNam, "metr.solb");
+    SPRINTF (OutNam, "current.metr.solb");
     OutMetr = GmfOpenMesh(OutNam,GmfWrite,GmfDouble,nDim);
   
     if ( !OutMetr ) {
@@ -454,6 +462,12 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
   }
 	
   delete [] TagBc;
+  
+#else // Not built with Inria support
+  
+  cout << "GMF file requested but SU2 was built without GMF support. No file written" << "\n";
+  
+#endif
 	
 }
 
@@ -462,24 +476,21 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
 
 void COutput::SetInriaMesh(CConfig *config, CGeometry *geometry) {
   
-  char cstr[MAX_STRING_SIZE], out_file[MAX_STRING_SIZE];
-  unsigned long iElem, iPoint, iElem_Bound, nElem_Bound_, vnodes_edge[2], vnodes_triangle[3], vnodes_quad[4], iNode, nElem;
-  unsigned short iMarker, iDim, nDim = geometry->GetnDim(), iChar, iPeriodic, nPeriodic = 0, VTK_Type, nMarker_;
-  su2double *center, *angles, *transl;
+#ifdef HAVE_INRIA
+  
+  unsigned long iElem, iPoint, iNode;
+  unsigned short iMarker, iDim, nDim = geometry->GetnDim();
   ofstream output_file;
   ifstream input_file;
   string Grid_Marker, text_line, Marker_Tag, str;
-  string::size_type position;
 	
   unsigned short nMarker = config->GetnMarker_All();
   unsigned long cptElem = 0, nTri=0, nLin=0, nQua=0;
   unsigned long myPoint, offset, Global_Index;
 
-  unsigned long OutMsh,i;
-  int iVer,iTri,iEfr,iTet;
+  unsigned long OutMsh;
   passivedouble bufDbl[8];
   char OutNam[2014];
-  int bufInt[8];
 	
   unsigned long *PointSurface=NULL;
   unsigned long nPointSurface=0;
@@ -487,12 +498,13 @@ void COutput::SetInriaMesh(CConfig *config, CGeometry *geometry) {
   CPrimalGrid* bnd = NULL;
 
   /*--- Read the name of the output and input file ---*/
-  str = config->GetMesh_Out_FileName();
+  // str = config->GetMesh_Out_FileName();
 
-  unsigned short lastindex = str.find_last_of(".");
-  str = str.substr(0, lastindex);
+  // unsigned short lastindex = str.find_last_of(".");
+  // str = str.substr(0, lastindex);
 
-  SPRINTF (OutNam, "%s.meshb", str.c_str());
+  // SPRINTF (OutNam, "%s.meshb", str.c_str());
+  SPRINTF (OutNam, "current.meshb");
 	
   OutMsh = GmfOpenMesh(OutNam,GmfWrite,GmfDouble,nDim);
   if ( !OutMsh ) {
@@ -736,6 +748,12 @@ void COutput::SetInriaMesh(CConfig *config, CGeometry *geometry) {
 		delete [] PointSurface;
 	
 	GmfCloseMesh(OutMsh);
+  
+#else // Not built with Inria support
+  
+  cout << "GMF file requested but SU2 was built without GMF support. No file written" << "\n";
+  
+#endif
   
 }
 
