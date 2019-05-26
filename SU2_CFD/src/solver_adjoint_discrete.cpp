@@ -270,7 +270,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
 
   /*--- Register farfield values as input ---*/
 
-  if((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS && !config->GetBoolTurbomachinery())) {
+  if((config->GetKind_Regime() == COMPRESSIBLE) && ((KindDirect_Solver == RUNTIME_FLOW_SYS || KindDirect_Solver == RUNTIME_TNE2_SYS) && !config->GetBoolTurbomachinery())) {
 
     su2double Velocity_Ref = config->GetVelocity_Ref();
     Alpha                  = config->GetAoA()*PI_NUMBER/180.0;
@@ -309,7 +309,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
 
   }
 
-  if ((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && config->GetBoolTurbomachinery()){
+  if ((config->GetKind_Regime() == COMPRESSIBLE) && ((KindDirect_Solver == RUNTIME_FLOW_SYS || KindDirect_Solver == RUNTIME_TNE2_SYS)) && config->GetBoolTurbomachinery()){
 
     BPressure = config->GetPressureOut_BC();
     Temperature = config->GetTotalTemperatureIn_BC();
@@ -326,7 +326,7 @@ void CDiscAdjSolver::RegisterVariables(CGeometry *geometry, CConfig *config, boo
   /*--- Register incompressible initialization values as input ---*/
 
   if ((config->GetKind_Regime() == INCOMPRESSIBLE) &&
-      ((KindDirect_Solver == RUNTIME_FLOW_SYS &&
+      (((KindDirect_Solver == RUNTIME_FLOW_SYS || KindDirect_Solver == RUNTIME_TNE2_SYS) &&
         (!config->GetBoolTurbomachinery())))) {
 
     /*--- Access the velocity (or pressure) and temperature at the
@@ -529,7 +529,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 
   /*--- Extract the adjoint values of the farfield values ---*/
 
-  if ((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && !config->GetBoolTurbomachinery()) {
+  if ((config->GetKind_Regime() == COMPRESSIBLE) && ((KindDirect_Solver == RUNTIME_FLOW_SYS || KindDirect_Solver == RUNTIME_TNE2_SYS)) && !config->GetBoolTurbomachinery()) {
     su2double Local_Sens_Press, Local_Sens_Temp, Local_Sens_AoA, Local_Sens_Mach;
 
     Local_Sens_Mach  = SU2_TYPE::GetDerivative(Mach);
@@ -550,7 +550,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
 #endif
   }
 
-  if ((config->GetKind_Regime() == COMPRESSIBLE) && (KindDirect_Solver == RUNTIME_FLOW_SYS) && config->GetBoolTurbomachinery()){
+  if ((config->GetKind_Regime() == COMPRESSIBLE) && ((KindDirect_Solver == RUNTIME_FLOW_SYS || KindDirect_Solver == RUNTIME_TNE2_SYS)) && config->GetBoolTurbomachinery()){
     su2double Local_Sens_BPress, Local_Sens_Temperature;
 
     Local_Sens_BPress = SU2_TYPE::GetDerivative(BPressure);
@@ -568,7 +568,7 @@ void CDiscAdjSolver::ExtractAdjoint_Variables(CGeometry *geometry, CConfig *conf
   }
 
   if ((config->GetKind_Regime() == INCOMPRESSIBLE) &&
-      (KindDirect_Solver == RUNTIME_FLOW_SYS &&
+      ((KindDirect_Solver == RUNTIME_FLOW_SYS || KindDirect_Solver == RUNTIME_TNE2_SYS) &&
        (!config->GetBoolTurbomachinery()))) {
 
     su2double Local_Sens_ModVel, Local_Sens_BPress, Local_Sens_Temp;
@@ -931,6 +931,10 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
   bool compressible = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
 
+  unsigned short AdjIndex;
+  if(KindDirect_Solver == RUNTIME_TNE2_SYS) AdjIndex = ADJTNE2_SOL;
+  else                                      AdjIndex = ADJFLOW_SOL;
+
   /*--- Restart the solution from file information ---*/
 
   filename = config->GetSolution_AdjFileName();
@@ -1015,12 +1019,12 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
       for (iChildren = 0; iChildren < geometry[iMesh]->node[iPoint]->GetnChildren_CV(); iChildren++) {
         Point_Fine = geometry[iMesh]->node[iPoint]->GetChildren_CV(iChildren);
         Area_Children = geometry[iMesh-1]->node[Point_Fine]->GetVolume();
-        Solution_Fine = solver[iMesh-1][ADJFLOW_SOL]->node[Point_Fine]->GetSolution();
+        Solution_Fine = solver[iMesh-1][AdjIndex]->node[Point_Fine]->GetSolution();
         for (iVar = 0; iVar < nVar; iVar++) {
           Solution[iVar] += Solution_Fine[iVar]*Area_Children/Area_Parent;
         }
       }
-      solver[iMesh][ADJFLOW_SOL]->node[iPoint]->SetSolution(Solution);
+      solver[iMesh][AdjIndex]->node[iPoint]->SetSolution(Solution);
     }
   }
 
@@ -1085,7 +1089,7 @@ void CDiscAdjSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config){
 
   unsigned long iPoint, nPoint = geometry->GetnPoint(), iElem, nElem = geometry->GetnElem();
   unsigned short iVar, iDim, iFlux;
-  unsigned short nVarMetr = 4, nFluxMetr = 1;
+  unsigned short nVarMetr = nVar, nFluxMetr = 1;
   su2double vnx[3], vny[3];
   su2double graTri[2];
   su2double Crd[3][2], Sens[3][nVarMetr][nFluxMetr];
@@ -1108,14 +1112,11 @@ void CDiscAdjSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config){
     for (unsigned short iNode=0; iNode<3; ++iNode) {
       const unsigned long kNode = geometry->elem[iElem]->GetNode(iNode);
       //--- store coordinates
-      for (unsigned short iDim = 0; iDim<2; ++iDim) {
+      for (iDim = 0; iDim<2; ++iDim) {
         Crd[iNode][iDim] = geometry->node[kNode]->GetCoord(iDim);
       }
       //--- store sensors
-      Sens[iNode][0][0] = node[kNode]->GetSolution(0);
-      Sens[iNode][1][0] = node[kNode]->GetSolution(1);
-      Sens[iNode][2][0] = node[kNode]->GetSolution(2);
-      Sens[iNode][3][0] = node[kNode]->GetSolution(3);
+      for(iVar = 0; iVar < nVarMetr; iVar++) Sens[iNode][iVar][0] = node[kNode]->GetSolution(iVar);
 
     }
 

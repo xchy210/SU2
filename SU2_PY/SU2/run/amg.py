@@ -410,6 +410,7 @@ def amg ( config , kind='' ):
                 config_cfd.SOLUTION_FLOW_FILENAME = current_solution_ini
                 config_cfd.RESTART_FLOW_FILENAME  = current_solution
                 config_cfd.MATH_PROBLEM           = 'DIRECT'
+                config_cfd.RESTART_SOL            = 'YES'
                 
                 config_cfd.RESIDUAL_REDUCTION = float(adap_res[iSiz])
                 config_cfd.EXT_ITER = int(adap_ext_iter[iSiz])

@@ -477,35 +477,33 @@ void CErrorEstimationDriver::Geometrical_Preprocessing_DGFEM(CConfig **config_co
 void CErrorEstimationDriver::Solver_Preprocessing(CSolver ****solver_container, CGeometry ***geometry,
                                                    CConfig *config, unsigned short val_iInst) {
   
-  bool euler, ns, turbulent,
+  unsigned short iMGlevel;
+  bool euler, ns, turbulent, tne2_euler, tne2_ns,
   fem_euler, fem_ns, fem_turbulent, fem_transition,
   adj_euler, adj_ns, adj_turb,
-  heat_fvm,
-  fem, disc_adj_fem,
+  heat_fvm, fem,
   spalart_allmaras, neg_spalart_allmaras, menter_sst, transition,
-  template_solver, disc_adj, disc_adj_turb, disc_adj_heat,
+  template_solver, disc_adj, disc_adj_turb, disc_adj_fem, disc_adj_heat, disc_adj_tne2,
   fem_dg_flow, fem_dg_shock_persson,
   e_spalart_allmaras, comp_spalart_allmaras, e_comp_spalart_allmaras;
-  
-  /*--- Count the number of DOFs per solution point. ---*/
-  
-  DOFsPerPoint = 0;
-  
-  /*--- Initialize some useful booleans ---*/
 
-  euler            = false;  ns              = false;  turbulent     = false;
+  /*--- Initialize some useful booleans ---*/
+  
+  euler            = false;  ns              = false;  turbulent = false;
   fem_euler        = false;  fem_ns          = false;  fem_turbulent = false;
-  adj_euler        = false;  adj_ns          = false;  adj_turb      = false;
+  adj_euler        = false;  adj_ns          = false;  adj_turb  = false;
   spalart_allmaras = false;  menter_sst      = false;  disc_adj_turb = false;
   neg_spalart_allmaras = false;
-  disc_adj         = false;
-  fem              = false;  disc_adj_fem     = false;
-  heat_fvm         = false;  disc_adj_heat    = false;
-  transition       = false;  fem_transition   = false;
+  disc_adj        = false;
+  fem              = false;  disc_adj_fem    = false;
+  heat_fvm        = false;   disc_adj_heat   = false;
+  transition       = false;
   template_solver  = false;
-  fem_dg_flow      = false;  fem_dg_shock_persson = false;
   e_spalart_allmaras = false; comp_spalart_allmaras = false; e_comp_spalart_allmaras = false;
-  
+  tne2_euler           = false; tne2_ns               = false;
+  fem_dg_flow      = false;  fem_dg_shock_persson = false;
+  disc_adj_tne2        = false;
+
   bool compressible   = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
 
@@ -514,7 +512,9 @@ void CErrorEstimationDriver::Solver_Preprocessing(CSolver ****solver_container, 
   switch (config->GetKind_Solver()) {
     case TEMPLATE_SOLVER: template_solver = true; break;
     case EULER : euler = true; break;
+    case TNE2_EULER: tne2_euler =true; break;
     case NAVIER_STOKES: ns = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case TNE2_NAVIER_STOKES: tne2_ns = true; break;
     case RANS : ns = true; turbulent = true; if (config->GetKind_Trans_Model() == LM) transition = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case FEM_EULER : fem_euler = true; break;
     case FEM_NAVIER_STOKES: fem_ns = true; break;
@@ -527,6 +527,8 @@ void CErrorEstimationDriver::Solver_Preprocessing(CSolver ****solver_container, 
     case ADJ_RANS : ns = true; turbulent = true; adj_ns = true; adj_turb = (!config->GetFrozen_Visc_Cont()); break;
     case DISC_ADJ_EULER: euler = true; disc_adj = true; break;
     case DISC_ADJ_NAVIER_STOKES: ns = true; disc_adj = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case DISC_ADJ_TNE2_EULER: tne2_euler = true; disc_adj_tne2 = true; break;
+    case DISC_ADJ_TNE2_NAVIER_STOKES: tne2_ns = true; disc_adj_tne2 = true; break;
     case DISC_ADJ_RANS: ns = true; turbulent = true; disc_adj = true; disc_adj_turb = (!config->GetFrozen_Visc_Disc()); heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case DISC_ADJ_FEM_EULER: fem_euler = true; disc_adj = true; break;
     case DISC_ADJ_FEM_NS: fem_ns = true; disc_adj = true; break;
@@ -586,6 +588,13 @@ void CErrorEstimationDriver::Solver_Preprocessing(CSolver ****solver_container, 
     }
     DOFsPerPoint += solver_container[val_iInst][MESH_0][FLOW_SOL]->GetnVar();
   }
+  if (tne2_euler || disc_adj_tne2) {
+    if (compressible) {
+      solver_container[val_iInst][MESH_0][TNE2_SOL] = new CTNE2EulerSolver(geometry[val_iInst][MESH_0], config, MESH_0);
+      solver_container[val_iInst][MESH_0][TNE2_SOL]->Preprocessing(geometry[val_iInst][MESH_0], solver_container[val_iInst][MESH_0], config, MESH_0, NO_RK_ITER, RUNTIME_TNE2_SYS, false);
+    }
+    DOFsPerPoint += solver_container[val_iInst][MESH_0][TNE2_SOL]->GetnVar();
+  }
   if (ns) {
     if (compressible) {
       solver_container[val_iInst][MESH_0][FLOW_SOL] = new CNSSolver(geometry[val_iInst][MESH_0], config, MESH_0);
@@ -594,6 +603,12 @@ void CErrorEstimationDriver::Solver_Preprocessing(CSolver ****solver_container, 
       solver_container[val_iInst][MESH_0][FLOW_SOL] = new CIncNSSolver(geometry[val_iInst][MESH_0], config, MESH_0);
     }
     DOFsPerPoint += solver_container[val_iInst][MESH_0][FLOW_SOL]->GetnVar();
+  }
+  if (tne2_ns) {
+    if (compressible) {
+      solver_container[val_iInst][MESH_0][TNE2_SOL] = new CTNE2NSSolver(geometry[val_iInst][MESH_0], config, MESH_0);
+    }
+    DOFsPerPoint += solver_container[val_iInst][MESH_0][TNE2_SOL]->GetnVar();
   }
   if (turbulent) {
     if (spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras || neg_spalart_allmaras) {
@@ -624,6 +639,10 @@ void CErrorEstimationDriver::Solver_Preprocessing(CSolver ****solver_container, 
       DOFsPerPoint += solver_container[val_iInst][MESH_0][ADJTURB_SOL]->GetnVar();
     }
   }  
+  if (disc_adj_tne2 || tne2_euler || tne2_ns) {
+    solver_container[val_iInst][MESH_0][ADJTNE2_SOL] = new CDiscAdjSolver(geometry[val_iInst][MESH_0], config, solver_container[val_iInst][MESH_0][TNE2_SOL], RUNTIME_TNE2_SYS, MESH_0);
+    DOFsPerPoint += solver_container[val_iInst][MESH_0][ADJTNE2_SOL]->GetnVar();
+  }
 
   /*--- Check for restarts and use the LoadRestart() routines. ---*/
 
@@ -638,9 +657,10 @@ void CErrorEstimationDriver::Solver_Restart(CSolver ****solver_container, CGeome
                              CConfig *config, bool update_geo, unsigned short val_iInst) {
 
   bool euler, ns, turbulent,
-  adj_euler, adj_ns, adj_turb,
+  adj_euler, adj_ns, adj_turb, tne2_euler, tne2_ns,
   heat_fvm, fem, fem_euler, fem_ns, fem_dg_flow,
-  template_solver, disc_adj, disc_adj_fem, disc_adj_turb, disc_adj_heat;
+  template_solver, disc_adj, disc_adj_fem, disc_adj_turb, disc_adj_heat,
+  disc_adj_tne2;
   int val_iter = 0;
 
   /*--- Initialize some useful booleans ---*/
@@ -649,8 +669,9 @@ void CErrorEstimationDriver::Solver_Restart(CSolver ****solver_container, CGeome
   adj_euler        = false;  adj_ns       = false;  adj_turb    = false;
   fem_euler        = false;  fem_ns       = false;  fem_dg_flow = false;
   disc_adj         = false;
+  tne2_euler       = false;  tne2_ns          = false;
   fem              = false;  disc_adj_fem     = false;
-  disc_adj_turb    = false;
+  disc_adj_turb    = false;  disc_adj_tne2 = false;
   heat_fvm         = false;  disc_adj_heat    = false;
   template_solver  = false;
 
@@ -686,6 +707,8 @@ void CErrorEstimationDriver::Solver_Restart(CSolver ****solver_container, CGeome
     case TEMPLATE_SOLVER: template_solver = true; break;
     case EULER : euler = true; break;
     case NAVIER_STOKES: ns = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case TNE2_EULER : tne2_euler = true; break;
+    case TNE2_NAVIER_STOKES: tne2_ns = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case RANS : ns = true; turbulent = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case FEM_EULER : fem_euler = true; break;
     case FEM_NAVIER_STOKES: fem_ns = true; break;
@@ -699,6 +722,8 @@ void CErrorEstimationDriver::Solver_Restart(CSolver ****solver_container, CGeome
     case DISC_ADJ_EULER: euler = true; disc_adj = true; break;
     case DISC_ADJ_NAVIER_STOKES: ns = true; disc_adj = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case DISC_ADJ_RANS: ns = true; turbulent = true; disc_adj = true; disc_adj_turb = (!config->GetFrozen_Visc_Disc()); heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case DISC_ADJ_TNE2_EULER: tne2_euler = true; disc_adj_tne2 = true; break;
+    case DISC_ADJ_TNE2_NAVIER_STOKES: tne2_ns = true; disc_adj_tne2 = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case DISC_ADJ_FEM_EULER: fem_euler = true; disc_adj = true; break;
     case DISC_ADJ_FEM_NS: fem_ns = true; disc_adj = true; break;
     case DISC_ADJ_FEM_RANS: fem_ns = true; turbulent = true; disc_adj = true; disc_adj_turb = (!config->GetFrozen_Visc_Disc()); break;
@@ -719,6 +744,9 @@ void CErrorEstimationDriver::Solver_Restart(CSolver ****solver_container, CGeome
   if (restart || restart_flow) {
     if (euler || ns) {
       solver_container[val_iInst][MESH_0][FLOW_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
+    }
+    if (tne2_euler || tne2_ns) {
+      solver_container[val_iInst][MESH_0][TNE2_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
     }
     if (turbulent) {
       solver_container[val_iInst][MESH_0][TURB_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
@@ -756,6 +784,13 @@ void CErrorEstimationDriver::Solver_Restart(CSolver ****solver_container, CGeome
       if (disc_adj_heat)
         solver_container[val_iInst][MESH_0][ADJHEAT_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
     }
+    if (disc_adj_tne2) {
+      solver_container[val_iInst][MESH_0][ADJTNE2_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
+      if (disc_adj_turb)
+        solver_container[val_iInst][MESH_0][ADJTURB_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
+      if (disc_adj_heat)
+        solver_container[val_iInst][MESH_0][ADJHEAT_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
+    }
     if (disc_adj_fem) {
         if (dynamic) val_iter = SU2_TYPE::Int(config->GetDyn_RestartIter())-1;
         solver_container[val_iInst][MESH_0][ADJFEA_SOL]->LoadRestart(geometry[val_iInst], solver_container[val_iInst], config, val_iter, update_geo);
@@ -778,8 +813,18 @@ void CErrorEstimationDriver::Solver_Restart(CSolver ****solver_container, CGeome
 
 void CErrorEstimationDriver::ComputeMetric() {
 
-  CSolver *solver_flow = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL],
-          *solver_adj  = solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL];
+  CSolver *solver_flow, *solver_adj;
+
+  switch(config_container[ZONE_0]->GetKind_Solver()) {
+    case EULER: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]; break;
+    case NAVIER_STOKES: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]; break;
+    case TNE2_EULER: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][TNE2_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJTNE2_SOL]; break;
+    case TNE2_NAVIER_STOKES: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][TNE2_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJTNE2_SOL]; break;
+    case DISC_ADJ_EULER: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]; break;
+    case DISC_ADJ_NAVIER_STOKES: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][FLOW_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJFLOW_SOL]; break;
+    case DISC_ADJ_TNE2_EULER: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][TNE2_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJTNE2_SOL]; break;
+    case DISC_ADJ_TNE2_NAVIER_STOKES: solver_flow = solver_container[ZONE_0][INST_0][MESH_0][TNE2_SOL]; solver_adj = solver_container[ZONE_0][INST_0][MESH_0][ADJTNE2_SOL]; break;
+  }
 
   if (rank == MASTER_NODE)
     cout << endl <<"----------------------------- Compute Metric ----------------------------" << endl;
@@ -820,14 +865,14 @@ void CErrorEstimationDriver::SumWeightedHessian(CSolver* solver_flow,
                                                 CSolver* solver_adj) {
 
   unsigned long iPoint, nPointDomain = geometry_container[ZONE_0][INST_0][MESH_0]->GetnPointDomain();
-  unsigned short nVarMetr = 4, nFluxMetr = 2;  //--- TODO: adjust size for goal (for different solvers, currently Euler) vs. feature
+  unsigned short nVarMetr = solver_flow->GetnVar(), 
+                 nFluxMetr = 2;  //--- TODO: adjust size for goal (for different solvers, currently Euler) vs. feature
   unsigned short nMetr = 3*(nDim-1);
-  unsigned short nDim = geometry_container[ZONE_0][INST_0][MESH_0]->GetnDim();
 
   for (iPoint = 0; iPoint < nPointDomain; ++iPoint) {
 
     //--- initialize metric tensor
-    for(unsigned short im = 0; im < 3*(nDim-1); ++im)
+    for(unsigned short im = 0; im < nMetr; ++im)
       solver_flow->node[iPoint]->SetAnisoMetr(im, 0.0);
 
     //--- perform summation of weighted Hessians
@@ -837,7 +882,7 @@ void CErrorEstimationDriver::SumWeightedHessian(CSolver* solver_flow,
         const unsigned short ig = iVar*nDim + iFlux;
         const su2double grad = solver_adj->node[iPoint]->GetAnisoGrad(ig);
 
-        for (unsigned short im = 0; im < 3*(nDim-1); ++im) {
+        for (unsigned short im = 0; im < nMetr; ++im) {
 
           const unsigned short ih = iFlux*nVarMetr*nMetr + iVar*nMetr + im;  
           const su2double hess = solver_flow->node[iPoint]->GetAnisoHess(ih);
@@ -891,6 +936,8 @@ void CErrorEstimationDriver::Output() {
     case DISC_ADJ_EULER: config_container[ZONE_0]->SetKind_Solver(EULER); break;
     case DISC_ADJ_NAVIER_STOKES: config_container[ZONE_0]->SetKind_Solver(NAVIER_STOKES); break;
     case DISC_ADJ_RANS: config_container[ZONE_0]->SetKind_Solver(RANS); break;
+    case DISC_ADJ_TNE2_EULER: config_container[ZONE_0]->SetKind_Solver(TNE2_EULER); break;
+    case DISC_ADJ_TNE2_NAVIER_STOKES: config_container[ZONE_0]->SetKind_Solver(TNE2_NAVIER_STOKES); break;
   }
 
   /*--- Set DiscreteAdjoint flag to false so we write to correct files ---*/
@@ -954,11 +1001,11 @@ void CErrorEstimationDriver::Solver_Postprocessing(CSolver ****solver_container,
                                                    CConfig *config, unsigned short val_iInst) {
   
   unsigned short iMGlevel;
-  bool euler, ns, turbulent,
+  bool euler, ns, turbulent, tne2_euler, tne2_ns,
   adj_euler, adj_ns, adj_turb,
   heat_fvm, fem,
   spalart_allmaras, neg_spalart_allmaras, menter_sst, transition,
-  template_solver, disc_adj, disc_adj_turb, disc_adj_fem, disc_adj_heat,
+  template_solver, disc_adj, disc_adj_turb, disc_adj_fem, disc_adj_heat, disc_adj_tne2,
   e_spalart_allmaras, comp_spalart_allmaras, e_comp_spalart_allmaras;
 
   /*--- Initialize some useful booleans ---*/
@@ -973,13 +1020,17 @@ void CErrorEstimationDriver::Solver_Postprocessing(CSolver ****solver_container,
   transition       = false;
   template_solver  = false;
   e_spalart_allmaras = false; comp_spalart_allmaras = false; e_comp_spalart_allmaras = false;
+  tne2_euler           = false; tne2_ns               = false;
+  disc_adj_tne2        = false;
 
   /*--- Assign booleans ---*/
   
   switch (config->GetKind_Solver()) {
     case TEMPLATE_SOLVER: template_solver = true; break;
     case EULER : euler = true; break;
+    case TNE2_EULER: tne2_euler =true; break;
     case NAVIER_STOKES: ns = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case TNE2_NAVIER_STOKES: tne2_ns = true; break;
     case RANS : ns = true; turbulent = true; if (config->GetKind_Trans_Model() == LM) transition = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case FEM_EULER : euler = true; break;
     case FEM_NAVIER_STOKES:
@@ -992,6 +1043,8 @@ void CErrorEstimationDriver::Solver_Postprocessing(CSolver ****solver_container,
     case ADJ_RANS : ns = true; turbulent = true; adj_ns = true; adj_turb = (!config->GetFrozen_Visc_Cont()); break;
     case DISC_ADJ_EULER: euler = true; disc_adj = true; break;
     case DISC_ADJ_NAVIER_STOKES: ns = true; disc_adj = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case DISC_ADJ_TNE2_EULER: tne2_euler = true; disc_adj_tne2 = true; break;
+    case DISC_ADJ_TNE2_NAVIER_STOKES: tne2_ns = true; disc_adj_tne2 = true; break;
     case DISC_ADJ_RANS: ns = true; turbulent = true; disc_adj = true; disc_adj_turb = (!config->GetFrozen_Visc_Disc()); heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case DISC_ADJ_FEM_EULER: euler = true; disc_adj = true; break;
     case DISC_ADJ_FEM_NS: ns = true; disc_adj = true; break;
@@ -1035,6 +1088,10 @@ void CErrorEstimationDriver::Solver_Postprocessing(CSolver ****solver_container,
       }
     }
 
+    if (disc_adj_tne2) {
+      delete solver_container[val_iInst][iMGlevel][ADJTNE2_SOL];
+    }
+
     if (disc_adj_heat) {
       delete solver_container[val_iInst][iMGlevel][ADJHEAT_SOL];
     }
@@ -1043,6 +1100,9 @@ void CErrorEstimationDriver::Solver_Postprocessing(CSolver ****solver_container,
     
     if (euler || ns) {
       delete solver_container[val_iInst][iMGlevel][FLOW_SOL];
+    }
+    if (tne2_euler || tne2_ns) {
+      delete solver_container[val_iInst][iMGlevel][TNE2_SOL];
     }
 
     if (turbulent) {

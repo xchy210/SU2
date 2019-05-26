@@ -190,6 +190,7 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
   switch (config->GetKind_Solver()) {
     case EULER : case NAVIER_STOKES: FirstIndex = FLOW_SOL; SecondIndex = NONE; break;
     case RANS : FirstIndex = FLOW_SOL; SecondIndex = TURB_SOL; break;
+    case TNE2_EULER : case TNE2_NAVIER_STOKES: FirstIndex = TNE2_SOL; SecondIndex = NONE; break;
     default: SecondIndex = NONE; break;
   }
   
@@ -203,6 +204,7 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
 	
   idxVar=0;
   idxVar += nDim + nVar_Consv_Par; // Add coordinates and conservative variables
+  if(Kind_Solver == TNE2_EULER || Kind_Solver == TNE2_NAVIER_STOKES) idxVar +=1; // Add total density for TNE2
   
   if (!config->GetLow_MemoryOutput()) {
     
@@ -213,7 +215,8 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
       idxVar += nVar_Consv_Par; // Add residuals
     }
     
-    if ((Kind_Solver == EULER) || (Kind_Solver == NAVIER_STOKES) || (Kind_Solver == RANS)) {
+    if ((Kind_Solver == EULER) || (Kind_Solver == NAVIER_STOKES) || (Kind_Solver == RANS) 
+      || (Kind_Solver == TNE2_EULER) || (Kind_Solver == TNE2_NAVIER_STOKES)) {
       TagBc[bcPres] = idxVar;
       TagBc[bcTemp] = idxVar+1;
       TagBc[bcMach] = idxVar+2;
@@ -226,7 +229,8 @@ void COutput::WriteInriaOutputs(CConfig *config, CGeometry *geometry, CSolver **
 
   if(config->GetError_Estimate() && config->GetKind_SU2() == SU2_MET){
     
-    if ((Kind_Solver == NAVIER_STOKES) || (Kind_Solver == RANS)) {
+    if ((Kind_Solver == NAVIER_STOKES) || (Kind_Solver == RANS)
+      || (Kind_Solver == TNE2_NAVIER_STOKES)) {
       idxVar += nDim + 2; // Add laminar viscosity, skin friction, heat flux
       if(config->GetBuffet_Monitoring() || config->GetKind_ObjFunc() == BUFFET_SENSOR) idxVar += 1; // Add buffet sensor
     }
