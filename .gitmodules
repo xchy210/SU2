@@ -11,4 +11,7 @@
 	url = http://github.com/bmunguia/libMeshb
 [submodule "externals/amginterface"]
 	path = externals/amginterface
-	url = https://github.com/bmunguia/amginterface
+	url = http://github.com/bmunguia/amginterface
+[submodule "amginterface"]
+	path = amginterface
+	url = http://github.com/bmunguia/amginterface
