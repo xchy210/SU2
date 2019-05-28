@@ -8,7 +8,7 @@
 	ignore = dirty
 [submodule "externals/libMeshb"]
 	path = externals/libMeshb
-	url = https://github.com/bmunguia/libMeshb
+	url = http://github.com/bmunguia/libMeshb
 [submodule "externals/amginterface"]
 	path = externals/amginterface
 	url = https://github.com/bmunguia/amginterface
