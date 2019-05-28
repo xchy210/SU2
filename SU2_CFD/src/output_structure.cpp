@@ -4311,7 +4311,6 @@ void COutput::MergeBaselineSolution(CConfig *config, CGeometry *geometry, CSolve
   unsigned long iPoint = 0, jPoint = 0;
   
   nVar_Total = config->fields.size() - 1;
-  
   /*--- Merge the solution either in serial or parallel. ---*/
   
 #ifndef HAVE_MPI
@@ -9711,7 +9710,6 @@ void COutput::SetBaselineResult_Files(CSolver ***solver, CGeometry ***geometry, 
           case TECPLOT:
 
             /*--- Write a Tecplot ASCII file ---*/
-
             if (rank == MASTER_NODE) cout << "Writing Tecplot ASCII file (volume grid)." << endl;
             SetTecplotASCII(config[iZone], geometry[iZone][iInst], &solver[iZone][iInst], iZone, val_nZone, false);
             DeallocateConnectivity(config[iZone], geometry[iZone][iInst], false);
@@ -15759,7 +15757,7 @@ void COutput::LoadLocalData_Elasticity(CConfig *config, CGeometry *geometry, CSo
 
 void COutput::LoadLocalData_TNE2(CConfig *config, CGeometry *geometry, CSolver **solver, unsigned short val_iZone) {
 
-  unsigned short iDim, iSpecies, nSpecies;
+  unsigned short iDim, nSpecies;
   unsigned short Kind_Solver = config->GetKind_Solver();
   unsigned short nDim = geometry->GetnDim();
 
@@ -15851,7 +15849,7 @@ void COutput::LoadLocalData_TNE2(CConfig *config, CGeometry *geometry, CSolver *
   Variable_Names.push_back("Momentum_y");
   if (geometry->GetnDim() == 3) Variable_Names.push_back("Momentum_z");
   Variable_Names.push_back("Energy");
-  Variable_Names.push_back("Electronic Energy");
+  Variable_Names.push_back("Electronic_Energy");
 
   if (SecondIndex != NONE) {
     if (config->GetKind_Turb_Model() == SST) {
@@ -15864,7 +15862,7 @@ void COutput::LoadLocalData_TNE2(CConfig *config, CGeometry *geometry, CSolver *
   }
 
   /*--- Total Density ---*/
-  nVar_Par += 1; Variable_Names.push_back("Total Density");
+  nVar_Par += 1; Variable_Names.push_back("Total_Density");
 
   /*--- If requested, register the limiter and residuals for all of the
    equations in the current flow problem. ---*/
@@ -16338,7 +16336,6 @@ void COutput::LoadLocalData_AdjTNE2(CConfig *config, CGeometry *geometry, CSolve
   su2double *Grid_Vel = NULL;
   su2double *Normal, Area;
 
-  bool incompressible = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool grid_movement  = (config->GetGrid_Movement());
   bool Wrt_Halo       = config->GetWrt_Halo(), isPeriodic;
 
@@ -16416,7 +16413,7 @@ void COutput::LoadLocalData_AdjTNE2(CConfig *config, CGeometry *geometry, CSolve
   }
 
   /*--- Total Density ---*/
-  nVar_Par +=1; Variable_Names.push_back("Adjoint_Total_Density");
+  //nVar_Par +=1; Variable_Names.push_back("Adjoint_Total_Density");
 
   /*--- For the discrete adjoint, we have the full field of sensitivity
    in each coordinate direction. ---*/
