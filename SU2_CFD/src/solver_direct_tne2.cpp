@@ -3076,6 +3076,15 @@ void CTNE2EulerSolver::SetHessian_L2Proj2(CGeometry *geometry, CConfig *config){
                                         RuU[0][0]*LamRuU[0][1]+RuU[0][1]*LamRuU[1][1], 
                                         RuU[1][0]*LamRuU[0][1]+RuU[1][1]*LamRuU[1][1]};
 
+        if(isinf(Hess[0]) || isinf(Hess[1]) || isinf(Hess[2])){
+          cout << "Inf detected in L2Proj2 at node " << iPoint << endl;
+          cout << "Lam  = (" << Lam1 << ", " << Lam2 << ")" << endl;
+          cout << "RuH  = (" << RuH[0][0] << ", " << RuH[0][1] << ")" << endl;
+          cout << "        " << RuH[1][0] << ", " << RuH[1][1] << ")" << endl;
+          cout << "Hess = (" << Hess[0] << ", " << Hess[1] << ")" << endl;
+          cout << "        " << Hess[1] << ", " << Hess[2] << ")" << endl;
+        }
+
         var->SetAnisoHess(i+0, Hess[0]);
         var->SetAnisoHess(i+1, Hess[1]);
         var->SetAnisoHess(i+2, Hess[2]);

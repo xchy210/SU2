@@ -1116,7 +1116,13 @@ void CDiscAdjSolver::SetGradient_L2Proj2(CGeometry *geometry, CConfig *config){
         Crd[iNode][iDim] = geometry->node[kNode]->GetCoord(iDim);
       }
       //--- store sensors
-      for(iVar = 0; iVar < nVarMetr; iVar++) Sens[iNode][iVar][0] = node[kNode]->GetSolution(iVar);
+      for(iVar = 0; iVar < nVarMetr; iVar++) {Sens[iNode][iVar][0] = node[kNode]->GetSolution(iVar);
+        if(isnan(Sens[iNode][iVar][0]) || isinf(Sens[iNode][iVar][0])){
+          cout << "Inf/NaN detected in AdjL2Proj2 at elem " << iElem << ", node "<< kNode << endl;
+          cout << "iVar = " << iVar << endl;
+          cout << "Adj  = " << Sens[iNode][iVar][0] << endl;
+        }
+      }
 
     }
 

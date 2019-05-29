@@ -881,6 +881,11 @@ void CErrorEstimationDriver::SumWeightedHessian(CSolver* solver_flow,
       for (unsigned short iFlux = 0; iFlux < nFluxMetr; ++iFlux) {
         const unsigned short ig = iVar*nDim + iFlux;
         const su2double grad = solver_adj->node[iPoint]->GetAnisoGrad(ig);
+        if(isnan(grad) || isinf(grad)){
+          cout << "Inf/NaN detected in SumWeightedHessian at node " << iPoint << endl;
+          cout << "iVar = " << iVar << ", iFlux = " << iFlux << ", iGrad = " << ig << endl;
+          cout << "Grad = " << grad << endl;
+        }
 
         for (unsigned short im = 0; im < nMetr; ++im) {
 
@@ -918,6 +923,13 @@ void CErrorEstimationDriver::SumWeightedHessian(CSolver* solver_flow,
 
     const su2double factor = Complexity
                            * pow(abs(Lam1*Lam2), -1./5.);
+
+    if(isinf(Metr[0]) || isinf(Metr[1]) || isinf(Metr[2]) || isinf(factor)){
+          cout << "Inf detected in SumWeightedHessian at node " << iPoint << endl;
+          cout << "Lam  = (" << Lam1 << ", " << Lam2 << ")" << endl;
+          cout << "Metr = (" << Metr[0] << ", " << Metr[1] << ")" << endl;
+          cout << "        " << Metr[1] << ", " << Metr[2] << ")" << endl;
+        }
 
     var->SetAnisoMetr(0, factor*Metr[0]);
     var->SetAnisoMetr(1, factor*Metr[1]);
