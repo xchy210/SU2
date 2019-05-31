@@ -14626,6 +14626,27 @@ private:
   AllBound_MaxHeatFlux_Visc; /*!< \brief Maximum heat flux (viscous contribution) for all boundaries. */
   su2double StrainMag_Max, Omega_Max; /*!< \brief Maximum Strain Rate magnitude and Omega. */
 
+  /* PSU May 29, 2019 */
+  /* Adding members for wall model deubgging */
+  struct wmDebugStruct {
+	  std::string marker_tag;
+	  unsigned long surf_elem;
+	  unsigned long vol_elem_id;
+	  unsigned long bound_elem_id_global;
+	  vector<unsigned long> donors_wm;
+	  vector<unsigned short> n_int_per_wm_donor;
+	  vector<unsigned short> int_per_wm_donor;
+	  vector<su2double> coords_int;
+	  su2double T_wall;
+	  su2double gas_constant;
+	  su2double C_v;
+	  su2double static_energy;
+
+
+  };
+  vector<wmDebugStruct> wm_debug_data;
+  /* END PSU */
+
 public:
 
   /*!

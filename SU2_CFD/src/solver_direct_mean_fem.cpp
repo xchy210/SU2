@@ -6196,6 +6196,11 @@ void CFEM_DG_EulerSolver::Boundary_Conditions(const unsigned short timeLevel,
                             + nVar*startLocResFacesMarkers[iMarker][timeLevel];
 
         const CSurfaceElementFEM *surfElem = boundaries[iMarker].surfElem.data();
+        /* PSU May 28, 2019 */
+        /* Output the boundary name as a header for debugging wall-model output */
+        std::cout << "Boundary " << boundaries[iMarker].markerTag << std::endl;
+        std::cout << "********************" << std::endl;
+        /* End PSU */
 
         /* Apply the appropriate boundary condition. */
         switch (config->GetMarker_All_KindBC(iMarker)) {
@@ -15282,7 +15287,12 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
   /* Determine the number of faces that are treated simultaneously
      in the matrix products to obtain good gemm performance. */
   const unsigned short nPadInput  = config->GetSizeMatMulPadding();
+
+  /* PSU May 28, 2019 */
+  /* Setting nFaceSimul to 1 to make debugging easier */
   const unsigned short nFaceSimul = nPadInput/nVar;
+//  const unsigned short nFaceSimul = 1;
+  /* END PSU */
 
   /* Determine the minimum padded size in the matrix multiplications, which
      corresponds to 64 byte alignment. */
@@ -15301,6 +15311,14 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 
     MetaDataChunkOfElem(surfElem, l, surfElemEnd, nFaceSimul,
                         nPadMin, lEnd, ind, llEnd, NPad);
+    /* PSU May 28, 2019 */
+    /* Adding output for debugging the wall model */
+//    std::cout << "Number of simultaneous faces = " << nFaceSimul << std::endl;
+//    std::cout << "Beginning of this chunk of faces (l) = " << l << std::endl;
+//    std::cout << "End of this chunk of faces (lEnd) = " << lEnd << std::endl;
+//    std::cout << "ind = " << ind << std::endl;
+//    std::cout << "llEnd = " << llEnd << std::endl;
+    /* End PSU */
 
     /*--- Get the information from the standard element, which is the same
           for all the faces in the chunks considered. ---*/
@@ -15316,6 +15334,11 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
        function LeftStatesIntegrationPointsBoundaryFace. */
     LeftStatesIntegrationPointsBoundaryFace(config, llEnd, NPad, &surfElem[l],
                                             work, solIntL);
+
+    /* PSU May 29, 2019 */
+    /* Allocate space in vector to hold values for wm debugging output */
+    wm_debug_data.resize((surfElemEnd-surfElemBeg)*nInt);
+    /* END PSU */
 
     /*--- Integration to the wall is used, so the no-slip condition is enforced,
           albeit weakly. Loop over the number of faces in this chunk and the
@@ -15351,8 +15374,34 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 
         /* Compute the total energy of the right state. */
         UR[nDim+1] = UR[0]*(StaticEnergy + 0.5*kinEner);
+
+        /* PSU */
+        /* Set element id and volume id information */
+        unsigned long cur_int = lll*nInt + i;
+        wm_debug_data[cur_int].marker_tag = Marker_Tag;
+        wm_debug_data[cur_int].surf_elem = lll;
+        wm_debug_data[cur_int].vol_elem_id = surfElem[lll].volElemID;
+        wm_debug_data[cur_int].bound_elem_id_global = surfElem[lll].boundElemIDGlobal;
+        wm_debug_data[cur_int].donors_wm = surfElem[lll].donorsWallFunction;
+        wm_debug_data[cur_int].n_int_per_wm_donor = surfElem[lll].nIntPerWallFunctionDonor;
+        wm_debug_data[cur_int].int_per_wm_donor = surfElem[lll].intPerWallFunctionDonor;
+        wm_debug_data[cur_int].coords_int.resize(3);
+        for(unsigned short iDim=0; iDim<nDim; ++iDim){
+        	wm_debug_data[cur_int].coords_int[0] = surfElem[lll].coorIntegrationPoints[i*nDim];
+        	wm_debug_data[cur_int].coords_int[1] = surfElem[lll].coorIntegrationPoints[i*nDim+1];
+        	wm_debug_data[cur_int].coords_int[2] = surfElem[lll].coorIntegrationPoints[i*nDim+2];
+        }
+        wm_debug_data[cur_int].T_wall = TWall;
+        wm_debug_data[cur_int].gas_constant = Gas_Constant;
+        wm_debug_data[cur_int].C_v = Cv;
+        wm_debug_data[cur_int].static_energy = StaticEnergy;
+
+        /* END PSU */
+
       }
     }
+
+
 
     /* The remainder of the boundary treatment is the same for all
        boundary conditions (except the symmetry plane). */
@@ -15362,9 +15411,31 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
                                     work, resFaces, indResFaces,
                                     boundaries[val_marker].wallModel);
 
+
     /* Update the value of the counter l to the end index of the
        current chunk. */
     l = lEnd;
+  }
+  std::cout << "Marker, surf_elem, int, vol_elem_id, bound_elem_id_global, x, y, z, T_wall, gas_constant, C_v, static_energy" << std::endl;
+  for(unsigned long l = surfElemBeg; l<surfElemEnd; ++l){
+	  unsigned short ind = surfElem[l].indStandardElement;
+	  const unsigned short nInt = standardBoundaryFacesSol[ind].GetNIntegration();
+	  for(unsigned short i = 0; i<nInt; i++){
+		unsigned long cur_int = l*nInt + i;
+		std::cout << wm_debug_data[cur_int].marker_tag << ", ";
+		std::cout << wm_debug_data[cur_int].surf_elem << ", ";
+		std::cout << i << ", ";
+		std::cout << wm_debug_data[cur_int].vol_elem_id << ", ";
+		std::cout << wm_debug_data[cur_int].bound_elem_id_global << ", ";
+		std::cout << wm_debug_data[cur_int].coords_int[0] << ", ";
+		std::cout << wm_debug_data[cur_int].coords_int[1] << ", ";
+		std::cout << wm_debug_data[cur_int].coords_int[2] << ", ";
+		std::cout << wm_debug_data[cur_int].T_wall << ", ";
+		std::cout << wm_debug_data[cur_int].gas_constant << ", ";
+		std::cout << wm_debug_data[cur_int].C_v << ", ";
+		std::cout << wm_debug_data[cur_int].static_energy << ", ";
+		std::cout << std::endl;
+	  }
   }
 }
 
