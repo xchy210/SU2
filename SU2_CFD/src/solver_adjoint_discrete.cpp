@@ -988,6 +988,12 @@ void CDiscAdjSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConfi
       index = counter*Restart_Vars[1] + skipVars;
       for (iVar = 0; iVar < nVar; iVar++) Solution[iVar] = Restart_Data[index+iVar];
       node[iPoint_Local]->SetSolution(Solution);
+      for(iVar = 0; iVar < nVar; iVar++)
+        if(isinf(Solution[iVar]) || isnan(Solution[iVar])){
+          cout << "Inf/NaN detected in LoadRestart at node "<< iPoint_Global << endl;
+          cout << "iVar = " << iVar << "/" << nVar << endl;
+          cout << "Adj  = " << Solution[iVar] << endl;
+        }
       iPoint_Global_Local++;
 
       /*--- Increment the overall counter for how many points have been loaded. ---*/

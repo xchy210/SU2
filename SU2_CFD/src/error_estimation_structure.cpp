@@ -891,7 +891,8 @@ void CErrorEstimationDriver::SumWeightedHessian(CSolver* solver_flow,
 
           const unsigned short ih = iFlux*nVarMetr*nMetr + iVar*nMetr + im;  
           const su2double hess = solver_flow->node[iPoint]->GetAnisoHess(ih);
-          const su2double part = abs(grad)*hess;
+          su2double part = abs(grad)*hess;
+          if((abs(part) < 1.0E-16)) part = 1.0E-16;
           solver_flow->node[iPoint]->AddAnisoMetr(im,part);
 
         }
@@ -899,6 +900,46 @@ void CErrorEstimationDriver::SumWeightedHessian(CSolver* solver_flow,
       }
 
     }
+
+  }
+
+  //--- maximum and minimal sizes
+  su2double hmax = config_container[ZONE_0]->GetMesh_Hmax(),
+            hmin = config_container[ZONE_0]->GetMesh_Hmin();
+  for(iPoint = 0; iPoint < nPointDomain; ++iPoint) {
+
+    CVariable *var = solver_flow->node[iPoint];
+
+    const su2double Metr[3] = {var->GetAnisoMetr(0), 
+                               var->GetAnisoMetr(1), 
+                               var->GetAnisoMetr(2)};
+
+    const su2double DetH = Metr[0]*Metr[2]
+                         - Metr[1]*Metr[1];
+    const su2double TraH = Metr[0]+Metr[2];
+
+    const su2double Lam1 = TraH/2.0 + sqrt(TraH*TraH/4.-DetH);
+    const su2double Lam2 = TraH/2.0 - sqrt(TraH*TraH/4.-DetH);
+
+    const su2double RuH[2][2]    = {{Metr[1],Metr[1]},
+                                    {Lam1-Metr[0],Lam2-Metr[0]}};
+
+    const su2double RuU[2][2]    = {{RuH[0][0]/sqrt(RuH[0][0]*RuH[0][0]+RuH[1][0]*RuH[1][0]), RuH[0][1]/sqrt(RuH[0][1]*RuH[0][1]+RuH[1][1]*RuH[1][1])},
+                                    {RuH[1][0]/sqrt(RuH[0][0]*RuH[0][0]+RuH[1][0]*RuH[1][0]), RuH[1][1]/sqrt(RuH[0][1]*RuH[0][1]+RuH[1][1]*RuH[1][1])}};
+
+    const su2double Lam1new = min(max(abs(Lam1), 1./(hmax*hmax)), 1./(hmin*hmin));
+    const su2double Lam2new = min(max(abs(Lam2), 1./(hmax*hmax)), 1./(hmin*hmin));
+
+    const su2double LamRuU[2][2] = {{abs(Lam1new)*RuU[0][0],abs(Lam1new)*RuU[1][0]},
+                                    {abs(Lam2new)*RuU[0][1],abs(Lam2new)*RuU[1][1]}};
+
+    const su2double MetrNew[3]   = {RuU[0][0]*LamRuU[0][0]+RuU[0][1]*LamRuU[1][0], 
+                                    RuU[0][0]*LamRuU[0][1]+RuU[0][1]*LamRuU[1][1], 
+                                    RuU[1][0]*LamRuU[0][1]+RuU[1][1]*LamRuU[1][1]};
+
+    var->SetAnisoMetr(0, MetrNew[0]);
+    var->SetAnisoMetr(1, MetrNew[1]);
+    var->SetAnisoMetr(2, MetrNew[2]);
 
   }
 
@@ -918,18 +959,28 @@ void CErrorEstimationDriver::SumWeightedHessian(CSolver* solver_flow,
                          - Metr[1]*Metr[1];
     const su2double TraH = Metr[0]+Metr[2];
 
-    const su2double Lam1 = TraH/2.0 + sqrt(TraH*TraH/4.-DetH);
-    const su2double Lam2 = TraH/2.0 - sqrt(TraH*TraH/4.-DetH);
+    su2double Lam1 = TraH/2.0 + sqrt(TraH*TraH/4.-DetH);
+    su2double Lam2 = TraH/2.0 - sqrt(TraH*TraH/4.-DetH);
+
+    if(isnan(Lam1)) Lam1 = TraH/2.0;
+    if(isnan(Lam2)) Lam2 = TraH/2.0;
 
     const su2double factor = Complexity
                            * pow(abs(Lam1*Lam2), -1./5.);
 
     if(isinf(Metr[0]) || isinf(Metr[1]) || isinf(Metr[2]) || isinf(factor)){
-          cout << "Inf detected in SumWeightedHessian at node " << iPoint << endl;
-          cout << "Lam  = (" << Lam1 << ", " << Lam2 << ")" << endl;
-          cout << "Metr = (" << Metr[0] << ", " << Metr[1] << ")" << endl;
-          cout << "        " << Metr[1] << ", " << Metr[2] << ")" << endl;
-        }
+      cout << "Inf detected in SumWeightedHessian at node " << iPoint << endl;
+      cout << "Lam  = (" << Lam1 << ", " << Lam2 << ")" << endl;
+      cout << "Metr = (" << Metr[0] << ", " << Metr[1] << ")" << endl;
+      cout << "        " << Metr[1] << ", " << Metr[2] << ")" << endl;
+    }
+
+    if(isnan(Metr[0]) || isnan(Metr[1]) || isnan(Metr[2]) || isnan(factor)){
+      cout << "NaN detected in SumWeightedHessian at node " << iPoint << endl;
+      cout << "Lam  = (" << Lam1 << ", " << Lam2 << ")" << endl;
+      cout << "Metr = (" << Metr[0] << ", " << Metr[1] << ")" << endl;
+      cout << "        " << Metr[1] << ", " << Metr[2] << ")" << endl;
+    }
 
     var->SetAnisoMetr(0, factor*Metr[0]);
     var->SetAnisoMetr(1, factor*Metr[1]);

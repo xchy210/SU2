@@ -1183,6 +1183,8 @@ private:
          ECC_Solution_Adj_FileName;  /*!< \brief File name of higher order interpolated adjoint solution that is input */
   unsigned short Kind_Aniso_Sensor;  /*!< \brief Sensor used for anistropy */
   bool Wrt_Aniso_Sensor;             /*!< \brief Whether or not to write sensor files */
+  su2double Mesh_Hmax,               /*!< \brief Maximum cell size */
+            Mesh_Hmin;               /*!< \brief Minimum cell size */
   unsigned long  Mesh_Complexity;    /*!< \brief Constraint mesh complexity */
   
   /*--- all_options is a map containing all of the options. This is used during config file parsing
@@ -9595,6 +9597,18 @@ public:
    * \return Flag for field variable to be used as sensor
    */
   unsigned short GetKind_Aniso_Sensor(void);
+
+  /*!
+   * \brief Get maximum cell size
+   * \return Maximum cell size
+   */
+  su2double GetMesh_Hmax(void);
+
+  /*!
+   * \brief Get minimum cell size
+   * \return Minimum cell size
+   */
+  su2double GetMesh_Hmin(void);
 
   /*!
    * \brief Get constraint complexity
