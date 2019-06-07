@@ -14439,7 +14439,7 @@ void CFEM_DG_NSSolver::BC_Euler_Wall(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL);
+                                    indResFaces, NULL, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -14511,7 +14511,7 @@ void CFEM_DG_NSSolver::BC_Far_Field(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL);
+                                    indResFaces, NULL, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -14984,7 +14984,7 @@ void CFEM_DG_NSSolver::BC_Supersonic_Outlet(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL);
+                                    indResFaces, NULL, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15050,7 +15050,7 @@ void CFEM_DG_NSSolver::BC_Inlet(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL);
+                                    indResFaces, NULL, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15116,7 +15116,7 @@ void CFEM_DG_NSSolver::BC_Outlet(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL);
+                                    indResFaces, NULL, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15248,7 +15248,7 @@ void CFEM_DG_NSSolver::BC_HeatFlux_Wall(CConfig                  *config,
                                     Wall_HeatFlux, true, 0.0, false,
                                     &surfElem[l], solIntL, solIntR,
                                     work, resFaces, indResFaces,
-                                    boundaries[val_marker].wallModel);
+                                    boundaries[val_marker].wallModel, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15409,34 +15409,60 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
                                     0.0, false, TWall, true,
                                     &surfElem[l], solIntL, solIntR,
                                     work, resFaces, indResFaces,
-                                    boundaries[val_marker].wallModel);
+                                    boundaries[val_marker].wallModel, l);
 
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
     l = lEnd;
   }
-  std::cout << "Marker, surf_elem, int, vol_elem_id, bound_elem_id_global, x, y, z, T_wall, gas_constant, C_v, static_energy" << std::endl;
+  std::ofstream wm_debug_file;
+  std::string file_name = "wm_debug_output_";
+  file_name.append(Marker_Tag);
+  file_name.append(".csv");
+  wm_debug_file.open(file_name);
+  wm_debug_file << "Marker, surf_elem, int, vol_elem_id, bound_elem_id_global, x, y, z, T_wall, gas_constant, C_v, static_energy, ";
+  wm_debug_file << "rho_ex, u_ex, v_ex, w_ex, intE_ex, P_ex, T_ex, mu_ex, vel_tan_ex, tau_wall, q_wall, mu_wall, k_over_cv_wall, ";
+  wm_debug_file << "visc_norm_flux_0, visc_norm_flux_1, visc_norm_flux_2, visc_norm_flux_3, visc_norm_flux_4" << std::endl;
   for(unsigned long l = surfElemBeg; l<surfElemEnd; ++l){
 	  unsigned short ind = surfElem[l].indStandardElement;
 	  const unsigned short nInt = standardBoundaryFacesSol[ind].GetNIntegration();
 	  for(unsigned short i = 0; i<nInt; i++){
 		unsigned long cur_int = l*nInt + i;
-		std::cout << wm_debug_data[cur_int].marker_tag << ", ";
-		std::cout << wm_debug_data[cur_int].surf_elem << ", ";
-		std::cout << i << ", ";
-		std::cout << wm_debug_data[cur_int].vol_elem_id << ", ";
-		std::cout << wm_debug_data[cur_int].bound_elem_id_global << ", ";
-		std::cout << wm_debug_data[cur_int].coords_int[0] << ", ";
-		std::cout << wm_debug_data[cur_int].coords_int[1] << ", ";
-		std::cout << wm_debug_data[cur_int].coords_int[2] << ", ";
-		std::cout << wm_debug_data[cur_int].T_wall << ", ";
-		std::cout << wm_debug_data[cur_int].gas_constant << ", ";
-		std::cout << wm_debug_data[cur_int].C_v << ", ";
-		std::cout << wm_debug_data[cur_int].static_energy << ", ";
-		std::cout << std::endl;
+		wm_debug_file << wm_debug_data[cur_int].marker_tag << ", ";
+		wm_debug_file << wm_debug_data[cur_int].surf_elem << ", ";
+		wm_debug_file << i << ", ";
+		wm_debug_file << wm_debug_data[cur_int].vol_elem_id << ", ";
+		wm_debug_file << wm_debug_data[cur_int].bound_elem_id_global << ", ";
+		wm_debug_file << wm_debug_data[cur_int].coords_int[0] << ", ";
+		wm_debug_file << wm_debug_data[cur_int].coords_int[1] << ", ";
+		wm_debug_file << wm_debug_data[cur_int].coords_int[2] << ", ";
+		wm_debug_file << wm_debug_data[cur_int].T_wall << ", ";
+		wm_debug_file << wm_debug_data[cur_int].gas_constant << ", ";
+		wm_debug_file << wm_debug_data[cur_int].C_v << ", ";
+		wm_debug_file << wm_debug_data[cur_int].static_energy << ", ";
+		wm_debug_file << wm_debug_data[cur_int].rho_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].u_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].v_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].w_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].int_energy_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].pressure_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].T_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].mu_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].vel_tan_exchange << ", ";
+		wm_debug_file << wm_debug_data[cur_int].tau_wall << ", ";
+		wm_debug_file << wm_debug_data[cur_int].q_wall << ", ";
+		wm_debug_file << wm_debug_data[cur_int].mu_wall << ", ";
+		wm_debug_file << wm_debug_data[cur_int].k_over_cv_wall << ", ";
+		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_0 << ", ";
+		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_1 << ", ";
+		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_2 << ", ";
+		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_3 << ", ";
+		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_4 << ", ";
+		wm_debug_file << std::endl;
 	  }
   }
+  wm_debug_file.close();
 }
 
 void CFEM_DG_NSSolver::BC_Riemann(CConfig                  *config,
@@ -15497,7 +15523,7 @@ void CFEM_DG_NSSolver::BC_Riemann(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work,
-                                    resFaces, indResFaces, NULL);
+                                    resFaces, indResFaces, NULL, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15615,7 +15641,7 @@ void CFEM_DG_NSSolver::BC_Custom(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work,
-                                    resFaces, indResFaces, NULL);
+                                    resFaces, indResFaces, NULL, l);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15638,7 +15664,8 @@ void CFEM_DG_NSSolver::ViscousBoundaryFacesBCTreatment(
                                              su2double          *workArray,
                                              su2double          *resFaces,
                                              unsigned long      &indResFaces,
-                                             CWallModel         *wallModel) {
+                                             CWallModel         *wallModel,
+									   const unsigned long		cur_elem) {
 
   /*--- Get the information from the standard element, which is the same
         for all the faces in the chunks considered. ---*/
@@ -15662,7 +15689,7 @@ void CFEM_DG_NSSolver::ViscousBoundaryFacesBCTreatment(
                                HeatFlux_Prescribed, Wall_Temperature,
                                Temperature_Prescribed, surfElem, solIntL,
                                gradSolInt, viscFluxes, viscosityInt,
-                               kOverCvInt, wallModel);
+                               kOverCvInt, wallModel, cur_elem);
   }
   else {
     ComputeViscousFluxesBoundaryFaces(config, nFaceSimul, NPad, nInt, nDOFsElem,
@@ -15772,7 +15799,8 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
                                         su2double          *viscFluxes,
                                         su2double          *viscosityInt,
                                         su2double          *kOverCvInt,
-                                        CWallModel         *wallModel) {
+                                        CWallModel         *wallModel,
+								  const unsigned long		cur_elem) {
 
   /* Loop over the simultaneously treated faces. */
   for(unsigned short l=0; l<nFaceSimul; ++l) {
@@ -15806,6 +15834,11 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
         /* Easier storage of the actual integration point. */
         const unsigned short ii = surfElem[l].intPerWallFunctionDonor[i];
 
+        /* PSU */
+        /* Adding integration point number for wall-model debug array */
+        unsigned long cur_int = (cur_elem+l)*nInt + ii;
+        /* END PSU */
+
         /* Determine the normal and the wall velocity for this integration point. */
         const su2double *normals = surfElem[l].metricNormalsFace.data() + ii*(nDim+1);
         const su2double *gridVel = surfElem[l].gridVelocities.data() + ii*nDim;
@@ -15813,6 +15846,8 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
         /* Determine the velocities and pressure in the exchange point. */
         const su2double *solInt = workArray
                                 + nVar*(i-surfElem[l].nIntPerWallFunctionDonor[j]);
+
+
 
         su2double rhoInv = 1.0/solInt[0];
         su2double vel[]  = {0.0, 0.0, 0.0};
@@ -15844,6 +15879,19 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
         su2double dirTan[] = {0.0, 0.0, 0.0};
         for(unsigned short k=0; k<nDim; ++k) dirTan[k] = vel[k]/velTan;
         
+        /* PSU */
+        /* inserting data into the wall-model debug array */
+        wm_debug_data[cur_int].rho_exchange = solInt[0];
+        wm_debug_data[cur_int].u_exchange = vel[0];
+        wm_debug_data[cur_int].v_exchange = vel[1];
+        wm_debug_data[cur_int].w_exchange = vel[2];
+        wm_debug_data[cur_int].int_energy_exchange = eInt;
+        wm_debug_data[cur_int].pressure_exchange = Pressure;
+        wm_debug_data[cur_int].T_exchange = Temperature;
+        wm_debug_data[cur_int].mu_exchange = LaminarViscosity;
+        wm_debug_data[cur_int].vel_tan_exchange = velTan;
+        /* END PSU */
+
         /* Compute the wall shear stress and heat flux vector using
            the wall model. */
         su2double tauWall, qWall, ViscosityWall, kOverCvWall;
@@ -15853,6 +15901,14 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
                                               Wall_Temperature, Temperature_Prescribed,
                                               FluidModel, tauWall, qWall, ViscosityWall,
                                               kOverCvWall);
+
+        /* PSU */
+        /* Add more debug data */
+        wm_debug_data[cur_int].tau_wall = tauWall;
+        wm_debug_data[cur_int].q_wall = qWall;
+        wm_debug_data[cur_int].mu_wall = ViscosityWall;
+        wm_debug_data[cur_int].k_over_cv_wall = kOverCvWall;
+        /* END PSU */
 
         /* Compute the wall velocity in tangential direction. */
         const su2double *solWallInt = solIntL + NPad*ii + llNVar;
@@ -15875,6 +15931,15 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
         for(unsigned short k=0; k<nDim; ++k)
           normalFlux[k+1] = -normals[nDim]*tauWall*dirTan[k];
         normalFlux[nVar-1] = normals[nDim]*(qWall - tauWall*velWallTan);
+
+        /* PSU */
+        /* Add viscous normal flux data to debug data */
+        wm_debug_data[cur_int].visc_norm_flux_0 = normalFlux[0];
+        wm_debug_data[cur_int].visc_norm_flux_1 = normalFlux[1];
+        wm_debug_data[cur_int].visc_norm_flux_2 = normalFlux[2];
+        wm_debug_data[cur_int].visc_norm_flux_3 = normalFlux[3];
+        wm_debug_data[cur_int].visc_norm_flux_4 = normalFlux[4];
+        /* END PSU */
       }
     }
   }

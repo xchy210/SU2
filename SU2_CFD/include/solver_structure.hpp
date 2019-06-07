@@ -14641,8 +14641,24 @@ private:
 	  su2double gas_constant;
 	  su2double C_v;
 	  su2double static_energy;
-
-
+	  su2double rho_exchange;
+	  su2double u_exchange;
+	  su2double v_exchange;
+	  su2double w_exchange;
+	  su2double int_energy_exchange;
+	  su2double pressure_exchange;
+	  su2double T_exchange;
+	  su2double mu_exchange;
+	  su2double vel_tan_exchange;
+	  su2double tau_wall;
+	  su2double q_wall;
+	  su2double mu_wall;
+	  su2double k_over_cv_wall;
+	  su2double visc_norm_flux_0;
+	  su2double visc_norm_flux_1;
+	  su2double visc_norm_flux_2;
+	  su2double visc_norm_flux_3;
+	  su2double visc_norm_flux_4;
   };
   vector<wmDebugStruct> wm_debug_data;
   /* END PSU */
@@ -15205,7 +15221,8 @@ private:
                                              su2double          *workArray,
                                              su2double          *resFaces,
                                              unsigned long      &indResFaces,
-                                             CWallModel         *wallModel);
+                                             CWallModel         *wallModel,
+									   const unsigned long 		cur_elem);
 
   /*!
    * \brief Function, which computes the viscous fluxes in the integration
@@ -15294,7 +15311,8 @@ private:
                                         su2double          *viscFluxes,
                                         su2double          *viscosityInt,
                                         su2double          *kOverCvInt,
-                                        CWallModel         *wallModel);
+                                        CWallModel         *wallModel,
+								  const unsigned long		cur_elem);
 
   /*!
    * \brief Function, which computes the residual contribution from a boundary
