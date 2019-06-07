@@ -5223,12 +5223,25 @@ void CTNE2EulerSolver::BC_Supersonic_Outlet(CGeometry *geometry, CSolver **solut
   unsigned short iDim;
   unsigned long iVertex, iPoint;
   su2double *V_outlet, *V_domain;
+  su2double *U_outlet, *U_domain;
 
   bool implicit = (config->GetKind_TimeIntScheme_TNE2() == EULER_IMPLICIT);
   bool grid_movement  = config->GetGrid_Movement();
   string Marker_Tag = config->GetMarker_All_TagBound(val_marker);
 
   su2double *Normal = new su2double[nDim];
+
+  /*--- Initializing the required indices ---*/
+  conv_numerics->SetRhosIndex   ( node[0]->GetRhosIndex()    );
+  conv_numerics->SetRhoIndex    ( node[0]->GetRhoIndex()     );
+  conv_numerics->SetPIndex      ( node[0]->GetPIndex()       );
+  conv_numerics->SetTIndex      ( node[0]->GetTIndex()       );
+  conv_numerics->SetTveIndex    ( node[0]->GetTveIndex()     );
+  conv_numerics->SetVelIndex    ( node[0]->GetVelIndex()     );
+  conv_numerics->SetHIndex      ( node[0]->GetHIndex()       );
+  conv_numerics->SetAIndex      ( node[0]->GetAIndex()       );
+  conv_numerics->SetRhoCvtrIndex( node[0]->GetRhoCvtrIndex() );
+  conv_numerics->SetRhoCvveIndex( node[0]->GetRhoCvveIndex() );
 
   /*--- Supersonic outlet flow: there are no ingoing characteristics,
    so all flow variables can should be interpolated from the domain. ---*/
@@ -5243,9 +5256,10 @@ void CTNE2EulerSolver::BC_Supersonic_Outlet(CGeometry *geometry, CSolver **solut
 
       /*--- Current solution at this boundary node ---*/
       V_domain = node[iPoint]->GetPrimVar();
-
+      U_domain = node[iPoint]->GetSolution();
       /*--- Allocate the value at the outlet ---*/
       V_outlet = V_domain;
+      U_outlet = U_domain;
 
       /*--- Normal vector for this vertex (negate for outward convention) ---*/
       geometry->vertex[val_marker][iVertex]->GetNormal(Normal);
@@ -5254,6 +5268,7 @@ void CTNE2EulerSolver::BC_Supersonic_Outlet(CGeometry *geometry, CSolver **solut
       /*--- Set various quantities in the solver class ---*/
       conv_numerics->SetNormal(Normal);
       conv_numerics->SetPrimitive(V_domain, V_outlet);
+      conv_numerics->SetConservative(U_domain, U_outlet);
 
       if (grid_movement)
         conv_numerics->SetGridVel(geometry->node[iPoint]->GetGridVel(),
