@@ -617,10 +617,6 @@ void CUpwAUSM_TNE2::ComputeResidual(su2double *val_residual,
   for (iDim = 0; iDim < nDim; iDim++)
     val_residual[nSpecies+iDim] += pF*UnitNormal[iDim]*Area;
 
-  for (iVar =0; iVar < nVar; iVar++){
-    if (val_residual[iVar] != val_residual[iVar])
-      cout << "delete me" << endl;
-  }
   if (implicit) {
 
     /*--- Initialize the Jacobians ---*/
@@ -2415,7 +2411,6 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
         val_Jacobian_i[iVar][jVar] = 0.0;
   }
 
-
   /*--- Define artificial chemistry parameters ---*/
   // Note: These parameters artificially increase the rate-controlling reaction
   //       temperature.  This relaxes some of the stiffness in the chemistry
@@ -2485,6 +2480,7 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
     fwdRxn = 1.0;
     bkwRxn = 1.0;
     for (ii = 0; ii < 3; ii++) {
+
       /*--- Reactants ---*/
       iSpecies = RxnMap[iReaction][0][ii];
       if ( iSpecies != nSpecies)
@@ -2500,6 +2496,7 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
     bkwRxn = 1000.0 * kb * bkwRxn;
 
     for (ii = 0; ii < 3; ii++) {
+
       /*--- Products ---*/
       iSpecies = RxnMap[iReaction][1][ii];
       if (iSpecies != nSpecies) {
@@ -2507,6 +2504,7 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
         val_residual[nSpecies+nDim+1] += Ms[iSpecies] * (fwdRxn-bkwRxn)
             * eve_i[iSpecies] * Volume;
       }
+
       /*--- Reactants ---*/
       iSpecies = RxnMap[iReaction][0][ii];
       if (iSpecies != nSpecies) {
@@ -2517,6 +2515,8 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
     }
 
     if (implicit) {
+
+      /*--- Initializing derivative variables ---*/
       for (iVar = 0; iVar < nVar; iVar++) {
         dkf[iVar] = 0.0;
         dkb[iVar] = 0.0;
@@ -2528,23 +2528,24 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
         betak[iSpecies]  = 0;
       }
 
+      /*--- Derivative of modified temperature wrt Trxnf ---*/
       dThf = 0.5 * (1.0 + (Trxnf-T_min)/sqrt((Trxnf-T_min)*(Trxnf-T_min)
                                              + epsilon*epsilon          ));
       dThb = 0.5 * (1.0 + (Trxnb-T_min)/sqrt((Trxnb-T_min)*(Trxnb-T_min)
                                              + epsilon*epsilon          ));
 
-      /*--- Rate coefficient derivatives ---*/
-      // Fwd
+      /*--- Fwd rate coefficient derivatives ---*/
       coeff = kf * (eta/Thf+theta/(Thf*Thf)) * dThf;
       for (iVar = 0; iVar < nVar; iVar++) {
         dkf[iVar] = coeff * (  af*Trxnf/T*dTdU_i[iVar]
-                               + bf*Trxnf/Tve*dTvedU_i[iVar] );
+                             + bf*Trxnf/Tve*dTvedU_i[iVar] );
       }
-      // Bkw
+
+      /*--- Bkwd rate coefficient derivatives ---*/
       coeff = kb * (eta/Thb+theta/(Thb*Thb)) * dThb;
       for (iVar = 0; iVar < nVar; iVar++) {
         dkb[iVar] = coeff*(  ab*Trxnb/T*dTdU_i[iVar]
-                             + bb*Trxnb/Tve*dTvedU_i[iVar])
+                           + bb*Trxnb/Tve*dTvedU_i[iVar])
             - kb*((A[0]*Thb/1E4 - A[2] - A[3]*1E4/Thb
             - 2*A[4]*(1E4/Thb)*(1E4/Thb))/Thb) * dThb * (  ab*Trxnb/T*dTdU_i[iVar]
                                                            + bb*Trxnb/Tve*dTvedU_i[iVar]);
@@ -2552,16 +2553,20 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
 
       /*--- Rxn rate derivatives ---*/
       for (ii = 0; ii < 3; ii++) {
+
         /*--- Products ---*/
         iSpecies = RxnMap[iReaction][1][ii];
         if (iSpecies != nSpecies)
           betak[iSpecies]++;
+
         /*--- Reactants ---*/
         iSpecies = RxnMap[iReaction][0][ii];
         if (iSpecies != nSpecies)
           alphak[iSpecies]++;
       }
+
       for (iSpecies = 0; iSpecies < nSpecies; iSpecies++) {
+
         // Fwd
         dRfok[iSpecies] =  0.001*alphak[iSpecies]/Ms[iSpecies]
             * pow(0.001*U_i[iSpecies]/Ms[iSpecies],
@@ -2571,6 +2576,7 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
             dRfok[iSpecies] *= pow(0.001*U_i[jSpecies]/Ms[jSpecies],
                                    alphak[jSpecies]                );
         dRfok[iSpecies] *= 1000.0;
+
         // Bkw
         dRbok[iSpecies] =  0.001*betak[iSpecies]/Ms[iSpecies]
             * pow(0.001*U_i[iSpecies]/Ms[iSpecies],
@@ -2584,6 +2590,7 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
 
       nEve = nSpecies+nDim+1;
       for (ii = 0; ii < 3; ii++) {
+
         /*--- Products ---*/
         iSpecies = RxnMap[iReaction][1][ii];
         if (iSpecies != nSpecies) {
@@ -2594,7 +2601,7 @@ void CSource_TNE2::ComputeChemistry(su2double *val_residual,
             val_Jacobian_i[nEve][iVar] +=
                 Ms[iSpecies] * ( dkf[iVar]*(fwdRxn/kf) + kf*dRfok[iVar]
                                  -dkb[iVar]*(bkwRxn/kb) - kb*dRbok[iVar])
-                * eve_i[iSpecies] * Volume;
+                                * eve_i[iSpecies] * Volume;
           }
 
           for (jVar = 0; jVar < nVar; jVar++) {
@@ -2641,9 +2648,8 @@ void CSource_TNE2::ComputeVibRelaxation(su2double *val_residual,
   su2double rhos, P, T, Tve, rhoCvtr, rhoCvve, RuSI, Ru, conc, N;
   su2double Qtv, taunum, taudenom;
   su2double mu, A_sr, B_sr, num, denom;
-  su2double Cs;
+  su2double Cs, sig_s;
   su2double *Ms, *thetav;
-
 
   /*--- Initialize residual and Jacobian arrays ---*/
   for (iVar = 0; iVar < nVar; iVar++) {
@@ -2706,8 +2712,10 @@ void CSource_TNE2::ComputeVibRelaxation(su2double *val_residual,
     tauMW[iSpecies] = num / denom;
 
     /*--- Park limiting cross section ---*/
-    Cs = 1E-20*5E4*5E4*sqrt(8*Ru/(PI_NUMBER*Ms[iSpecies]));
-    tauP[iSpecies] = T*sqrt(T)/(Cs*N);
+    Cs    = sqrt((8.0*Ru*T)/(PI_NUMBER*Ms[iSpecies]));
+    sig_s = 1E-20*(5E4*5E4)/(T*T);
+
+    tauP[iSpecies] = 1/(sig_s*Cs*N);
 
     /*--- Species relaxation time ---*/
     taus[iSpecies] = tauMW[iSpecies] + tauP[iSpecies];
