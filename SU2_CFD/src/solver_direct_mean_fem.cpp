@@ -13268,7 +13268,7 @@ void CFEM_DG_NSSolver::ResidualFaces(CConfig             *config,
                             matchingInternalFaces[ll].metricCoorDerivFace0.data(),
                             matchingInternalFaces[ll].metricNormalsFace.data(),
                             matchingInternalFaces[ll].wallDistance.data(),
-                            viscFluxes, viscosityIntL, kOverCvIntL);
+                            viscFluxes, viscosityIntL, kOverCvIntL, -1);
     }
 
     /*--- Subtract half of the viscous fluxes from the inviscid fluxes. The
@@ -13341,7 +13341,7 @@ void CFEM_DG_NSSolver::ResidualFaces(CConfig             *config,
                             matchingInternalFaces[ll].metricCoorDerivFace1.data(),
                             matchingInternalFaces[ll].metricNormalsFace.data(),
                             matchingInternalFaces[ll].wallDistance.data(),
-                            viscFluxes, viscosityIntR, kOverCvIntR);
+                            viscFluxes, viscosityIntR, kOverCvIntR, -1);
     }
 
     /*--- Subtract half of the viscous fluxes from the inviscid fluxes. ---*/
@@ -13548,7 +13548,8 @@ void CFEM_DG_NSSolver::ViscousNormalFluxFace(const CVolumeElementFEM *adjVolElem
                                              const su2double         *wallDistanceInt,
                                                    su2double         *viscNormFluxes,
                                                    su2double         *viscosityInt,
-                                                   su2double         *kOverCvInt) {
+                                                   su2double         *kOverCvInt,
+											 const long	 			 cur_elem) {
 
   /* Multiplication factor for the heat flux. It is set to zero if the wall heat flux
      is prescribed, such that the computed heat flux is zero, and to one otherwise. */
@@ -14439,7 +14440,7 @@ void CFEM_DG_NSSolver::BC_Euler_Wall(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL, l);
+                                    indResFaces, NULL, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -14511,7 +14512,7 @@ void CFEM_DG_NSSolver::BC_Far_Field(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL, l);
+                                    indResFaces, NULL, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -14918,7 +14919,7 @@ void CFEM_DG_NSSolver::BC_Sym_Plane(CConfig                  *config,
        ResidualViscousBoundaryFace will carry out this task. */
     ResidualViscousBoundaryFace(config, conv_numerics, llEnd, NPad, &surfElem[l],
                                 solIntL, solIntR, gradSolInt, fluxes, viscFluxes,
-                                viscosityInt, kOverCvInt, resFaces, indResFaces);
+                                viscosityInt, kOverCvInt, resFaces, indResFaces, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -14984,7 +14985,7 @@ void CFEM_DG_NSSolver::BC_Supersonic_Outlet(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL, l);
+                                    indResFaces, NULL, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15050,7 +15051,7 @@ void CFEM_DG_NSSolver::BC_Inlet(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL, l);
+                                    indResFaces, NULL, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15116,7 +15117,7 @@ void CFEM_DG_NSSolver::BC_Outlet(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work, resFaces,
-                                    indResFaces, NULL, l);
+                                    indResFaces, NULL, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15248,7 +15249,7 @@ void CFEM_DG_NSSolver::BC_HeatFlux_Wall(CConfig                  *config,
                                     Wall_HeatFlux, true, 0.0, false,
                                     &surfElem[l], solIntL, solIntR,
                                     work, resFaces, indResFaces,
-                                    boundaries[val_marker].wallModel, l);
+                                    boundaries[val_marker].wallModel, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15337,6 +15338,7 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 
     /* PSU May 29, 2019 */
     /* Allocate space in vector to hold values for wm debugging output */
+    wm_debugging = true;
     wm_debug_data.resize((surfElemEnd-surfElemBeg)*nInt);
     /* END PSU */
 
@@ -15523,7 +15525,7 @@ void CFEM_DG_NSSolver::BC_Riemann(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work,
-                                    resFaces, indResFaces, NULL, l);
+                                    resFaces, indResFaces, NULL, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15641,7 +15643,7 @@ void CFEM_DG_NSSolver::BC_Custom(CConfig                  *config,
     ViscousBoundaryFacesBCTreatment(config, conv_numerics, llEnd, NPad,
                                     0.0, false, 0.0, false, &surfElem[l],
                                     solIntL, solIntR, work,
-                                    resFaces, indResFaces, NULL, l);
+                                    resFaces, indResFaces, NULL, -1);
 
     /* Update the value of the counter l to the end index of the
        current chunk. */
@@ -15665,7 +15667,7 @@ void CFEM_DG_NSSolver::ViscousBoundaryFacesBCTreatment(
                                              su2double          *resFaces,
                                              unsigned long      &indResFaces,
                                              CWallModel         *wallModel,
-									   const unsigned long		cur_elem) {
+									   const long		cur_elem) {
 
   /*--- Get the information from the standard element, which is the same
         for all the faces in the chunks considered. ---*/
@@ -15696,7 +15698,7 @@ void CFEM_DG_NSSolver::ViscousBoundaryFacesBCTreatment(
                                       Wall_HeatFlux, HeatFlux_Prescribed,
                                       derBasisElem, surfElem, solIntL,
                                       fluxes, gradSolInt, viscFluxes,
-                                      viscosityInt, kOverCvInt);
+                                      viscosityInt, kOverCvInt, cur_elem);
   }
 
   /* The remainder of the boundary condition treatment is the same for all
@@ -15706,7 +15708,7 @@ void CFEM_DG_NSSolver::ViscousBoundaryFacesBCTreatment(
 
   ResidualViscousBoundaryFace(config, conv_numerics, nFaceSimul, NPad, surfElem,
                               solIntL, solIntR, gradSolInt, fluxes, viscFluxes,
-                              viscosityInt, kOverCvInt, resFaces, indResFaces);
+                              viscosityInt, kOverCvInt, resFaces, indResFaces, cur_elem);
 }
 
 void CFEM_DG_NSSolver::ComputeViscousFluxesBoundaryFaces(
@@ -15724,7 +15726,8 @@ void CFEM_DG_NSSolver::ComputeViscousFluxesBoundaryFaces(
                                              su2double          *gradSolInt,
                                              su2double          *viscFluxes,
                                              su2double          *viscosityInt,
-                                             su2double          *kOverCvInt) {
+                                             su2double          *kOverCvInt,
+									   const long      cur_elem) {
 
   /* Easier storage of the number of bytes to copy in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
@@ -15780,7 +15783,7 @@ void CFEM_DG_NSSolver::ComputeViscousFluxesBoundaryFaces(
                           surfElem[l].metricCoorDerivFace.data(),
                           surfElem[l].metricNormalsFace.data(),
                           surfElem[l].wallDistance.data(),
-                          viscFluxes, viscosityInt, kOverCvInt);
+                          viscFluxes, viscosityInt, kOverCvInt, cur_elem+l);
   }
 }
 
@@ -15800,7 +15803,13 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
                                         su2double          *viscosityInt,
                                         su2double          *kOverCvInt,
                                         CWallModel         *wallModel,
-								  const unsigned long		cur_elem) {
+								  const long		cur_elem) {
+
+//  /* PSU */
+//  /* Try zeroing out viscous flux array */
+//  for(unsigned short i = 0; i<NPad*nInt; i++){
+//	  viscFluxes[i] = 0;
+//  }
 
   /* Loop over the simultaneously treated faces. */
   for(unsigned short l=0; l<nFaceSimul; ++l) {
@@ -15959,7 +15968,8 @@ void CFEM_DG_NSSolver::ResidualViscousBoundaryFace(
                                       const su2double          *viscosityInt,
                                       const su2double          *kOverCvInt,
                                       su2double                *resFaces,
-                                      unsigned long            &indResFaces) {
+                                      unsigned long            &indResFaces,
+									  const long	   cur_elem) {
 
   /* Easier storage of the number of bytes to copy in the memcpy calls. */
   const unsigned long nBytes = nVar*sizeof(su2double);
@@ -15996,6 +16006,10 @@ void CFEM_DG_NSSolver::ResidualViscousBoundaryFace(
      Riemann solver in the integration points. */
   ComputeInviscidFluxesFace(config, nFaceSimul, NPad, nInt, arrNorm, arrGridVel,
                             solInt0, solInt1, fluxes, conv_numerics);
+
+  /* PSU */
+  /* Adding output for wall model and BC debugging */
+
 
   /* Subtract the viscous fluxes from the inviscid fluxes. */
   for(unsigned short j=0; j<(NPad*nInt); ++j) fluxes[j] -= viscFluxes[j];

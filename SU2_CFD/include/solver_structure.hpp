@@ -14661,6 +14661,7 @@ private:
 	  su2double visc_norm_flux_4;
   };
   vector<wmDebugStruct> wm_debug_data;
+  bool wm_debugging;
   /* END PSU */
 
 public:
@@ -15222,7 +15223,7 @@ private:
                                              su2double          *resFaces,
                                              unsigned long      &indResFaces,
                                              CWallModel         *wallModel,
-									   const unsigned long 		cur_elem);
+									   const long 				cur_elem);
 
   /*!
    * \brief Function, which computes the viscous fluxes in the integration
@@ -15268,7 +15269,8 @@ private:
                                                su2double          *gradSolInt,
                                                su2double          *viscFluxes,
                                                su2double          *viscosityInt,
-                                               su2double          *kOverCvInt);
+                                               su2double          *kOverCvInt,
+										 const long               cur_elem);
 
   /*!
    * \brief Function, which computes the viscous fluxes in the integration
@@ -15312,7 +15314,7 @@ private:
                                         su2double          *viscosityInt,
                                         su2double          *kOverCvInt,
                                         CWallModel         *wallModel,
-								  const unsigned long		cur_elem);
+								  const long	   		   cur_elem);
 
   /*!
    * \brief Function, which computes the residual contribution from a boundary
@@ -15356,7 +15358,8 @@ private:
                                    const su2double          *viscosityInt,
                                    const su2double          *kOverCvInt,
                                    su2double                *resFaces,
-                                   unsigned long            &indResFaces);
+                                   unsigned long            &indResFaces,
+								   const long				cur_elem);
 
   /*!
    * \brief Function to compute the symmetrizing terms in the integration
@@ -15453,7 +15456,8 @@ private:
                              const su2double         *wallDistanceInt,
                                    su2double         *viscNormFluxes,
                                    su2double         *viscosityInt,
-                                   su2double         *kOverCvInt);
+                                   su2double         *kOverCvInt,
+							 const long	 			 cur_elem);
 
   /*!
    * \brief Function to compute the viscous normal flux in one integration point for a
