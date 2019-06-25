@@ -14654,14 +14654,34 @@ private:
 	  su2double q_wall;
 	  su2double mu_wall;
 	  su2double k_over_cv_wall;
+	  su2double tauxx;
+	  su2double tauyy;
+	  su2double tauzz;
+	  su2double tauxy;
+	  su2double tauxz;
+	  su2double tauyz;
+	  su2double qx;
+	  su2double qy;
+	  su2double qz;
 	  su2double visc_norm_flux_0;
 	  su2double visc_norm_flux_1;
 	  su2double visc_norm_flux_2;
 	  su2double visc_norm_flux_3;
 	  su2double visc_norm_flux_4;
+	  su2double invsic_flux_0;
+	  su2double invisc_flux_1;
+	  su2double invisc_flux_2;
+	  su2double invisc_flux_3;
+	  su2double invisc_flux_4;
+	  su2double penalty_0;
+	  su2double penalty_1;
+	  su2double penalty_2;
+	  su2double penalty_3;
+	  su2double penalty_4;
   };
   vector<wmDebugStruct> wm_debug_data;
   bool wm_debugging;
+  bool wm_debug_write;
   /* END PSU */
 
 public:
@@ -15513,7 +15533,8 @@ private:
                                             const su2double lenScale_LES,
                                                   su2double &Viscosity,
                                                   su2double &kOverCv,
-                                                  su2double *normalFlux);
+                                                  su2double *normalFlux,
+											const long		cur_int);
 };
 
 #include "solver_structure.inl"

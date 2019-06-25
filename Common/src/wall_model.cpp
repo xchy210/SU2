@@ -342,6 +342,7 @@ void CWallModel1DEQ::WallShearStressAndHeatFlux(const su2double tExchange,
       converged = true;
     }
   }
+  //std::cout << "Iterations for wm = " << iter << std::endl;
 }
 
 CWallModelLogLaw::CWallModelLogLaw(CConfig      *config,

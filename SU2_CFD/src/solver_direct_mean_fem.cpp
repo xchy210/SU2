@@ -6196,11 +6196,6 @@ void CFEM_DG_EulerSolver::Boundary_Conditions(const unsigned short timeLevel,
                             + nVar*startLocResFacesMarkers[iMarker][timeLevel];
 
         const CSurfaceElementFEM *surfElem = boundaries[iMarker].surfElem.data();
-        /* PSU May 28, 2019 */
-        /* Output the boundary name as a header for debugging wall-model output */
-        std::cout << "Boundary " << boundaries[iMarker].markerTag << std::endl;
-        std::cout << "********************" << std::endl;
-        /* End PSU */
 
         /* Apply the appropriate boundary condition. */
         switch (config->GetMarker_All_KindBC(iMarker)) {
@@ -13638,6 +13633,17 @@ void CFEM_DG_NSSolver::ViscousNormalFluxFace(const CVolumeElementFEM *adjVolElem
          compute the viscous fluxes. */
       for(unsigned short i=0; i<nInt; ++i) {
 
+	    /* PSU */
+	    /* Adding integration point number for wall-model debug array */
+    	long cur_int = 0;
+    	if(cur_elem >= 0){
+    		cur_int = cur_elem*nInt + i;
+    	}
+    	else{
+    		cur_int = -1;
+    	}
+	    /* END PSU */
+
         /* Easier storage of the metric terms needed to compute the Cartesian
            gradients in this integration point and the starting locations of
            the solution and the gradients, w.r.t. the parametric coordinates
@@ -13694,7 +13700,7 @@ void CFEM_DG_NSSolver::ViscousNormalFluxFace(const CVolumeElementFEM *adjVolElem
 
         ViscousNormalFluxIntegrationPoint_3D(sol, solGradCart, normal, HeatFlux,
                                              factHeatFlux, wallDist, lenScale_LES,
-                                             Viscosity, kOverCv, normalFlux);
+                                             Viscosity, kOverCv, normalFlux, cur_int);
 
         const unsigned short ind = indFaceChunk*nInt + i;
         viscosityInt[ind] = Viscosity;
@@ -13801,7 +13807,8 @@ void CFEM_DG_NSSolver::ViscousNormalFluxIntegrationPoint_3D(const su2double *sol
                                                             const su2double lenScale_LES,
                                                                   su2double &Viscosity,
                                                                   su2double &kOverCv,
-                                                                  su2double *normalFlux) {
+                                                                  su2double *normalFlux,
+															const long		cur_int) {
 
   /* Constant factor present in the heat flux vector, namely the ratio of
      thermal conductivity and viscosity. */
@@ -13886,6 +13893,36 @@ void CFEM_DG_NSSolver::ViscousNormalFluxIntegrationPoint_3D(const su2double *sol
   const su2double ny = normal[1]*normal[3];
   const su2double nz = normal[2]*normal[3];
 
+  /* PSU */
+  /* inserting data into the wall-model debug array */
+  if( (wm_debugging == true) && (wm_debug_write == true)){
+	  if(cur_int >= 0){
+		wm_debug_data[cur_int].rho_exchange = 0;
+		wm_debug_data[cur_int].u_exchange = 0;
+		wm_debug_data[cur_int].v_exchange = 0;
+		wm_debug_data[cur_int].w_exchange = 0;
+		wm_debug_data[cur_int].int_energy_exchange = 0;
+		wm_debug_data[cur_int].pressure_exchange = 0;
+		wm_debug_data[cur_int].T_exchange = 0;
+		wm_debug_data[cur_int].mu_exchange = 0;
+		wm_debug_data[cur_int].vel_tan_exchange = 0;
+		wm_debug_data[cur_int].tau_wall = 0;
+		wm_debug_data[cur_int].q_wall = 0;
+		wm_debug_data[cur_int].mu_wall = Viscosity;
+		wm_debug_data[cur_int].k_over_cv_wall = kOverCv;
+		wm_debug_data[cur_int].tauxx = tauxx;
+		wm_debug_data[cur_int].tauyy = tauyy;
+		wm_debug_data[cur_int].tauzz = tauzz;
+		wm_debug_data[cur_int].tauxy = tauxy;
+		wm_debug_data[cur_int].tauxz = tauxz;
+		wm_debug_data[cur_int].tauyz = tauyz;
+		wm_debug_data[cur_int].qx = qx;
+		wm_debug_data[cur_int].qy = qy;
+		wm_debug_data[cur_int].qz = qz;
+	  }
+  }
+  /* END PSU */
+
   /*--- Compute the viscous normal flux. Note that the energy flux get a
         contribution from both the prescribed and the computed heat flux.
         At least one of these terms is zero. ---*/
@@ -13897,6 +13934,19 @@ void CFEM_DG_NSSolver::ViscousNormalFluxIntegrationPoint_3D(const su2double *sol
                 + (u*tauxx + v*tauxy + w*tauxz + qx)*nx
                 + (u*tauxy + v*tauyy + w*tauyz + qy)*ny
                 + (u*tauxz + v*tauyz + w*tauzz + qz)*nz;
+
+  /* PSU */
+  /* Add viscous normal flux data to debug data */
+  if( (wm_debugging == true) && (wm_debug_write == true)){
+	  if(cur_int >= 0){
+		wm_debug_data[cur_int].visc_norm_flux_0 = normalFlux[0];
+		wm_debug_data[cur_int].visc_norm_flux_1 = normalFlux[1];
+		wm_debug_data[cur_int].visc_norm_flux_2 = normalFlux[2];
+		wm_debug_data[cur_int].visc_norm_flux_3 = normalFlux[3];
+		wm_debug_data[cur_int].visc_norm_flux_4 = normalFlux[4];
+	  }
+  }
+  /* END PSU */
 }
 
 void CFEM_DG_NSSolver::PenaltyTermsFluxFace(const unsigned short indFaceChunk,
@@ -14894,10 +14944,10 @@ void CFEM_DG_NSSolver::BC_Sym_Plane(CConfig                  *config,
 
             ViscousNormalFluxIntegrationPoint_3D(UR, URGradCart, normals, 0.0, 1.0,
                                                  wallDist, lenScale_LES, Viscosity,
-                                                 kOverCv, viscFluxR);
+                                                 kOverCv, viscFluxR, -1);
             ViscousNormalFluxIntegrationPoint_3D(UL, ULGradCart, normals, 0.0, 1.0,
                                                  wallDist, lenScale_LES, Viscosity,
-                                                 kOverCv, viscFluxL);
+                                                 kOverCv, viscFluxL, -1);
             viscosityInt[nInt*llRel+i] = Viscosity;
             kOverCvInt[nInt*llRel+i]   = kOverCv;
 
@@ -15292,7 +15342,7 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
   /* PSU May 28, 2019 */
   /* Setting nFaceSimul to 1 to make debugging easier */
   const unsigned short nFaceSimul = nPadInput/nVar;
-//  const unsigned short nFaceSimul = 1;
+  //  const unsigned short nFaceSimul = 1;
   /* END PSU */
 
   /* Determine the minimum padded size in the matrix multiplications, which
@@ -15312,14 +15362,6 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 
     MetaDataChunkOfElem(surfElem, l, surfElemEnd, nFaceSimul,
                         nPadMin, lEnd, ind, llEnd, NPad);
-    /* PSU May 28, 2019 */
-    /* Adding output for debugging the wall model */
-//    std::cout << "Number of simultaneous faces = " << nFaceSimul << std::endl;
-//    std::cout << "Beginning of this chunk of faces (l) = " << l << std::endl;
-//    std::cout << "End of this chunk of faces (lEnd) = " << lEnd << std::endl;
-//    std::cout << "ind = " << ind << std::endl;
-//    std::cout << "llEnd = " << llEnd << std::endl;
-    /* End PSU */
 
     /*--- Get the information from the standard element, which is the same
           for all the faces in the chunks considered. ---*/
@@ -15339,7 +15381,10 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
     /* PSU May 29, 2019 */
     /* Allocate space in vector to hold values for wm debugging output */
     wm_debugging = true;
-    wm_debug_data.resize((surfElemEnd-surfElemBeg)*nInt);
+    if( (wm_debugging == true) && (config->GetWrt_Vol_Sol() == true) ){
+    	wm_debug_write = true;
+    	wm_debug_data.resize((surfElemEnd-surfElemBeg)*nInt);
+    }
     /* END PSU */
 
     /*--- Integration to the wall is used, so the no-slip condition is enforced,
@@ -15380,26 +15425,26 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
         /* PSU */
         /* Set element id and volume id information */
         unsigned long cur_int = lll*nInt + i;
-        wm_debug_data[cur_int].marker_tag = Marker_Tag;
-        wm_debug_data[cur_int].surf_elem = lll;
-        wm_debug_data[cur_int].vol_elem_id = surfElem[lll].volElemID;
-        wm_debug_data[cur_int].bound_elem_id_global = surfElem[lll].boundElemIDGlobal;
-        wm_debug_data[cur_int].donors_wm = surfElem[lll].donorsWallFunction;
-        wm_debug_data[cur_int].n_int_per_wm_donor = surfElem[lll].nIntPerWallFunctionDonor;
-        wm_debug_data[cur_int].int_per_wm_donor = surfElem[lll].intPerWallFunctionDonor;
-        wm_debug_data[cur_int].coords_int.resize(3);
-        for(unsigned short iDim=0; iDim<nDim; ++iDim){
-        	wm_debug_data[cur_int].coords_int[0] = surfElem[lll].coorIntegrationPoints[i*nDim];
-        	wm_debug_data[cur_int].coords_int[1] = surfElem[lll].coorIntegrationPoints[i*nDim+1];
-        	wm_debug_data[cur_int].coords_int[2] = surfElem[lll].coorIntegrationPoints[i*nDim+2];
+        if( (wm_debugging == true) && (config->GetWrt_Vol_Sol() == true) ){
+			wm_debug_data[cur_int].marker_tag = Marker_Tag;
+			wm_debug_data[cur_int].surf_elem = lll;
+			wm_debug_data[cur_int].vol_elem_id = surfElem[lll].volElemID;
+			wm_debug_data[cur_int].bound_elem_id_global = surfElem[lll].boundElemIDGlobal;
+			wm_debug_data[cur_int].donors_wm = surfElem[lll].donorsWallFunction;
+			wm_debug_data[cur_int].n_int_per_wm_donor = surfElem[lll].nIntPerWallFunctionDonor;
+			wm_debug_data[cur_int].int_per_wm_donor = surfElem[lll].intPerWallFunctionDonor;
+			wm_debug_data[cur_int].coords_int.resize(3);
+			for(unsigned short iDim=0; iDim<nDim; ++iDim){
+				wm_debug_data[cur_int].coords_int[0] = surfElem[lll].coorIntegrationPoints[i*nDim];
+				wm_debug_data[cur_int].coords_int[1] = surfElem[lll].coorIntegrationPoints[i*nDim+1];
+				wm_debug_data[cur_int].coords_int[2] = surfElem[lll].coorIntegrationPoints[i*nDim+2];
+			}
+			wm_debug_data[cur_int].T_wall = TWall;
+			wm_debug_data[cur_int].gas_constant = Gas_Constant;
+			wm_debug_data[cur_int].C_v = Cv;
+			wm_debug_data[cur_int].static_energy = StaticEnergy;
         }
-        wm_debug_data[cur_int].T_wall = TWall;
-        wm_debug_data[cur_int].gas_constant = Gas_Constant;
-        wm_debug_data[cur_int].C_v = Cv;
-        wm_debug_data[cur_int].static_energy = StaticEnergy;
-
         /* END PSU */
-
       }
     }
 
@@ -15418,53 +15463,69 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
        current chunk. */
     l = lEnd;
   }
-  std::ofstream wm_debug_file;
-  std::string file_name = "wm_debug_output_";
-  file_name.append(Marker_Tag);
-  file_name.append(".csv");
-  wm_debug_file.open(file_name);
-  wm_debug_file << "Marker, surf_elem, int, vol_elem_id, bound_elem_id_global, x, y, z, T_wall, gas_constant, C_v, static_energy, ";
-  wm_debug_file << "rho_ex, u_ex, v_ex, w_ex, intE_ex, P_ex, T_ex, mu_ex, vel_tan_ex, tau_wall, q_wall, mu_wall, k_over_cv_wall, ";
-  wm_debug_file << "visc_norm_flux_0, visc_norm_flux_1, visc_norm_flux_2, visc_norm_flux_3, visc_norm_flux_4" << std::endl;
-  for(unsigned long l = surfElemBeg; l<surfElemEnd; ++l){
-	  unsigned short ind = surfElem[l].indStandardElement;
-	  const unsigned short nInt = standardBoundaryFacesSol[ind].GetNIntegration();
-	  for(unsigned short i = 0; i<nInt; i++){
-		unsigned long cur_int = l*nInt + i;
-		wm_debug_file << wm_debug_data[cur_int].marker_tag << ", ";
-		wm_debug_file << wm_debug_data[cur_int].surf_elem << ", ";
-		wm_debug_file << i << ", ";
-		wm_debug_file << wm_debug_data[cur_int].vol_elem_id << ", ";
-		wm_debug_file << wm_debug_data[cur_int].bound_elem_id_global << ", ";
-		wm_debug_file << wm_debug_data[cur_int].coords_int[0] << ", ";
-		wm_debug_file << wm_debug_data[cur_int].coords_int[1] << ", ";
-		wm_debug_file << wm_debug_data[cur_int].coords_int[2] << ", ";
-		wm_debug_file << wm_debug_data[cur_int].T_wall << ", ";
-		wm_debug_file << wm_debug_data[cur_int].gas_constant << ", ";
-		wm_debug_file << wm_debug_data[cur_int].C_v << ", ";
-		wm_debug_file << wm_debug_data[cur_int].static_energy << ", ";
-		wm_debug_file << wm_debug_data[cur_int].rho_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].u_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].v_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].w_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].int_energy_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].pressure_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].T_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].mu_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].vel_tan_exchange << ", ";
-		wm_debug_file << wm_debug_data[cur_int].tau_wall << ", ";
-		wm_debug_file << wm_debug_data[cur_int].q_wall << ", ";
-		wm_debug_file << wm_debug_data[cur_int].mu_wall << ", ";
-		wm_debug_file << wm_debug_data[cur_int].k_over_cv_wall << ", ";
-		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_0 << ", ";
-		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_1 << ", ";
-		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_2 << ", ";
-		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_3 << ", ";
-		wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_4 << ", ";
-		wm_debug_file << std::endl;
+  /* PSU */
+  /* Write debug output to file */
+  if( (wm_debugging == true) && (config->GetWrt_Vol_Sol() == true) ){
+	  std::ofstream wm_debug_file;
+	  std::string file_name = "wall_debug_";
+	  file_name.append(Marker_Tag);
+	  file_name.append(std::to_string(config->GetExtIter()));
+	  file_name.append(".csv");
+	  wm_debug_file.open(file_name);
+	  wm_debug_file << "Marker, surf_elem, int, vol_elem_id, bound_elem_id_global, x, y, z, T_wall, gas_constant, C_v, static_energy, ";
+	  wm_debug_file << "rho_ex, u_ex, v_ex, w_ex, intE_ex, P_ex, T_ex, mu_ex, vel_tan_ex, tau_wall, q_wall, mu_wall, k_over_cv_wall, ";
+	  wm_debug_file << "tauxx, tauyy, tauzz, tauxy, tauxz, tauyz, qx, qy, qz, ";
+	  wm_debug_file << "visc_norm_flux_0, visc_norm_flux_1, visc_norm_flux_2, visc_norm_flux_3, visc_norm_flux_4" << std::endl;
+	  for(unsigned long l = surfElemBeg; l<surfElemEnd; ++l){
+		  unsigned short ind = surfElem[l].indStandardElement;
+		  const unsigned short nInt = standardBoundaryFacesSol[ind].GetNIntegration();
+		  for(unsigned short i = 0; i<nInt; i++){
+			unsigned long cur_int = l*nInt + i;
+			wm_debug_file << wm_debug_data[cur_int].marker_tag << ", ";
+			wm_debug_file << wm_debug_data[cur_int].surf_elem << ", ";
+			wm_debug_file << i << ", ";
+			wm_debug_file << wm_debug_data[cur_int].vol_elem_id << ", ";
+			wm_debug_file << wm_debug_data[cur_int].bound_elem_id_global << ", ";
+			wm_debug_file << wm_debug_data[cur_int].coords_int[0] << ", ";
+			wm_debug_file << wm_debug_data[cur_int].coords_int[1] << ", ";
+			wm_debug_file << wm_debug_data[cur_int].coords_int[2] << ", ";
+			wm_debug_file << wm_debug_data[cur_int].T_wall << ", ";
+			wm_debug_file << wm_debug_data[cur_int].gas_constant << ", ";
+			wm_debug_file << wm_debug_data[cur_int].C_v << ", ";
+			wm_debug_file << wm_debug_data[cur_int].static_energy << ", ";
+			wm_debug_file << wm_debug_data[cur_int].rho_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].u_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].v_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].w_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].int_energy_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].pressure_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].T_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].mu_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].vel_tan_exchange << ", ";
+			wm_debug_file << wm_debug_data[cur_int].tau_wall << ", ";
+			wm_debug_file << wm_debug_data[cur_int].q_wall << ", ";
+			wm_debug_file << wm_debug_data[cur_int].mu_wall << ", ";
+			wm_debug_file << wm_debug_data[cur_int].k_over_cv_wall << ", ";
+			wm_debug_file << wm_debug_data[cur_int].tauxx << ", ";
+			wm_debug_file << wm_debug_data[cur_int].tauyy << ", ";
+			wm_debug_file << wm_debug_data[cur_int].tauzz << ", ";
+			wm_debug_file << wm_debug_data[cur_int].tauxy << ", ";
+			wm_debug_file << wm_debug_data[cur_int].tauxz << ", ";
+			wm_debug_file << wm_debug_data[cur_int].tauyz << ", ";
+			wm_debug_file << wm_debug_data[cur_int].qx << ", ";
+			wm_debug_file << wm_debug_data[cur_int].qy << ", ";
+			wm_debug_file << wm_debug_data[cur_int].qz << ", ";
+			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_0 << ", ";
+			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_1 << ", ";
+			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_2 << ", ";
+			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_3 << ", ";
+			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_4 << ", ";
+			wm_debug_file << std::endl;
+		  }
 	  }
+	  wm_debug_file.close();
   }
-  wm_debug_file.close();
+  /* END PSU */
 }
 
 void CFEM_DG_NSSolver::BC_Riemann(CConfig                  *config,
@@ -15890,15 +15951,17 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
         
         /* PSU */
         /* inserting data into the wall-model debug array */
-        wm_debug_data[cur_int].rho_exchange = solInt[0];
-        wm_debug_data[cur_int].u_exchange = vel[0];
-        wm_debug_data[cur_int].v_exchange = vel[1];
-        wm_debug_data[cur_int].w_exchange = vel[2];
-        wm_debug_data[cur_int].int_energy_exchange = eInt;
-        wm_debug_data[cur_int].pressure_exchange = Pressure;
-        wm_debug_data[cur_int].T_exchange = Temperature;
-        wm_debug_data[cur_int].mu_exchange = LaminarViscosity;
-        wm_debug_data[cur_int].vel_tan_exchange = velTan;
+        if( (wm_debugging == true) && (config->GetWrt_Vol_Sol() == true) ){
+			wm_debug_data[cur_int].rho_exchange = solInt[0];
+			wm_debug_data[cur_int].u_exchange = vel[0];
+			wm_debug_data[cur_int].v_exchange = vel[1];
+			wm_debug_data[cur_int].w_exchange = vel[2];
+			wm_debug_data[cur_int].int_energy_exchange = eInt;
+			wm_debug_data[cur_int].pressure_exchange = Pressure;
+			wm_debug_data[cur_int].T_exchange = Temperature;
+			wm_debug_data[cur_int].mu_exchange = LaminarViscosity;
+			wm_debug_data[cur_int].vel_tan_exchange = velTan;
+        }
         /* END PSU */
 
         /* Compute the wall shear stress and heat flux vector using
@@ -15913,10 +15976,21 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
 
         /* PSU */
         /* Add more debug data */
-        wm_debug_data[cur_int].tau_wall = tauWall;
-        wm_debug_data[cur_int].q_wall = qWall;
-        wm_debug_data[cur_int].mu_wall = ViscosityWall;
-        wm_debug_data[cur_int].k_over_cv_wall = kOverCvWall;
+        if( (wm_debugging == true) && (config->GetWrt_Vol_Sol() == true) ){
+			wm_debug_data[cur_int].tau_wall = tauWall;
+			wm_debug_data[cur_int].q_wall = qWall;
+			wm_debug_data[cur_int].mu_wall = ViscosityWall;
+			wm_debug_data[cur_int].k_over_cv_wall = kOverCvWall;
+			wm_debug_data[cur_int].tauxx = 0;
+			wm_debug_data[cur_int].tauyy = 0;
+			wm_debug_data[cur_int].tauzz = 0;
+			wm_debug_data[cur_int].tauxy = 0;
+			wm_debug_data[cur_int].tauxz = 0;
+			wm_debug_data[cur_int].tauyz = 0;
+			wm_debug_data[cur_int].qx = 0;
+			wm_debug_data[cur_int].qy = 0;
+			wm_debug_data[cur_int].qz = 0;
+        }
         /* END PSU */
 
         /* Compute the wall velocity in tangential direction. */
@@ -15943,11 +16017,13 @@ void CFEM_DG_NSSolver::WallTreatmentViscousFluxes(
 
         /* PSU */
         /* Add viscous normal flux data to debug data */
-        wm_debug_data[cur_int].visc_norm_flux_0 = normalFlux[0];
-        wm_debug_data[cur_int].visc_norm_flux_1 = normalFlux[1];
-        wm_debug_data[cur_int].visc_norm_flux_2 = normalFlux[2];
-        wm_debug_data[cur_int].visc_norm_flux_3 = normalFlux[3];
-        wm_debug_data[cur_int].visc_norm_flux_4 = normalFlux[4];
+        if( (wm_debugging == true) && (config->GetWrt_Vol_Sol() == true) ){
+			wm_debug_data[cur_int].visc_norm_flux_0 = normalFlux[0];
+			wm_debug_data[cur_int].visc_norm_flux_1 = normalFlux[1];
+			wm_debug_data[cur_int].visc_norm_flux_2 = normalFlux[2];
+			wm_debug_data[cur_int].visc_norm_flux_3 = normalFlux[3];
+			wm_debug_data[cur_int].visc_norm_flux_4 = normalFlux[4];
+        }
         /* END PSU */
       }
     }
@@ -16009,6 +16085,7 @@ void CFEM_DG_NSSolver::ResidualViscousBoundaryFace(
 
   /* PSU */
   /* Adding output for wall model and BC debugging */
+
 
 
   /* Subtract the viscous fluxes from the inviscid fluxes. */
