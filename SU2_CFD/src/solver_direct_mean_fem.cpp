@@ -15591,6 +15591,7 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 				wm_debug_data[cur_int].coords_int[1] = surfElem[lll].coorIntegrationPoints[i*nDim+1];
 				wm_debug_data[cur_int].coords_int[2] = surfElem[lll].coorIntegrationPoints[i*nDim+2];
 			}
+			wm_debug_data[cur_int].rho_wall = UR[0];
 			wm_debug_data[cur_int].T_wall = TWall;
 			wm_debug_data[cur_int].gas_constant = Gas_Constant;
 			wm_debug_data[cur_int].C_v = Cv;
@@ -15621,10 +15622,11 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 	  std::ofstream wm_debug_file;
 	  std::string file_name = "wall_debug_";
 	  file_name.append(Marker_Tag);
+	  file_name.append(".");
 	  file_name.append(std::to_string(config->GetExtIter()));
 	  file_name.append(".csv");
 	  wm_debug_file.open(file_name);
-	  wm_debug_file << "Marker, surf_elem, int, vol_elem_id, bound_elem_id_global, x, y, z, T_wall, gas_constant, C_v, static_energy, ";
+	  wm_debug_file << "Marker, surf_elem, int, vol_elem_id, bound_elem_id_global, x, y, z, rho_wall, T_wall, gas_constant, C_v, static_energy, ";
 	  wm_debug_file << "rho_ex, u_ex, v_ex, w_ex, intE_ex, P_ex, T_ex, mu_ex, vel_tan_ex, tau_wall, q_wall, mu_wall, k_over_cv_wall, ";
 	  wm_debug_file << "tauxx, tauyy, tauzz, tauxy, tauxz, tauyz, qx, qy, qz, ";
 	  wm_debug_file << "visc_norm_flux_0, visc_norm_flux_1, visc_norm_flux_2, visc_norm_flux_3, visc_norm_flux_4" << std::endl;
@@ -15641,6 +15643,7 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 			wm_debug_file << wm_debug_data[cur_int].coords_int[0] << ", ";
 			wm_debug_file << wm_debug_data[cur_int].coords_int[1] << ", ";
 			wm_debug_file << wm_debug_data[cur_int].coords_int[2] << ", ";
+			wm_debug_file << wm_debug_data[cur_int].rho_wall << ", ";
 			wm_debug_file << wm_debug_data[cur_int].T_wall << ", ";
 			wm_debug_file << wm_debug_data[cur_int].gas_constant << ", ";
 			wm_debug_file << wm_debug_data[cur_int].C_v << ", ";
@@ -15671,8 +15674,7 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_1 << ", ";
 			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_2 << ", ";
 			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_3 << ", ";
-			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_4 << ", ";
-			wm_debug_file << std::endl;
+			wm_debug_file << wm_debug_data[cur_int].visc_norm_flux_4 << std::endl;
 		  }
 	  }
 	  wm_debug_file.close();

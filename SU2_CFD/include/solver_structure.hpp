@@ -14675,6 +14675,7 @@ private:
 	  vector<unsigned short> n_int_per_wm_donor;
 	  vector<unsigned short> int_per_wm_donor;
 	  vector<su2double> coords_int;
+	  su2double rho_wall;
 	  su2double T_wall;
 	  su2double gas_constant;
 	  su2double C_v;
