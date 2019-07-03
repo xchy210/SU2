@@ -1,7 +1,7 @@
 /*!
- * \file numerics_direct_turbulent.cpp
+ * \file numerics_direct_tne2_turbulent.cpp
  * \brief This file contains all the convective term discretization.
- * \author F. Palacios, A. Bueno
+ * \author W. Maier
  * \version 6.2.0 "Falcon"
  *
  * The current SU2 release has been coordinated by the
@@ -73,21 +73,21 @@ void CUpwScalar::ComputeResidual(su2double *val_residual,
 
   ExtraADPreaccIn();
 
-  Density_i = V_i[nDim+2];
-  Density_j = V_j[nDim+2];
+  Density_i = V_i[RHO_INDEX];
+  Density_j = V_j[RHO_INDEX];
 
   q_ij = 0.0;
   if (grid_movement) {
     for (iDim = 0; iDim < nDim; iDim++) {
-      Velocity_i[iDim] = V_i[iDim+1] - GridVel_i[iDim];
-      Velocity_j[iDim] = V_j[iDim+1] - GridVel_j[iDim];
+      Velocity_i[iDim] = V_i[VEL_INDEX+iDim] - GridVel_i[iDim];
+      Velocity_j[iDim] = V_j[VEL_INDEX+iDim] - GridVel_j[iDim];
       q_ij += 0.5*(Velocity_i[iDim]+Velocity_j[iDim])*Normal[iDim];
     }
   }
   else {
     for (iDim = 0; iDim < nDim; iDim++) {
-      Velocity_i[iDim] = V_i[iDim+1];
-      Velocity_j[iDim] = V_j[iDim+1];
+      Velocity_i[iDim] = V_i[VEL_INDEX+iDim];
+      Velocity_j[iDim] = V_j[VEL_INDEX+iDim];
       q_ij += 0.5*(Velocity_i[iDim]+Velocity_j[iDim])*Normal[iDim];
     }
   }
@@ -174,16 +174,16 @@ void CAvgGrad_Scalar::ComputeResidual(su2double *val_residual,
   if (incompressible) {
     AD::SetPreaccIn(V_i, nDim+6); AD::SetPreaccIn(V_j, nDim+6);
 
-    Density_i = V_i[nDim+2];            Density_j = V_j[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+4];  Laminar_Viscosity_j = V_j[nDim+4];
-    Eddy_Viscosity_i = V_i[nDim+5];     Eddy_Viscosity_j = V_j[nDim+5];
+    Density_i = V_i[RHO_INDEX];               Density_j = V_j[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX]; Laminar_Viscosity_j = V_j[LAMVISC_INDEX];
+    Eddy_Viscosity_i = V_i[EDDYVISC_INDEX];   Eddy_Viscosity_j = V_j[EDDYVISC_INDEX];
   }
   else {
     AD::SetPreaccIn(V_i, nDim+7); AD::SetPreaccIn(V_j, nDim+7);
 
-    Density_i = V_i[nDim+2];            Density_j = V_j[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+5];  Laminar_Viscosity_j = V_j[nDim+5];
-    Eddy_Viscosity_i = V_i[nDim+6];     Eddy_Viscosity_j = V_j[nDim+6];
+    Density_i = V_i[RHO_INDEX];               Density_j = V_j[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX]; Laminar_Viscosity_j = V_j[LAMVISC_INDEX];
+    Eddy_Viscosity_i = V_i[EDDYVISC_INDEX];   Eddy_Viscosity_j = V_j[EDDYVISC_INDEX];
   }
 
   /*--- Compute vector going from iPoint to jPoint ---*/
@@ -229,11 +229,9 @@ CAvgGrad_TurbSA::CAvgGrad_TurbSA(unsigned short val_nDim,
    : CAvgGrad_Scalar(val_nDim, val_nVar, correct_grad, config), sigma(2./3.) {
 }
 
-CAvgGrad_TurbSA::~CAvgGrad_TurbSA(void) {
-}
+CAvgGrad_TurbSA::~CAvgGrad_TurbSA(void) {}
 
-void CAvgGrad_TurbSA::ExtraADPreaccIn() {
-}
+void CAvgGrad_TurbSA::ExtraADPreaccIn() {}
 
 void CAvgGrad_TurbSA::FinishResidualCalc(su2double *val_residual, su2double **Jacobian_i, su2double **Jacobian_j, CConfig *config) {
 
@@ -262,11 +260,9 @@ CAvgGrad_TurbSA_Neg::CAvgGrad_TurbSA_Neg(unsigned short val_nDim,
       sigma(2./3.), cn1(16.0), fn(0.0) {
 }
 
-CAvgGrad_TurbSA_Neg::~CAvgGrad_TurbSA_Neg(void) {
-}
+CAvgGrad_TurbSA_Neg::~CAvgGrad_TurbSA_Neg(void) {}
 
-void CAvgGrad_TurbSA_Neg::ExtraADPreaccIn() {
-}
+void CAvgGrad_TurbSA_Neg::ExtraADPreaccIn() {}
 
 void CAvgGrad_TurbSA_Neg::FinishResidualCalc(su2double *val_residual,
                                                    su2double **Jacobian_i,
@@ -342,12 +338,12 @@ void CSourcePieceWise_TurbSA::ComputeResidual(su2double *val_residual, su2double
   su2double tu , nu_cr, nu_t, nu_BC, chi_1, chi_2, term1, term2, term_exponential;
 
   if (incompressible) {
-    Density_i = V_i[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+4];
+    Density_i = V_i[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
   }
   else {
-    Density_i = V_i[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+5];
+    Density_i = V_i[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
   }
 
   val_residual[0] = 0.0;
@@ -511,12 +507,12 @@ void CSourcePieceWise_TurbSA_E::ComputeResidual(su2double *val_residual, su2doub
     //  AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
 
     if (incompressible) {
-      Density_i = V_i[nDim+2];
-      Laminar_Viscosity_i = V_i[nDim+4];
+      Density_i = V_i[RHO_INDEX];
+      Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
     }
     else {
-        Density_i = V_i[nDim+2];
-        Laminar_Viscosity_i = V_i[nDim+5];
+        Density_i = V_i[RHO_INDEX];
+        Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
     }
 
     val_residual[0] = 0.0;
@@ -655,12 +651,12 @@ void CSourcePieceWise_TurbSA_COMP::ComputeResidual(su2double *val_residual, su2d
     //  AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
 
     if (incompressible) {
-      Density_i = V_i[nDim+2];
-      Laminar_Viscosity_i = V_i[nDim+4];
+      Density_i = V_i[RHO_INDEX];
+      Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
     }
     else {
-        Density_i = V_i[nDim+2];
-        Laminar_Viscosity_i = V_i[nDim+5];
+        Density_i = V_i[RHO_INDEX];
+        Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
     }
 
     val_residual[0] = 0.0;
@@ -792,12 +788,12 @@ void CSourcePieceWise_TurbSA_E_COMP::ComputeResidual(su2double *val_residual, su
     //  AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
 
     if (incompressible) {
-      Density_i = V_i[nDim+2];
-      Laminar_Viscosity_i = V_i[nDim+4];
+      Density_i = V_i[RHO_INDEX];
+      Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
     }
     else {
-        Density_i = V_i[nDim+2];
-        Laminar_Viscosity_i = V_i[nDim+5];
+        Density_i = V_i[RHO_INDEX];
+        Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
     }
 
     val_residual[0] = 0.0;
@@ -947,12 +943,12 @@ void CSourcePieceWise_TurbSA_Neg::ComputeResidual(su2double *val_residual, su2do
   //  AD::SetPreaccIn(Volume); AD::SetPreaccIn(dist_i);
 
   if (incompressible) {
-    Density_i = V_i[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+4];
+    Density_i = V_i[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
   }
   else {
-    Density_i = V_i[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+5];
+    Density_i = V_i[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
   }
 
   val_residual[0] = 0.0;
@@ -1195,19 +1191,19 @@ void CSourcePieceWise_TurbSST::ComputeResidual(su2double *val_residual, su2doubl
   if (incompressible) {
     AD::SetPreaccIn(V_i, nDim+6);
 
-    Density_i = V_i[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+4];
-    Eddy_Viscosity_i = V_i[nDim+5];
+    Density_i = V_i[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
+    Eddy_Viscosity_i = V_i[EDDYVISC_INDEX];
   }
   else {
     AD::SetPreaccIn(V_i, nDim+7);
 
-    Density_i = V_i[nDim+2];
-    Laminar_Viscosity_i = V_i[nDim+5];
-    Eddy_Viscosity_i = V_i[nDim+6];
+    Density_i = V_i[RHO_INDEX];
+    Laminar_Viscosity_i = V_i[LAMVISC_INDEX];
+    Eddy_Viscosity_i = V_i[EDDYVISC_INDEX];
   }
 
-  val_residual[0] = 0.0;        val_residual[1] = 0.0;
+  val_residual[0] = 0.0;         val_residual[1] = 0.0;
   val_Jacobian_i[0][0] = 0.0;    val_Jacobian_i[0][1] = 0.0;
   val_Jacobian_i[1][0] = 0.0;    val_Jacobian_i[1][1] = 0.0;
 
@@ -1439,7 +1435,9 @@ void CSourcePieceWise_TurbSST::SetPerturbedRSM(su2double turb_ke, CConfig *confi
 }
 
 void CSourcePieceWise_TurbSST::SetPerturbedStrainMag(su2double turb_ke){
+
   unsigned short iDim, jDim;
+
   PerturbedStrainMag = 0;
   su2double **StrainRate = new su2double* [nDim];
   for (iDim= 0; iDim< nDim; iDim++){
