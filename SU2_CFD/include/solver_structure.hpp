@@ -14237,7 +14237,8 @@ protected:
                                  const su2double      *solL,
                                  const su2double      *solR,
                                  su2double            *fluxes,
-                                 CNumerics            *numerics);
+                                 CNumerics            *numerics,
+								 bool				  nonSlipWall);
 
   /*!
    * \brief Function, which computes the inviscid fluxes in the face integration

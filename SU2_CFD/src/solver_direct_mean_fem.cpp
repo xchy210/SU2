@@ -6522,7 +6522,7 @@ void CFEM_DG_EulerSolver::InviscidFluxesInternalMatchingFace(
   /* General function to compute the fluxes in the integration points
      of the faces. */
   ComputeInviscidFluxesFace(config, llEnd, NPad, nInt, arrNorm, arrGridVel,
-                            solIntL, solIntR, fluxes, numerics);
+                            solIntL, solIntR, fluxes, numerics, false);
 }
 
 void CFEM_DG_EulerSolver::AccumulateSpaceTimeResidualADEROwnedElem(
@@ -8821,7 +8821,7 @@ void CFEM_DG_EulerSolver::ResidualInviscidBoundaryFace(
   /* General function to compute the inviscid fluxes, using an approximate
      Riemann solver in the integration points. */
   ComputeInviscidFluxesFace(config, nFaceSimul, NPad, nInt, arrNorm, arrGridVel,
-                            solInt0, solInt1, fluxes, conv_numerics);
+                            solInt0, solInt1, fluxes, conv_numerics, false);
 
   /* Multiply the fluxes with the integration weight of the corresponding
      integration point. */
@@ -8918,7 +8918,8 @@ void CFEM_DG_EulerSolver::ComputeInviscidFluxesFace(CConfig              *config
                                                     const su2double      *solL,
                                                     const su2double      *solR,
                                                     su2double            *fluxes,
-                                                    CNumerics            *numerics) {
+                                                    CNumerics            *numerics,
+													bool 				 nonSlipWall) {
 
   /* Easier storage of the specific heat ratio. */
   const su2double gm1 = Gamma_Minus_One;
@@ -9080,15 +9081,25 @@ void CFEM_DG_EulerSolver::ComputeInviscidFluxesFace(CConfig              *config
 
               /*--- Compute the primitive variables of the left and right state. ---*/
               su2double tmp       = 1.0/UL[0];
-              const su2double vxL = tmp*UL[1];
-              const su2double vyL = tmp*UL[2];
-              const su2double vzL = tmp*UL[3];
+              su2double vxL = tmp*UL[1];
+              su2double vyL = tmp*UL[2];
+              su2double vzL = tmp*UL[3];
+              if (nonSlipWall == true){
+            	  vxL = 0;
+            	  vyL = 0;
+            	  vzL = 0;
+              }
               const su2double pL  = gm1*(UL[4] - 0.5*(vxL*UL[1] + vyL*UL[2] + vzL*UL[3]));
 
               tmp                 = 1.0/UR[0];
-              const su2double vxR = tmp*UR[1];
-              const su2double vyR = tmp*UR[2];
-              const su2double vzR = tmp*UR[3];
+              su2double vxR = tmp*UR[1];
+              su2double vyR = tmp*UR[2];
+              su2double vzR = tmp*UR[3];
+              if (nonSlipWall == true){
+            	  vxR = 0;
+            	  vyR = 0;
+            	  vzR = 0;
+              }
               const su2double pR  = gm1*(UR[4] - 0.5*(vxR*UR[1] + vyR*UR[2] + vzR*UR[3]));
 
               /*--- Compute the difference of the conservative mean flow variables. ---*/
@@ -16208,7 +16219,7 @@ void CFEM_DG_NSSolver::ResidualViscousBoundaryFace(
   /* General function to compute the inviscid fluxes, using an approximate
      Riemann solver in the integration points. */
   ComputeInviscidFluxesFace(config, nFaceSimul, NPad, nInt, arrNorm, arrGridVel,
-                            solInt0, solInt1, fluxes, conv_numerics);
+                            solInt0, solInt1, fluxes, conv_numerics, true);
 
   /* PSU */
   /* Adding output for wall model and BC debugging */
