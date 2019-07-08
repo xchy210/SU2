@@ -15543,7 +15543,12 @@ void CFEM_DG_NSSolver::BC_Isothermal_Wall(CConfig                  *config,
 
     /* PSU May 29, 2019 */
     /* Allocate space in vector to hold values for wm debugging output */
+    wm_debugging = false;
+
+#if (defined(WM_DEBUG))
     wm_debugging = true;
+#endif
+
     if( (wm_debugging == true) && (config->GetWrt_Vol_Sol() == true) ){
     	wm_debug_write = true;
     	wm_debug_data.resize((surfElemEnd-surfElemBeg)*nInt);
