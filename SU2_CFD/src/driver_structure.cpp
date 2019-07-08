@@ -1226,7 +1226,7 @@ void CDriver::Solver_Preprocessing(CSolver ****solver_container, CGeometry ***ge
 
   unsigned short iMGlevel;
   bool euler, ns, turbulent,
-  tne2_euler, tne2_ns, tne2_turbulent
+  tne2_euler, tne2_ns, tne2_turbulent,
   fem_euler, fem_ns, fem_turbulent, fem_transition,
   adj_euler, adj_ns, adj_turb,
   heat_fvm,
@@ -1254,7 +1254,7 @@ void CDriver::Solver_Preprocessing(CSolver ****solver_container, CGeometry ***ge
   template_solver      = false;
   fem_dg_flow          = false; fem_dg_shock_persson  = false;
   e_spalart_allmaras   = false; comp_spalart_allmaras = false; e_comp_spalart_allmaras = false;
-  tne2_euler           = false; tne2_ns               = false; tne2_turbulent
+  tne2_euler           = false; tne2_ns               = false; tne2_turbulent;
   disc_adj_tne2        = false;
 
   bool compressible   = (config->GetKind_Regime() == COMPRESSIBLE);
@@ -1629,7 +1629,7 @@ void CDriver::Inlet_Preprocessing(CSolver ***solver_container, CGeometry **geome
 
 void CDriver::Solver_Restart(CSolver ****solver_container, CGeometry ***geometry,
                              CConfig *config, bool update_geo, unsigned short val_iInst) {
-  bool euler, ns, turbulent,
+  bool euler, ns, turbulent, tne2_turbulent,
   adj_euler, adj_ns, adj_turb, tne2_euler, tne2_ns,
   heat_fvm, fem, fem_euler, fem_ns, fem_dg_flow,
   template_solver, disc_adj, disc_adj_fem, disc_adj_turb, disc_adj_heat,
@@ -2168,7 +2168,7 @@ void CDriver::Numerics_Preprocessing(CNumerics *****numerics_container,
     case FEM_LES :  fem_ns = true; break;
     case TNE2_EULER : case DISC_ADJ_TNE2_EULER: tne2_euler = true; break;
     case TNE2_NAVIER_STOKES: case DISC_ADJ_TNE2_NAVIER_STOKES: tne2_ns = true; break;
-    case TNE2_RANS : case DISC_ADJ_TEN2_RANS: tne2_ns = true; tne2_turbulent = true; if (config->GetKind_Trans_Model() == LM) transition = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
+    case TNE2_RANS : case DISC_ADJ_TNE2_RANS: tne2_ns = true; tne2_turbulent = true; if (config->GetKind_Trans_Model() == LM) transition = true; heat_fvm = config->GetWeakly_Coupled_Heat(); break;
     case HEAT_EQUATION_FVM: heat_fvm = true; break;
     case FEM_ELASTICITY: case DISC_ADJ_FEM: fem = true; break;
     case ADJ_EULER : euler = true; adj_euler = true; break;
@@ -2766,8 +2766,7 @@ void CDriver::Numerics_Preprocessing(CNumerics *****numerics_container,
       else if (comp_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_COMP(nDim, nVar_Turb, config);
       else if (e_comp_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_E_COMP(nDim, nVar_Turb, config);
       else if (neg_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_Neg(nDim, nVar_Turb, config);
-      else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSST(nDim, nVar_Turb, constants, config);
-      numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_THIRD_TERM] = new CSourceNothing(nDim, nVar_Turb, config);
+      else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TurbSST(nDim, nVar_Turb, constants, config);
     }
 
     /*--- Definition of the boundary condition method ---*/
@@ -2849,7 +2848,6 @@ void CDriver::Numerics_Preprocessing(CNumerics *****numerics_container,
     /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
       numerics_container[val_iInst][iMGlevel][TRANS_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TransLM(nDim, nVar_Trans, config);
-      numerics_container[val_iInst][iMGlevel][TRANS_SOL][SOURCE_THIRD_TERM] = new CSourceNothing(nDim, nVar_Trans, config);
     }
 
     /*--- Definition of the boundary condition method ---*/
@@ -3170,7 +3168,7 @@ void CDriver::Numerics_Postprocessing(CNumerics *****numerics_container,
 
   bool
   euler, adj_euler,
-  tne2_euler, tne2_ns, tne2_turbulent
+  tne2_euler, tne2_ns, tne2_turbulent,
   ns, adj_ns,
   fem_euler, fem_ns, fem_turbulent,
   turbulent, adj_turb,
@@ -3468,7 +3466,6 @@ void CDriver::Numerics_Postprocessing(CNumerics *****numerics_container,
         for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
           delete numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_TERM];
           delete numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM];
-          delete numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_THIRD_TERM];
           /*--- Definition of the boundary condition method ---*/
           delete numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_BOUND_TERM];
           delete numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_BOUND_TERM];
@@ -3519,7 +3516,6 @@ void CDriver::Numerics_Postprocessing(CNumerics *****numerics_container,
       delete numerics_container[val_iInst][iMGlevel][TRANS_SOL][VISC_TERM];
       /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
       delete numerics_container[val_iInst][iMGlevel][TRANS_SOL][SOURCE_SECOND_TERM];
-      delete numerics_container[val_iInst][iMGlevel][TRANS_SOL][SOURCE_THIRD_TERM];
       /*--- Definition of the boundary condition method ---*/
       delete numerics_container[val_iInst][iMGlevel][TRANS_SOL][CONV_BOUND_TERM];
     }
@@ -3719,7 +3715,7 @@ void CDriver::Iteration_Preprocessing() {
       }
       break;
 
-    case TNE2_EULER: case TNE2_NAVIER_STOKES: case TNE2_RANS
+    case TNE2_EULER: case TNE2_NAVIER_STOKES: case TNE2_RANS:
 
       if (rank == MASTER_NODE)
           cout << ": Two-Temp Euler/Navier-Stokes/RANS fluid iteration." << endl;
@@ -3757,7 +3753,7 @@ void CDriver::Iteration_Preprocessing() {
       iteration_container[iZone][iInst] = new CDiscAdjFluidIteration(config_container[iZone]);
       break;
 
-    case DISC_ADJ_TNE2_EULER: case DISC_ADJ_TNE2_NAVIER_STOKES: DISC_ADJ_TNE2_RANS
+    case DISC_ADJ_TNE2_EULER: case DISC_ADJ_TNE2_NAVIER_STOKES: DISC_ADJ_TNE2_RANS:
       if (rank == MASTER_NODE)
         cout << ": discrete adjoint TNE2 Euler/Navier-Stokes/RANS fluid iteration." << endl;
       iteration_container[iZone][iInst] = new CDiscAdjTNE2Iteration(config_container[iZone]);
@@ -4392,8 +4388,8 @@ void CDriver::PreprocessExtIter(unsigned long ExtIter) {
           solver_container[iZone][iInst][MESH_0][FLOW_SOL]->SetInitialCondition(geometry_container[iZone][INST_0], solver_container[iZone][iInst], config_container[iZone], ExtIter);
       }
       if ((config_container[iZone]->GetKind_Solver() ==  TNE2_EULER) ||
-          (config_container[iZone]->GetKind_Solver() ==  TNE2_NAVIER_STOKES)
-          (config_container[iZone]->GetKind_Solver() ==  TNE2_RANS)) {
+          (config_container[iZone]->GetKind_Solver() ==  TNE2_NAVIER_STOKES) ||
+          (config_container[iZone]->GetKind_Solver() ==  TNE2_RANS) ) {
         for (iInst = 0; iInst < nInst[iZone]; iInst++)
           solver_container[iZone][iInst][MESH_0][TNE2_SOL]->SetInitialCondition(geometry_container[iZone][INST_0], solver_container[iZone][iInst], config_container[iZone], ExtIter);
       }
@@ -4448,7 +4444,7 @@ bool CDriver::Monitor(unsigned long ExtIter) {
   switch (config_container[ZONE_0]->GetKind_Solver()) {
     case EULER: case NAVIER_STOKES: case RANS:
       StopCalc = integration_container[ZONE_0][INST_0][FLOW_SOL]->GetConvergence(); break;
-    case TNE2_EULER: case TNE2_NAVIER_STOKES: case TNE2_RANS
+    case TNE2_EULER: case TNE2_NAVIER_STOKES: case TNE2_RANS:
       StopCalc = integration_container[ZONE_0][INST_0][TNE2_SOL]->GetConvergence(); break;
     case HEAT_EQUATION_FVM:
       StopCalc = integration_container[ZONE_0][INST_0][HEAT_SOL]->GetConvergence(); break;
@@ -4458,7 +4454,7 @@ bool CDriver::Monitor(unsigned long ExtIter) {
     case DISC_ADJ_EULER: case DISC_ADJ_NAVIER_STOKES: case DISC_ADJ_RANS:
     case DISC_ADJ_FEM_EULER: case DISC_ADJ_FEM_NS: case DISC_ADJ_FEM_RANS:
       StopCalc = integration_container[ZONE_0][INST_0][ADJFLOW_SOL]->GetConvergence(); break;
-    case DISC_ADJ_TNE2_EULER: case DISC_ADJ_TNE2_NAVIER_STOKES: case DISC_ADJ_TNE2_RANS
+    case DISC_ADJ_TNE2_EULER: case DISC_ADJ_TNE2_NAVIER_STOKES: case DISC_ADJ_TNE2_RANS:
       StopCalc = integration_container[ZONE_0][INST_0][ADJTNE2_SOL]->GetConvergence(); break;
   }
 
@@ -5647,7 +5643,7 @@ void CDiscAdjTNE2Driver::SetObjFunction(){
   for (iZone = 0; iZone < nZone; iZone++){
     switch (config_container[iZone]->GetKind_Solver()) {
       case TNE2_EULER:               case TNE2_NAVIER_STOKES:          case TNE2_RANS:
-      case DISC_ADJ_TNE2_EULER:      case DISC_ADJ_TNE2_NAVIER_STOKES: case DISC_ADJ_TNE2_RANS
+      case DISC_ADJ_TNE2_EULER:      case DISC_ADJ_TNE2_NAVIER_STOKES: case DISC_ADJ_TNE2_RANS:
 
         if (config_container[ZONE_0]->GetnMarker_Analyze() != 0)
           output->SpecialOutput_AnalyzeSurface(solver_container[iZone][INST_0][MESH_0][TNE2_SOL], geometry_container[iZone][INST_0][MESH_0], config_container[iZone], false);
@@ -8552,6 +8548,7 @@ void CMultiphysicsZonalDriver::Run() {
       else if ((config_container[iZone]->GetKind_Solver() == DISC_ADJ_EULER)
                || (config_container[iZone]->GetKind_Solver() == DISC_ADJ_NAVIER_STOKES)
                || (config_container[iZone]->GetKind_Solver() == DISC_ADJ_RANS))
+        checkConvergence += (int) integration_container[iZone][INST_0][ADJFLOW_SOL]->GetConvergence();
       else if ((config_container[iZone]->GetKind_Solver() == DISC_ADJ_TNE2_EULER)
                || (config_container[iZone]->GetKind_Solver() == DISC_ADJ_TNE2_NAVIER_STOKES)
                || (config_container[iZone]->GetKind_Solver() == DISC_ADJ_TNE2_RANS))
