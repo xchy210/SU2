@@ -2886,8 +2886,6 @@ public:
   void ComputeResidual (su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config);
 };
 
-
-
 /*!
  * \class CUpwLin_AdjTurb
  * \brief Class for performing a linear upwind solver for the adjoint turbulence equations.
@@ -3598,7 +3596,6 @@ private:
   bool implicit, /*!< \brief Implicit calculation. */
   grid_movement; /*!< \brief Modification for grid movement. */
 
-
 public:
 
   /*!
@@ -3752,8 +3749,6 @@ private:
   bool ionization;  /*!< \brief Charged species with the mixture. */
 	bool stretching;
   unsigned short nSpecies, nVar, nPrimVar, nPrimVarGrad, nDim;
-
-//  CVariable *var;
 
 public:
 
@@ -4050,9 +4045,7 @@ class CAvgGrad_Base : public CNumerics {
    * \param[in] iDim - The index of the component
    * \return The component of the heat flux vector at iDim
    */
-  su2double GetHeatFluxVector(unsigned short iDim) const;
-
-};
+  su2double GetHeatFluxVector(unsigned short iDim) const;};
 
 /*!
  * \class CAvgGrad_Flow
@@ -4188,7 +4181,6 @@ public:
    */
   void ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config);
 };
-
 
 /*!
  * \class CAvgGradInc_Flow
@@ -4786,8 +4778,6 @@ public:
   void ComputeResidual(su2double *val_residual, su2double **Jacobian_i, su2double **Jacobian_j, CConfig *config);
 };
 
-
-
 /*!
  * \class CAvgGrad_AdjFlow
  * \brief Class for computing the adjoint viscous terms.
@@ -5096,8 +5086,6 @@ public:
    */
   void ComputeResidual(su2double *val_residual, su2double **Jacobian_i, su2double **Jacobian_j, CConfig *config);
 };
-
-
 
 /*!
  * \class CAvgGrad_TurbSST
@@ -5654,7 +5642,6 @@ protected:
 
   su2double ke_DE;              /*!< \brief Electric Constant for Dielectric Elastomers. */
   su2double EFieldMod_Ref;      /*!< \brief Modulus of the electric field in the reference configuration. */
-
 
 public:
 
@@ -6590,8 +6577,8 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   CSourcePieceWise_TNE2TurbSA(unsigned short val_nDim, unsigned short val_nVar,
-unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
-    CConfig *config);
+                              unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+                              CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -6695,8 +6682,8 @@ public:
      * \param[in] config - Definition of the particular problem.
      */
     CSourcePieceWise_TNE2TurbSA_E(unsigned short val_nDim, unsigned short val_nVar,
-unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
-       CConfig *config);
+                                  unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+                                  CConfig *config);
 
     /*!
      * \brief Destructor of the class.
