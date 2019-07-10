@@ -165,6 +165,8 @@ CDriver::CDriver(char* confFile,
       if ((config_container[iZone]->GetKind_Solver() == RANS) ||
           (config_container[iZone]->GetKind_Solver() == ADJ_RANS) ||
           (config_container[iZone]->GetKind_Solver() == DISC_ADJ_RANS) ||
+          (config_container[iZone]->GetKind_Solver() == TNE2_RANS) ||
+          (config_container[iZone]->GetKind_Solver() == DISC_ADJ_TNE2_RANS) ||
           (config_container[iZone]->GetKind_Solver() == FEM_RANS) ||
           (config_container[iZone]->GetKind_Solver() == FEM_LES) ) {
 
@@ -1396,7 +1398,7 @@ void CDriver::Solver_Preprocessing(CSolver ****solver_container, CGeometry ***ge
       }
       if (iMGlevel == MESH_0) DOFsPerPoint += solver_container[val_iInst][iMGlevel][TURB_SOL]->GetnVar();
       if (transition) {
-        solver_container[val_iInst][iMGlevel][TRANS_SOL] = new CTNE2TransLMSolver(geometry[val_iInst][iMGlevel], config, iMGlevel);
+        //solver_container[val_iInst][iMGlevel][TRANS_SOL] = new CTNE2TransLMSolver(geometry[val_iInst][iMGlevel], config, iMGlevel);
         if (iMGlevel == MESH_0) DOFsPerPoint += solver_container[val_iInst][iMGlevel][TRANS_SOL]->GetnVar();
       }
     }
@@ -2738,9 +2740,9 @@ void CDriver::Numerics_Preprocessing(CNumerics *****numerics_container,
       case SPACE_UPWIND :
         for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
           if (spalart_allmaras || neg_spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras ) {
-            numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_TERM] = new CUpwSca_TNE2TurbSA(nDim, nVar_Turb, config);
+            numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_TERM] = new CUpwSca_TNE2TurbSA(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,config);
           }
-          else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_TERM] = new CUpwSca_TNE2TurbSST(nDim, nVar_Turb, config);
+          else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_TERM] = new CUpwSca_TNE2TurbSST(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
         }
         break;
       default :
@@ -2752,37 +2754,37 @@ void CDriver::Numerics_Preprocessing(CNumerics *****numerics_container,
 
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
       if (spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras){
-        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_TERM] = new CAvgGrad_TNE2TurbSA(nDim, nVar_Turb, true, config);
+        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_TERM] = new CAvgGrad_TNE2TurbSA(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,true, config);
       }
-      else if (neg_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_TERM] = new CAvgGrad_TNE2TurbSA_Neg(nDim, nVar_Turb, true, config);
-      else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_TERM] = new CAvgGrad_TNE2TurbSST(nDim, nVar_Turb, constants, true, config);
+      else if (neg_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_TERM] = new CAvgGrad_TNE2TurbSA_Neg(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,true, config);
+      else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_TERM] = new CAvgGrad_TNE2TurbSST(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,constants, true, config);
     }
 
     /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
 
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-      if (spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA(nDim, nVar_Turb, config);
-      else if (e_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_E(nDim, nVar_Turb, config);
-      else if (comp_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_COMP(nDim, nVar_Turb, config);
-      else if (e_comp_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_E_COMP(nDim, nVar_Turb, config);
-      else if (neg_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_Neg(nDim, nVar_Turb, config);
-      else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TurbSST(nDim, nVar_Turb, constants, config);
+      if (spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,config);
+      else if (e_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_E(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
+      else if (comp_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_COMP(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,config);
+      else if (e_comp_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_E_COMP(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
+      else if (neg_spalart_allmaras) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSA_Neg(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
+      else if (menter_sst) numerics_container[val_iInst][iMGlevel][TURB_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TurbSST(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, constants, config);
     }
 
     /*--- Definition of the boundary condition method ---*/
 
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
       if (spalart_allmaras || e_spalart_allmaras || comp_spalart_allmaras || e_comp_spalart_allmaras) {
-        numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_BOUND_TERM] = new CUpwSca_TNE2TurbSA(nDim, nVar_Turb, config);
-        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_BOUND_TERM] = new CAvgGrad_TNE2TurbSA(nDim, nVar_Turb, false, config);
+        numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_BOUND_TERM] = new CUpwSca_TNE2TurbSA(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,config);
+        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_BOUND_TERM] = new CAvgGrad_TNE2TurbSA(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,false, config);
       }
       else if (neg_spalart_allmaras) {
-        numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_BOUND_TERM] = new CUpwSca_TNE2TurbSA(nDim, nVar_Turb, config);
-        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_BOUND_TERM] = new CAvgGrad_TNE2TurbSA_Neg(nDim, nVar_Turb, false, config);
+        numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_BOUND_TERM] = new CUpwSca_TNE2TurbSA(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
+        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_BOUND_TERM] = new CAvgGrad_TNE2TurbSA_Neg(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, false, config);
       }
       else if (menter_sst) {
-        numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_BOUND_TERM] = new CUpwSca_TNE2TurbSST(nDim, nVar_Turb, config);
-        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_BOUND_TERM] = new CAvgGrad_TNE2TurbSST(nDim, nVar_Turb, constants, false, config);
+        numerics_container[val_iInst][iMGlevel][TURB_SOL][CONV_BOUND_TERM] = new CUpwSca_TNE2TurbSST(nDim, nVar_Turb,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
+        numerics_container[val_iInst][iMGlevel][TURB_SOL][VISC_BOUND_TERM] = new CAvgGrad_TNE2TurbSST(nDim, nVar_Turb, nPrimVar_TNE2, nPrimVarGrad_TNE2,constants, false, config);
       }
     }
   }
@@ -2832,7 +2834,7 @@ void CDriver::Numerics_Preprocessing(CNumerics *****numerics_container,
         break;
       case SPACE_UPWIND :
         for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-          numerics_container[val_iInst][iMGlevel][TRANS_SOL][CONV_TERM] = new CUpwSca_TNE2TransLM(nDim, nVar_Trans, config);
+          //numerics_container[val_iInst][iMGlevel][TRANS_SOL][CONV_TERM] = new CUpwSca_TNE2TransLM(nDim, nVar_Trans,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
         }
         break;
       default :
@@ -2842,17 +2844,17 @@ void CDriver::Numerics_Preprocessing(CNumerics *****numerics_container,
 
     /*--- Definition of the viscous scheme for each equation and mesh level ---*/
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-      numerics_container[val_iInst][iMGlevel][TRANS_SOL][VISC_TERM] = new CAvgGradCorrected_TNE2TransLM(nDim, nVar_Trans, config);
+      //numerics_container[val_iInst][iMGlevel][TRANS_SOL][VISC_TERM] = new CAvgGradCorrected_TNE2TransLM(nDim, nVar_Trans,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
     }
 
     /*--- Definition of the source term integration scheme for each equation and mesh level ---*/
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-      numerics_container[val_iInst][iMGlevel][TRANS_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TransLM(nDim, nVar_Trans, config);
+      //numerics_container[val_iInst][iMGlevel][TRANS_SOL][SOURCE_SECOND_TERM] = new CSourcePieceWise_TNE2TransLM(nDim, nVar_Trans, nPrimVar_TNE2, nPrimVarGrad_TNE2,config);
     }
 
     /*--- Definition of the boundary condition method ---*/
     for (iMGlevel = 0; iMGlevel <= config->GetnMGLevels(); iMGlevel++) {
-      numerics_container[val_iInst][iMGlevel][TRANS_SOL][CONV_BOUND_TERM] = new CUpwLin_TNE2TransLM(nDim, nVar_Trans, config);
+      //numerics_container[val_iInst][iMGlevel][TRANS_SOL][CONV_BOUND_TERM] = new CUpwLin_TNE2TransLM(nDim, nVar_Trans,nPrimVar_TNE2, nPrimVarGrad_TNE2, config);
     }
   }
 
@@ -3753,7 +3755,7 @@ void CDriver::Iteration_Preprocessing() {
       iteration_container[iZone][iInst] = new CDiscAdjFluidIteration(config_container[iZone]);
       break;
 
-    case DISC_ADJ_TNE2_EULER: case DISC_ADJ_TNE2_NAVIER_STOKES: DISC_ADJ_TNE2_RANS:
+    case DISC_ADJ_TNE2_EULER: case DISC_ADJ_TNE2_NAVIER_STOKES: case DISC_ADJ_TNE2_RANS:
       if (rank == MASTER_NODE)
         cout << ": discrete adjoint TNE2 Euler/Navier-Stokes/RANS fluid iteration." << endl;
       iteration_container[iZone][iInst] = new CDiscAdjTNE2Iteration(config_container[iZone]);

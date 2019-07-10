@@ -2846,6 +2846,49 @@ public:
 };
 
 /*!
+ * \class CUpwLin_TNE2TransLM
+ * \brief Class for performing a linear upwind solver for the Spalart-Allmaras turbulence model equations with transition
+ * \ingroup ConvDiscr
+ * \author W. Maier
+ */
+class CUpwLin_TNE2TransLM : public CNumerics {
+private:
+  su2double *Velocity_i;
+  su2double *Velocity_j;
+  bool implicit, grid_movement, incompressible;
+  su2double Density_i, Density_j, q_ij, a0, a1;
+  unsigned short iDim;
+
+public:
+
+  /*!
+   * \brief Constructor of the class.
+   * \param[in] val_nDim - Number of dimensions of the problem.
+   * \param[in] val_nVar - Number of variables of the problem.
+   * \param[in] config - Definition of the particular problem.
+   */
+  CUpwLin_TNE2TransLM(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+    CConfig *config);
+
+  /*!
+   * \brief Destructor of the class.
+   */
+  ~CUpwLin_TNE2TransLM(void);
+
+  /*!
+   * \brief Compute the upwind flux between two nodes i and j.
+   * \param[out] val_residual - Pointer to the total residual.
+   * \param[out] val_Jacobian_i - Jacobian of the numerical method at node i (implicit computation).
+   * \param[out] val_Jacobian_j - Jacobian of the numerical method at node j (implicit computation).
+   * \param[in] config - Definition of the particular problem.
+   */
+  void ComputeResidual (su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config);
+};
+
+
+
+/*!
  * \class CUpwLin_AdjTurb
  * \brief Class for performing a linear upwind solver for the adjoint turbulence equations.
  * \ingroup ConvDiscr
@@ -3067,12 +3110,80 @@ public:
 };
 
 /*!
+ * \class CTNE2UpwScalar
+ * \brief Template class for scalar upwind fluxes between nodes i and j.
+ * \details This class serves as a template for the scalar upwinding residual
+ *   classes.  The general structure of a scalar upwinding calculation is the
+ *   same for many different  models, which leads to a lot of repeated code.
+ *   By using the template design pattern, these sections of repeated code are
+ *   moved to this shared base class, and the specifics of each model
+ *   are implemented by derived classes.  In order to add a new residual
+ *   calculation for a convection residual, extend this class and implement
+ *   the pure virtual functions with model-specific behavior.
+ * \ingroup ConvDiscr
+ * \author C. Pederson, A. Bueno., and A. Campos, W. Maier.
+ */
+class CTNE2UpwScalar : public CNumerics {
+private:
+
+  /*!
+   * \brief A pure virtual function; Adds any extra variables to AD
+   */
+  virtual void ExtraADPreaccIn() = 0;
+
+  /*!
+   * \brief Model-specific steps in the ComputeResidual method
+   * \param[out] val_residual - Pointer to the total residual.
+   * \param[out] val_Jacobian_i - Jacobian of the numerical method at node i (implicit computation).
+   * \param[out] val_Jacobian_j - Jacobian of the numerical method at node j (implicit computation).
+   * \param[in] config - Definition of the particular problem.
+   */
+  virtual void FinishResidualCalc(su2double *val_residual,
+                                  su2double **Jacobian_i,
+                                  su2double **Jacobian_j,
+                                  CConfig *config) = 0;
+
+protected:
+  su2double *Velocity_i, *Velocity_j; /*!< \brief Velocity, minus any grid movement. */
+  su2double Density_i, Density_j;
+  bool implicit, grid_movement, incompressible;
+  su2double q_ij, /*!< \brief Projected velocity at the face. */
+            a0,   /*!< \brief The maximum of the face-normal velocity and 0 */
+            a1;   /*!< \brief The minimum of the face-normal velocity and 0 */
+  unsigned short iDim;
+
+public:
+
+  /*!
+   * \brief Constructor of the class.
+   * \param[in] val_nDim - Number of dimensions of the problem.
+   * \param[in] val_nVar - Number of variables of the problem.
+   * \param[in] config - Definition of the particular problem.
+   */
+  CTNE2UpwScalar(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+
+  /*!
+   * \brief Destructor of the class.
+   */
+  ~CTNE2UpwScalar(void);
+
+  /*!
+   * \brief Compute the scalar upwind flux between two nodes i and j.
+   * \param[out] val_residual - Pointer to the total residual.
+   * \param[out] val_Jacobian_i - Jacobian of the numerical method at node i (implicit computation).
+   * \param[out] val_Jacobian_j - Jacobian of the numerical method at node j (implicit computation).
+   * \param[in] config - Definition of the particular problem.
+   */
+  void ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config);
+};
+
+/*!
  * \class CUpwSca_TNE2TurbSA
  * \brief Class for doing a scalar upwind solver for the Spalar-Allmaras turbulence model equations.
  * \ingroup ConvDiscr
  * \author W. Maier.
  */
-class CUpwSca_TNE2TurbSA : public CUpwScalar {
+class CUpwSca_TNE2TurbSA : public CTNE2UpwScalar {
 private:
 
   /*!
@@ -3098,7 +3209,9 @@ public:
    * \param[in] val_nVar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CUpwSca_TNE2TurbSA(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+  CUpwSca_TNE2TurbSA(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+    CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -3112,7 +3225,7 @@ public:
  * \ingroup ConvDiscr
  * \author W. Maier
  */
-class CUpwSca_TNE2TurbSST : public CUpwScalar {
+class CUpwSca_TNE2TurbSST : public CTNE2UpwScalar {
 private:
 
   /*!
@@ -3138,7 +3251,9 @@ public:
    * \param[in] val_nVar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CUpwSca_TNE2TurbSST(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+  CUpwSca_TNE2TurbSST(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+    CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -3167,8 +3282,9 @@ public:
    * \param[in] val_nVar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CUpwSca_TNE2TransLM(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
-
+  CUpwSca_TNE2TransLM(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+    CConfig *config);
   /*!
    * \brief Destructor of the class.
    */
@@ -4542,10 +4658,10 @@ public:
  * \ingroup ViscDiscr
  * \author W. Maier.
  */
-class CAvgGrad_TNE2TurbSA : public CAvgGrad_Scalar {
+class CAvgGrad_TNE2TurbSA : public CAvgGrad_TNE2 {
 private:
 
-  const su2double sigma;
+  //const su2double sigma;
   su2double nu_i, nu_j, nu_e;
 
   /*!
@@ -4572,7 +4688,8 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   CAvgGrad_TNE2TurbSA(unsigned short val_nDim, unsigned short val_nVar,
-                  bool correct_grad, CConfig *config);
+                      unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+                      bool correct_grad, CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -4586,13 +4703,13 @@ public:
  * \ingroup ViscDiscr
  * \author W. Maier
  */
-class CAvgGrad_TNE2TurbSA_Neg : public CAvgGrad_Scalar {
+class CAvgGrad_TNE2TurbSA_Neg : public CAvgGrad_TNE2 {
 private:
 
-  const su2double sigma;
-  const su2double cn1;
-  su2double fn, Xi;
-  su2double nu_i, nu_j, nu_ij, nu_tilde_ij, nu_e;
+  //const su2double sigma;
+  //const su2double cn1;
+  //su2double fn, Xi;
+  //su2double nu_i, nu_j, nu_ij, nu_tilde_ij, nu_e;
 
   /*!
    * \brief Adds any extra variables to AD
@@ -4618,7 +4735,8 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   CAvgGrad_TNE2TurbSA_Neg(unsigned short val_nDim, unsigned short val_nVar,
-                      bool correct_grad, CConfig *config);
+                          unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+                          bool correct_grad, CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -4939,6 +5057,49 @@ public:
 };
 
 /*!
+ * \class CAvgGradCorrected_TNE2TransLM
+ * \brief Class for computing viscous term using average of gradients with correction (Spalart-Allmaras turbulence model).
+ * \ingroup ViscDiscr
+ * \author A. Bueno.
+ */
+class CAvgGradCorrected_TNE2TransLM : public CNumerics {
+private:
+  su2double **Mean_GradTurbVar;
+  su2double *Proj_Mean_GradTurbVar_Kappa, *Proj_Mean_GradTurbVar_Edge, *Proj_Mean_GradTurbVar_Corrected;
+  su2double *Edge_Vector;
+  bool implicit, incompressible;
+  su2double sigma;
+
+public:
+
+  /*!
+   * \brief Constructor of the class.
+   * \param[in] val_nDim - Number of dimensions of the problem.
+   * \param[in] val_nVar - Number of variables of the problem.
+   * \param[in] config - Definition of the particular problem.
+   */
+  CAvgGradCorrected_TNE2TransLM(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+    CConfig *config);
+
+  /*!
+   * \brief Destructor of the class.
+   */
+  ~CAvgGradCorrected_TNE2TransLM(void);
+
+  /*!
+   * \brief Compute the viscous turbulent residual using an average of gradients with correction.
+   * \param[out] val_residual - Pointer to the total residual.
+   * \param[out] Jacobian_i - Jacobian of the numerical method at node i (implicit computation).
+   * \param[out] Jacobian_j - Jacobian of the numerical method at node j (implicit computation).
+   * \param[in] config - Definition of the particular problem.
+   */
+  void ComputeResidual(su2double *val_residual, su2double **Jacobian_i, su2double **Jacobian_j, CConfig *config);
+};
+
+
+
+/*!
  * \class CAvgGrad_TurbSST
  * \brief Class for computing viscous term using average of gradient with correction (Menter SST turbulence model).
  * \ingroup ViscDiscr
@@ -5002,7 +5163,7 @@ public:
  * \ingroup ViscDiscr
  * \author W. Maier.
  */
-class CAvgGrad_TNE2TurbSST : public CAvgGrad_Scalar {
+class CAvgGrad_TNE2TurbSST : public CAvgGrad_TNE2 {
 private:
   su2double sigma_k1, /*!< \brief Constants for the viscous terms, k-w (1), k-eps (2)*/
   sigma_k2,
@@ -5038,6 +5199,7 @@ public:
    * \param[in] config - Definition of the particular problem.
    */
   CAvgGrad_TNE2TurbSST(unsigned short val_nDim, unsigned short val_nVar,
+                       unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
                    su2double* constants, bool correct_grad, CConfig *config);
 
   /*!
@@ -6427,7 +6589,9 @@ public:
    * \param[in] val_nVar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CSourcePieceWise_TNE2TurbSA(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+  CSourcePieceWise_TNE2TurbSA(unsigned short val_nDim, unsigned short val_nVar,
+unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+    CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -6530,7 +6694,9 @@ public:
      * \param[in] val_nVar - Number of variables of the problem.
      * \param[in] config - Definition of the particular problem.
      */
-    CSourcePieceWise_TNE2TurbSA_E(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+    CSourcePieceWise_TNE2TurbSA_E(unsigned short val_nDim, unsigned short val_nVar,
+unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+       CConfig *config);
 
     /*!
      * \brief Destructor of the class.
@@ -6627,7 +6793,8 @@ public:
      * \param[in] val_nVar - Number of variables of the problem.
      * \param[in] config - Definition of the particular problem.
      */
-    CSourcePieceWise_TNE2TurbSA_COMP(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+    CSourcePieceWise_TNE2TurbSA_COMP(unsigned short val_nDim, unsigned short val_nVar,
+      unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad, CConfig *config);
 
     /*!
      * \brief Destructor of the class.
@@ -6725,8 +6892,8 @@ public:
      * \param[in] val_nVar - Number of variables of the problem.
      * \param[in] config - Definition of the particular problem.
      */
-    CSourcePieceWise_TNE2TurbSA_E_COMP(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
-
+    CSourcePieceWise_TNE2TurbSA_E_COMP(unsigned short val_nDim, unsigned short val_nVar,
+      unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad, CConfig *config);
     /*!
      * \brief Destructor of the class.
      */
@@ -6819,7 +6986,8 @@ public:
    * \param[in] val_nVar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CSourcePieceWise_TNE2TurbSA_Neg(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+  CSourcePieceWise_TNE2TurbSA_Neg(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad, CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -6920,7 +7088,9 @@ public:
    * \param[in] val_nVar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CSourcePieceWise_TNE2TransLM(unsigned short val_nDim, unsigned short val_nVar, CConfig *config);
+  CSourcePieceWise_TNE2TransLM(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad,
+    CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -6973,7 +7143,8 @@ public:
    * \param[in] val_nVar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CSourcePieceWise_TNE2TurbSST(unsigned short val_nDim, unsigned short val_nVar, su2double* constants, CConfig *config);
+  CSourcePieceWise_TNE2TurbSST(unsigned short val_nDim, unsigned short val_nVar,
+    unsigned short val_nPrimVar, unsigned short val_nPrimVarGrad, su2double* constants, CConfig *config);
 
   /*!
    * \brief Destructor of the class.

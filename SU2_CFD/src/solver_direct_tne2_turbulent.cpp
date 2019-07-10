@@ -831,7 +831,7 @@ void CTNE2TurbSolver::LoadRestart(CGeometry **geometry, CSolver ***solver, CConf
 
 }
 
-CTNE2TurbSASolver::CTNE2TurbSASolver(void) : CTurbSolver() {
+CTNE2TurbSASolver::CTNE2TurbSASolver(void) : CTNE2TurbSolver() {
 
   Inlet_TurbVars = NULL;
 
@@ -3398,7 +3398,7 @@ CTNE2TurbSSTSolver::CTNE2TurbSSTSolver(CGeometry *geometry, CConfig *config, uns
 
 }
 
-CTNE2TurbSSTSolver::~CTTNE2urbSSTSolver(void) {
+CTNE2TurbSSTSolver::~CTNE2TurbSSTSolver(void) {
 
   if (constants != NULL) delete [] constants;
 

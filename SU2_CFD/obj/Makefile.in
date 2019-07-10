@@ -194,6 +194,7 @@ am__libSU2Core_a_SOURCES_DIST =  \
 	../src/numerics_direct_tne2.cpp \
 	../src/numerics_direct_transition.cpp \
 	../src/numerics_direct_turbulent.cpp \
+	../src/numerics_direct_tne2_turbulent.cpp \
 	../src/numerics_direct_elasticity_nonlinear.cpp \
 	../src/numerics_direct_elasticity_linear.cpp \
 	../src/numerics_direct_elasticity.cpp \
@@ -212,6 +213,7 @@ am__libSU2Core_a_SOURCES_DIST =  \
 	../src/solver_direct_tne2.cpp \
 	../src/solver_direct_transition.cpp \
 	../src/solver_direct_turbulent.cpp \
+	../src/solver_direct_tne2_turbulent.cpp \
 	../src/solver_direct_elasticity.cpp \
 	../src/solver_structure.cpp ../src/solver_template.cpp \
 	../src/transfer_physics.cpp ../src/transfer_structure.cpp \
@@ -225,6 +227,7 @@ am__libSU2Core_a_SOURCES_DIST =  \
 	../src/variable_direct_tne2.cpp \
 	../src/variable_direct_transition.cpp \
 	../src/variable_direct_turbulent.cpp \
+	../src/variable_direct_tne2_turbulent.cpp \
 	../src/variable_direct_elasticity.cpp \
 	../src/variable_structure.cpp ../src/variable_template.cpp
 am__dirstamp = $(am__leading_dot)dirstamp
@@ -250,6 +253,7 @@ am__objects_1 =  \
 	../src/libSU2Core_a-numerics_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_a-numerics_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_a-numerics_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_a-numerics_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_a-numerics_direct_elasticity_nonlinear.$(OBJEXT) \
 	../src/libSU2Core_a-numerics_direct_elasticity_linear.$(OBJEXT) \
 	../src/libSU2Core_a-numerics_direct_elasticity.$(OBJEXT) \
@@ -274,6 +278,7 @@ am__objects_1 =  \
 	../src/libSU2Core_a-solver_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_a-solver_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_a-solver_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_a-solver_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_a-solver_direct_elasticity.$(OBJEXT) \
 	../src/libSU2Core_a-solver_structure.$(OBJEXT) \
 	../src/libSU2Core_a-solver_template.$(OBJEXT) \
@@ -290,6 +295,7 @@ am__objects_1 =  \
 	../src/libSU2Core_a-variable_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_a-variable_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_a-variable_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_a-variable_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_a-variable_direct_elasticity.$(OBJEXT) \
 	../src/libSU2Core_a-variable_structure.$(OBJEXT) \
 	../src/libSU2Core_a-variable_template.$(OBJEXT)
@@ -334,6 +340,7 @@ am__libSU2Core_AD_a_SOURCES_DIST =  \
 	../src/numerics_direct_tne2.cpp \
 	../src/numerics_direct_transition.cpp \
 	../src/numerics_direct_turbulent.cpp \
+	../src/numerics_direct_tne2_turbulent.cpp \
 	../src/numerics_direct_elasticity_nonlinear.cpp \
 	../src/numerics_direct_elasticity_linear.cpp \
 	../src/numerics_direct_elasticity.cpp \
@@ -352,6 +359,7 @@ am__libSU2Core_AD_a_SOURCES_DIST =  \
 	../src/solver_direct_tne2.cpp \
 	../src/solver_direct_transition.cpp \
 	../src/solver_direct_turbulent.cpp \
+	../src/solver_direct_tne2_turbulent.cpp \
 	../src/solver_direct_elasticity.cpp \
 	../src/solver_structure.cpp ../src/solver_template.cpp \
 	../src/transfer_physics.cpp ../src/transfer_structure.cpp \
@@ -365,6 +373,7 @@ am__libSU2Core_AD_a_SOURCES_DIST =  \
 	../src/variable_direct_tne2.cpp \
 	../src/variable_direct_transition.cpp \
 	../src/variable_direct_turbulent.cpp \
+	../src/variable_direct_tne2_turbulent.cpp \
 	../src/variable_direct_elasticity.cpp \
 	../src/variable_structure.cpp ../src/variable_template.cpp
 am__objects_2 =  \
@@ -389,6 +398,7 @@ am__objects_2 =  \
 	../src/libSU2Core_AD_a-numerics_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_AD_a-numerics_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_AD_a-numerics_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.$(OBJEXT) \
 	../src/libSU2Core_AD_a-numerics_direct_elasticity_linear.$(OBJEXT) \
 	../src/libSU2Core_AD_a-numerics_direct_elasticity.$(OBJEXT) \
@@ -413,6 +423,7 @@ am__objects_2 =  \
 	../src/libSU2Core_AD_a-solver_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_AD_a-solver_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_AD_a-solver_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_AD_a-solver_direct_elasticity.$(OBJEXT) \
 	../src/libSU2Core_AD_a-solver_structure.$(OBJEXT) \
 	../src/libSU2Core_AD_a-solver_template.$(OBJEXT) \
@@ -429,6 +440,7 @@ am__objects_2 =  \
 	../src/libSU2Core_AD_a-variable_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_AD_a-variable_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_AD_a-variable_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_AD_a-variable_direct_elasticity.$(OBJEXT) \
 	../src/libSU2Core_AD_a-variable_structure.$(OBJEXT) \
 	../src/libSU2Core_AD_a-variable_template.$(OBJEXT)
@@ -473,6 +485,7 @@ am__libSU2Core_DIRECTDIFF_a_SOURCES_DIST =  \
 	../src/numerics_direct_tne2.cpp \
 	../src/numerics_direct_transition.cpp \
 	../src/numerics_direct_turbulent.cpp \
+	../src/numerics_direct_tne2_turbulent.cpp \
 	../src/numerics_direct_elasticity_nonlinear.cpp \
 	../src/numerics_direct_elasticity_linear.cpp \
 	../src/numerics_direct_elasticity.cpp \
@@ -491,6 +504,7 @@ am__libSU2Core_DIRECTDIFF_a_SOURCES_DIST =  \
 	../src/solver_direct_tne2.cpp \
 	../src/solver_direct_transition.cpp \
 	../src/solver_direct_turbulent.cpp \
+	../src/solver_direct_tne2_turbulent.cpp \
 	../src/solver_direct_elasticity.cpp \
 	../src/solver_structure.cpp ../src/solver_template.cpp \
 	../src/transfer_physics.cpp ../src/transfer_structure.cpp \
@@ -504,6 +518,7 @@ am__libSU2Core_DIRECTDIFF_a_SOURCES_DIST =  \
 	../src/variable_direct_tne2.cpp \
 	../src/variable_direct_transition.cpp \
 	../src/variable_direct_turbulent.cpp \
+	../src/variable_direct_tne2_turbulent.cpp \
 	../src/variable_direct_elasticity.cpp \
 	../src/variable_structure.cpp ../src/variable_template.cpp
 am__objects_3 = ../src/libSU2Core_DIRECTDIFF_a-data_manufactured_solutions.$(OBJEXT) \
@@ -527,6 +542,7 @@ am__objects_3 = ../src/libSU2Core_DIRECTDIFF_a-data_manufactured_solutions.$(OBJ
 	../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-numerics_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-numerics_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_linear.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity.$(OBJEXT) \
@@ -551,6 +567,7 @@ am__objects_3 = ../src/libSU2Core_DIRECTDIFF_a-data_manufactured_solutions.$(OBJ
 	../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-solver_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-solver_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-solver_structure.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-solver_template.$(OBJEXT) \
@@ -567,6 +584,7 @@ am__objects_3 = ../src/libSU2Core_DIRECTDIFF_a-data_manufactured_solutions.$(OBJ
 	../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-variable_direct_transition.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-variable_direct_turbulent.$(OBJEXT) \
+	../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-variable_direct_elasticity.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-variable_structure.$(OBJEXT) \
 	../src/libSU2Core_DIRECTDIFF_a-variable_template.$(OBJEXT)
@@ -881,6 +899,7 @@ libSU2Core_sources = \
   ../src/numerics_direct_tne2.cpp \
   ../src/numerics_direct_transition.cpp \
   ../src/numerics_direct_turbulent.cpp \
+  ../src/numerics_direct_tne2_turbulent.cpp \
   ../src/numerics_direct_elasticity_nonlinear.cpp \
   ../src/numerics_direct_elasticity_linear.cpp \
   ../src/numerics_direct_elasticity.cpp \
@@ -905,6 +924,7 @@ libSU2Core_sources = \
   ../src/solver_direct_tne2.cpp \
   ../src/solver_direct_transition.cpp \
   ../src/solver_direct_turbulent.cpp \
+  ../src/solver_direct_tne2_turbulent.cpp \
   ../src/solver_direct_elasticity.cpp \
   ../src/solver_structure.cpp \
   ../src/solver_template.cpp \
@@ -921,6 +941,7 @@ libSU2Core_sources = \
   ../src/variable_direct_tne2.cpp \
   ../src/variable_direct_transition.cpp \
   ../src/variable_direct_turbulent.cpp \
+  ../src/variable_direct_tne2_turbulent.cpp \
   ../src/variable_direct_elasticity.cpp \
   ../src/variable_structure.cpp \
   ../src/variable_template.cpp
@@ -1041,6 +1062,8 @@ clean-noinstLIBRARIES:
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-numerics_direct_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_a-numerics_direct_tne2_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-numerics_direct_elasticity_nonlinear.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-numerics_direct_elasticity_linear.$(OBJEXT):  \
@@ -1089,6 +1112,8 @@ clean-noinstLIBRARIES:
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-solver_direct_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_a-solver_direct_tne2_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-solver_direct_elasticity.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-solver_structure.$(OBJEXT):  \
@@ -1120,6 +1145,8 @@ clean-noinstLIBRARIES:
 ../src/libSU2Core_a-variable_direct_transition.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-variable_direct_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_a-variable_direct_tne2_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_a-variable_direct_elasticity.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
@@ -1174,6 +1201,8 @@ libSU2Core.a: $(libSU2Core_a_OBJECTS) $(libSU2Core_a_DEPENDENCIES) $(EXTRA_libSU
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-numerics_direct_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-numerics_direct_elasticity_linear.$(OBJEXT):  \
@@ -1222,6 +1251,8 @@ libSU2Core.a: $(libSU2Core_a_OBJECTS) $(libSU2Core_a_DEPENDENCIES) $(EXTRA_libSU
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-solver_direct_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-solver_direct_elasticity.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-solver_structure.$(OBJEXT):  \
@@ -1253,6 +1284,8 @@ libSU2Core.a: $(libSU2Core_a_OBJECTS) $(libSU2Core_a_DEPENDENCIES) $(EXTRA_libSU
 ../src/libSU2Core_AD_a-variable_direct_transition.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-variable_direct_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_AD_a-variable_direct_elasticity.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
@@ -1307,6 +1340,8 @@ libSU2Core_AD.a: $(libSU2Core_AD_a_OBJECTS) $(libSU2Core_AD_a_DEPENDENCIES) $(EX
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_linear.$(OBJEXT):  \
@@ -1355,6 +1390,8 @@ libSU2Core_AD.a: $(libSU2Core_AD_a_OBJECTS) $(libSU2Core_AD_a_DEPENDENCIES) $(EX
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-solver_direct_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-solver_structure.$(OBJEXT):  \
@@ -1386,6 +1423,8 @@ libSU2Core_AD.a: $(libSU2Core_AD_a_OBJECTS) $(libSU2Core_AD_a_DEPENDENCIES) $(EX
 ../src/libSU2Core_DIRECTDIFF_a-variable_direct_transition.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-variable_direct_turbulent.$(OBJEXT):  \
+	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
+../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
 ../src/libSU2Core_DIRECTDIFF_a-variable_direct_elasticity.$(OBJEXT):  \
 	../src/$(am__dirstamp) ../src/$(DEPDIR)/$(am__dirstamp)
@@ -1494,6 +1533,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_mean.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-numerics_structure.Po@am__quote@
@@ -1516,6 +1556,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_mean_fem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-solver_structure.Po@am__quote@
@@ -1532,6 +1573,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_mean.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_AD_a-variable_structure.Po@am__quote@
@@ -1558,6 +1600,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_mean.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_structure.Po@am__quote@
@@ -1580,6 +1623,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_mean_fem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_structure.Po@am__quote@
@@ -1596,6 +1640,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_mean.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_structure.Po@am__quote@
@@ -1622,6 +1667,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-numerics_direct_mean.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-numerics_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-numerics_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-numerics_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-numerics_structure.Po@am__quote@
@@ -1644,6 +1690,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-solver_direct_mean_fem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-solver_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-solver_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-solver_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-solver_structure.Po@am__quote@
@@ -1660,6 +1707,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-variable_direct_mean.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-variable_direct_mean_inc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-variable_direct_transition.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-variable_direct_turbulent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@../src/$(DEPDIR)/libSU2Core_a-variable_structure.Po@am__quote@
@@ -1974,6 +2022,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/numerics_direct_turbulent.cpp' object='../src/libSU2Core_a-numerics_direct_turbulent.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-numerics_direct_turbulent.obj `if test -f '../src/numerics_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_turbulent.cpp'; fi`
+
+../src/libSU2Core_a-numerics_direct_tne2_turbulent.o: ../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-numerics_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_a-numerics_direct_tne2_turbulent.o `test -f '../src/numerics_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/numerics_direct_tne2_turbulent.cpp' object='../src/libSU2Core_a-numerics_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-numerics_direct_tne2_turbulent.o `test -f '../src/numerics_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/numerics_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_a-numerics_direct_tne2_turbulent.obj: ../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-numerics_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_a-numerics_direct_tne2_turbulent.obj `if test -f '../src/numerics_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_a-numerics_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/numerics_direct_tne2_turbulent.cpp' object='../src/libSU2Core_a-numerics_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-numerics_direct_tne2_turbulent.obj `if test -f '../src/numerics_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_tne2_turbulent.cpp'; fi`
 
 ../src/libSU2Core_a-numerics_direct_elasticity_nonlinear.o: ../src/numerics_direct_elasticity_nonlinear.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-numerics_direct_elasticity_nonlinear.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-numerics_direct_elasticity_nonlinear.Tpo -c -o ../src/libSU2Core_a-numerics_direct_elasticity_nonlinear.o `test -f '../src/numerics_direct_elasticity_nonlinear.cpp' || echo '$(srcdir)/'`../src/numerics_direct_elasticity_nonlinear.cpp
@@ -2311,6 +2373,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-solver_direct_turbulent.obj `if test -f '../src/solver_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_turbulent.cpp'; fi`
 
+../src/libSU2Core_a-solver_direct_tne2_turbulent.o: ../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-solver_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_a-solver_direct_tne2_turbulent.o `test -f '../src/solver_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/solver_direct_tne2_turbulent.cpp' object='../src/libSU2Core_a-solver_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-solver_direct_tne2_turbulent.o `test -f '../src/solver_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/solver_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_a-solver_direct_tne2_turbulent.obj: ../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-solver_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_a-solver_direct_tne2_turbulent.obj `if test -f '../src/solver_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_a-solver_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/solver_direct_tne2_turbulent.cpp' object='../src/libSU2Core_a-solver_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-solver_direct_tne2_turbulent.obj `if test -f '../src/solver_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_tne2_turbulent.cpp'; fi`
+
 ../src/libSU2Core_a-solver_direct_elasticity.o: ../src/solver_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-solver_direct_elasticity.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-solver_direct_elasticity.Tpo -c -o ../src/libSU2Core_a-solver_direct_elasticity.o `test -f '../src/solver_direct_elasticity.cpp' || echo '$(srcdir)/'`../src/solver_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-solver_direct_elasticity.Tpo ../src/$(DEPDIR)/libSU2Core_a-solver_direct_elasticity.Po
@@ -2534,6 +2610,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_turbulent.cpp' object='../src/libSU2Core_a-variable_direct_turbulent.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-variable_direct_turbulent.obj `if test -f '../src/variable_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_turbulent.cpp'; fi`
+
+../src/libSU2Core_a-variable_direct_tne2_turbulent.o: ../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-variable_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_a-variable_direct_tne2_turbulent.o `test -f '../src/variable_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_tne2_turbulent.cpp' object='../src/libSU2Core_a-variable_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-variable_direct_tne2_turbulent.o `test -f '../src/variable_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/variable_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_a-variable_direct_tne2_turbulent.obj: ../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-variable_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_a-variable_direct_tne2_turbulent.obj `if test -f '../src/variable_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_a-variable_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_tne2_turbulent.cpp' object='../src/libSU2Core_a-variable_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_a-variable_direct_tne2_turbulent.obj `if test -f '../src/variable_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_tne2_turbulent.cpp'; fi`
 
 ../src/libSU2Core_a-variable_direct_elasticity.o: ../src/variable_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_a-variable_direct_elasticity.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_a-variable_direct_elasticity.Tpo -c -o ../src/libSU2Core_a-variable_direct_elasticity.o `test -f '../src/variable_direct_elasticity.cpp' || echo '$(srcdir)/'`../src/variable_direct_elasticity.cpp
@@ -2871,6 +2961,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-numerics_direct_turbulent.obj `if test -f '../src/numerics_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_turbulent.cpp'; fi`
 
+../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.o: ../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.o `test -f '../src/numerics_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/numerics_direct_tne2_turbulent.cpp' object='../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.o `test -f '../src/numerics_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/numerics_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.obj: ../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.obj `if test -f '../src/numerics_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/numerics_direct_tne2_turbulent.cpp' object='../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-numerics_direct_tne2_turbulent.obj `if test -f '../src/numerics_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_tne2_turbulent.cpp'; fi`
+
 ../src/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.o: ../src/numerics_direct_elasticity_nonlinear.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.Tpo -c -o ../src/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.o `test -f '../src/numerics_direct_elasticity_nonlinear.cpp' || echo '$(srcdir)/'`../src/numerics_direct_elasticity_nonlinear.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-numerics_direct_elasticity_nonlinear.Po
@@ -3207,6 +3311,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-solver_direct_turbulent.obj `if test -f '../src/solver_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_turbulent.cpp'; fi`
 
+../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.o: ../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.o `test -f '../src/solver_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/solver_direct_tne2_turbulent.cpp' object='../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.o `test -f '../src/solver_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/solver_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.obj: ../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.obj `if test -f '../src/solver_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/solver_direct_tne2_turbulent.cpp' object='../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-solver_direct_tne2_turbulent.obj `if test -f '../src/solver_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_tne2_turbulent.cpp'; fi`
+
 ../src/libSU2Core_AD_a-solver_direct_elasticity.o: ../src/solver_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-solver_direct_elasticity.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_elasticity.Tpo -c -o ../src/libSU2Core_AD_a-solver_direct_elasticity.o `test -f '../src/solver_direct_elasticity.cpp' || echo '$(srcdir)/'`../src/solver_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_elasticity.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-solver_direct_elasticity.Po
@@ -3430,6 +3548,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_turbulent.cpp' object='../src/libSU2Core_AD_a-variable_direct_turbulent.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-variable_direct_turbulent.obj `if test -f '../src/variable_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_turbulent.cpp'; fi`
+
+../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.o: ../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.o `test -f '../src/variable_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_tne2_turbulent.cpp' object='../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.o `test -f '../src/variable_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/variable_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.obj: ../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.obj `if test -f '../src/variable_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_tne2_turbulent.cpp' object='../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_AD_a-variable_direct_tne2_turbulent.obj `if test -f '../src/variable_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_tne2_turbulent.cpp'; fi`
 
 ../src/libSU2Core_AD_a-variable_direct_elasticity.o: ../src/variable_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_AD_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_AD_a-variable_direct_elasticity.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_AD_a-variable_direct_elasticity.Tpo -c -o ../src/libSU2Core_AD_a-variable_direct_elasticity.o `test -f '../src/variable_direct_elasticity.cpp' || echo '$(srcdir)/'`../src/variable_direct_elasticity.cpp
@@ -3767,6 +3899,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_turbulent.obj `if test -f '../src/numerics_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_turbulent.cpp'; fi`
 
+../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.o: ../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.o `test -f '../src/numerics_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/numerics_direct_tne2_turbulent.cpp' object='../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.o `test -f '../src/numerics_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/numerics_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.obj: ../src/numerics_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.obj `if test -f '../src/numerics_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/numerics_direct_tne2_turbulent.cpp' object='../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_tne2_turbulent.obj `if test -f '../src/numerics_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/numerics_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/numerics_direct_tne2_turbulent.cpp'; fi`
+
 ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.o: ../src/numerics_direct_elasticity_nonlinear.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.o `test -f '../src/numerics_direct_elasticity_nonlinear.cpp' || echo '$(srcdir)/'`../src/numerics_direct_elasticity_nonlinear.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-numerics_direct_elasticity_nonlinear.Po
@@ -4103,6 +4249,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-solver_direct_turbulent.obj `if test -f '../src/solver_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_turbulent.cpp'; fi`
 
+../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.o: ../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.o `test -f '../src/solver_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/solver_direct_tne2_turbulent.cpp' object='../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.o `test -f '../src/solver_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/solver_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.obj: ../src/solver_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.obj `if test -f '../src/solver_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/solver_direct_tne2_turbulent.cpp' object='../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-solver_direct_tne2_turbulent.obj `if test -f '../src/solver_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/solver_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/solver_direct_tne2_turbulent.cpp'; fi`
+
 ../src/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.o: ../src/solver_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.o `test -f '../src/solver_direct_elasticity.cpp' || echo '$(srcdir)/'`../src/solver_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-solver_direct_elasticity.Po
@@ -4326,6 +4486,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_turbulent.cpp' object='../src/libSU2Core_DIRECTDIFF_a-variable_direct_turbulent.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-variable_direct_turbulent.obj `if test -f '../src/variable_direct_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_turbulent.cpp'; fi`
+
+../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.o: ../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.o `test -f '../src/variable_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_tne2_turbulent.cpp' object='../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.o `test -f '../src/variable_direct_tne2_turbulent.cpp' || echo '$(srcdir)/'`../src/variable_direct_tne2_turbulent.cpp
+
+../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.obj: ../src/variable_direct_tne2_turbulent.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.obj -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.obj `if test -f '../src/variable_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_tne2_turbulent.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.Tpo ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='../src/variable_direct_tne2_turbulent.cpp' object='../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -c -o ../src/libSU2Core_DIRECTDIFF_a-variable_direct_tne2_turbulent.obj `if test -f '../src/variable_direct_tne2_turbulent.cpp'; then $(CYGPATH_W) '../src/variable_direct_tne2_turbulent.cpp'; else $(CYGPATH_W) '$(srcdir)/../src/variable_direct_tne2_turbulent.cpp'; fi`
 
 ../src/libSU2Core_DIRECTDIFF_a-variable_direct_elasticity.o: ../src/variable_direct_elasticity.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libSU2Core_DIRECTDIFF_a_CXXFLAGS) $(CXXFLAGS) -MT ../src/libSU2Core_DIRECTDIFF_a-variable_direct_elasticity.o -MD -MP -MF ../src/$(DEPDIR)/libSU2Core_DIRECTDIFF_a-variable_direct_elasticity.Tpo -c -o ../src/libSU2Core_DIRECTDIFF_a-variable_direct_elasticity.o `test -f '../src/variable_direct_elasticity.cpp' || echo '$(srcdir)/'`../src/variable_direct_elasticity.cpp
