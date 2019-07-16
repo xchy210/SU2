@@ -1035,6 +1035,8 @@ inline unsigned short CConfig::GetLinear_Solver_ILU_n(void) { return Linear_Solv
 
 inline unsigned long CConfig::GetLinear_Solver_Restart_Frequency(void) { return Linear_Solver_Restart_Frequency; }
 
+inline su2double CConfig::GetLinear_Solver_Smoother_Relaxation(void) const { return Linear_Solver_Smoother_Relaxation; }
+
 inline su2double CConfig::GetRelaxation_Factor_Flow(void) { return Relaxation_Factor_Flow; }
 
 inline su2double CConfig::GetRelaxation_Factor_AdjFlow(void) { return Relaxation_Factor_AdjFlow; }
@@ -2064,24 +2066,3 @@ inline unsigned short CConfig::GetEig_Val_Comp(void) {return eig_val_comp; }
 inline su2double CConfig::GetUQ_URLX(void) {return uq_urlx; }
 
 inline bool CConfig::GetUQ_Permute(void) { return uq_permute; }
-
-inline void *CConfig::AllocateMemory(const size_t sizeAlloc) {
-
-#ifdef HAVE_MKL
-  return mkl_malloc(sizeAlloc, byteAlignment);
-#else
-  return aligned_alloc(byteAlignment, sizeAlloc);
-#endif
-}
-
-inline void CConfig::FreeMemory(void *memPointer) {
-
-  if( memPointer ) {
-#ifdef HAVE_MKL
-    mkl_free(memPointer);
-#else
-    free(memPointer);
-#endif
-    memPointer = NULL;
-  }
-}
