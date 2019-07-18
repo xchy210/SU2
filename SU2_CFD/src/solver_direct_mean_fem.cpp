@@ -9084,23 +9084,25 @@ void CFEM_DG_EulerSolver::ComputeInviscidFluxesFace(CConfig              *config
               su2double vxL = tmp*UL[1];
               su2double vyL = tmp*UL[2];
               su2double vzL = tmp*UL[3];
+              const su2double pL  = gm1*(UL[4] - 0.5*(vxL*UL[1] + vyL*UL[2] + vzL*UL[3]));
               if (nonSlipWall == true){
             	  vxL = 0;
             	  vyL = 0;
             	  vzL = 0;
               }
-              const su2double pL  = gm1*(UL[4] - 0.5*(vxL*UL[1] + vyL*UL[2] + vzL*UL[3]));
+
 
               tmp                 = 1.0/UR[0];
               su2double vxR = tmp*UR[1];
               su2double vyR = tmp*UR[2];
               su2double vzR = tmp*UR[3];
+              const su2double pR  = gm1*(UR[4] - 0.5*(vxR*UR[1] + vyR*UR[2] + vzR*UR[3]));
               if (nonSlipWall == true){
             	  vxR = 0;
             	  vyR = 0;
             	  vzR = 0;
               }
-              const su2double pR  = gm1*(UR[4] - 0.5*(vxR*UR[1] + vyR*UR[2] + vzR*UR[3]));
+
 
               /*--- Compute the difference of the conservative mean flow variables. ---*/
               const su2double dr  = UR[0] - UL[0];
