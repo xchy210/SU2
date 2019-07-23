@@ -1,5 +1,7 @@
-su2_sol_src = ['SU2_SOL.cpp']
-su2_cfd_obj = su2_cfd.extract_objects(['solver_structure.cpp',
+if get_option('enable-normal')
+
+  su2_sol_src = ['SU2_SOL.cpp']
+  su2_cfd_obj = su2_cfd.extract_objects(['solver_structure.cpp',
                                        'output_structure.cpp',
                                        'output_cgns.cpp',
                                        'output_fieldview.cpp',
@@ -9,10 +11,10 @@ su2_cfd_obj = su2_cfd.extract_objects(['solver_structure.cpp',
 				       'variables/CBaselineVariable.cpp',
 				       'variables/CVariable.cpp'])
 
-su2_sol = executable('SU2_SOL',
-                     su2_sol_src, 
-                     install: true,
-		     dependencies: [su2_deps, common_dep], 
-		     objects : su2_cfd_obj,
-		     cpp_args : su2_cpp_args)
-
+  su2_sol = executable('SU2_SOL',
+                       su2_sol_src, 
+                       install: true,
+  		     dependencies: [su2_deps, common_dep], 
+  		     objects : su2_cfd_obj,
+  		     cpp_args : su2_cpp_args)
+endif
