@@ -18,7 +18,7 @@ notifications:
   
 branches:
     only:
-        - meson_build
+        - testing_travis
 
 python:
     - 3.6
@@ -26,23 +26,17 @@ python:
 env:
     global:
         CXXFLAGS="-O2 -Wall -Wextra -Wno-unused-parameter -Wno-empty-body -Wno-format-security" 
+        CACHE_NAME=COMMON
     matrix:
         # Serial build and test
-        #- CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false"
-        #  TEST_SCRIPT=serial_regression.py
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true"
 
         # Parallel build and test
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true"
-          TEST_SCRIPT=parallel_regression.py
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-normal=false -Denable-directdiff=true"
 
         # Serial build and test for AD
-        #- CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false -Denable-autodiff=true -Denable-directdiff=true"
-        #  TEST_SCRIPT=serial_regression_AD.py
-
-        # Parallel build and test for AD:
-        #- CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
-          TEST_SCRIPT=parallel_regression_AD.py
-
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-normal=false -Denable-autodiff=true"
+        
 before_install:
     # Temporarily fixes Travis CI issue with paths for Python packages
     - export PATH=/usr/bin:$PATH
@@ -98,4 +92,31 @@ before_script:
 script: 
     # Run the tests via the Python scripts
     #- python $TEST_SCRIPT
-    - echo "Test"
+    - echo "No Tests"
+    
+jobs:
+    include:
+        - stage: Testing
+          env:
+              global: 
+                   CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
+                   CACHE_NAME=COMMON                   
+              matrix:
+                   - TEST_SCRIPT=parallel_regression.py
+                   - TEST_SCRIPT=parallel_regression_AD.py
+          before_script:
+               # Get the test cases
+               - git clone -b develop https://github.com/su2code/TestCases.git ./TestData
+               - cp -R ./TestData/* ./TestCases/
+             
+               # Get the tutorial cases
+               - git clone -b develop https://github.com/su2code/su2code.github.io ./Tutorials
+               
+               # Enter the SU2/TestCases/ directory, which is now ready to run
+               - cd TestCases/
+          script:
+               - python $TEST_SCRIPT
+
+stages:
+    - Compiling
+    - Testing
