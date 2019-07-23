@@ -27,15 +27,16 @@ common_src =files(['geometry_structure_fem_part.cpp',
 subdir('linear_algebra')
 subdir('toolboxes')
 
-common     = static_library('SU2Common', 
-                            common_src,
-                            install : false, 
-			    dependencies : su2_deps, 
-			    cpp_args: su2_cpp_args)
+if get_option('enable-normal')
+  common     = static_library('SU2Common', 
+                              common_src,
+                              install : false, 
+		  	    dependencies : su2_deps, 
+	  		    cpp_args: su2_cpp_args)
 
-common_dep = declare_dependency(link_with: common,
-                                include_directories : common_include)
-
+  common_dep = declare_dependency(link_with: common,
+                                  include_directories : common_include)
+endif
 if get_option('enable-autodiff')
   
   commonAD = static_library('SU2CommonAD',

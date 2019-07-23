@@ -68,11 +68,13 @@ su2_cfd_src += files(['variables/CIncNSVariable.cpp',
                      'variables/CIncEulerVariable.cpp',
                      'variables/CEulerVariable.cpp'])
 
-su2_cfd = executable('SU2_CFD',
-                     su2_cfd_src, 
-		     install : true, 
-		     dependencies : [su2_deps, common_dep], 
-		     cpp_args:  ['-fPIC'] + [su2_cpp_args])
+if get_option('enable-normal')
+  su2_cfd = executable('SU2_CFD',
+                       su2_cfd_src, 
+		       install : true, 
+		       dependencies : [su2_deps, common_dep], 
+		       cpp_args:  ['-fPIC'] + [su2_cpp_args])
+endif
 
 if get_option('enable-autodiff')
   su2_cfd_ad = executable('SU2_CFD_AD',
