@@ -96,7 +96,7 @@ script:
     
 jobs:
     include:
-        - stage: Testing
+        - stage: regression
           env:
               global: 
                    CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
@@ -118,5 +118,5 @@ jobs:
                - python $TEST_SCRIPT
 
 stages:
-    - Compiling
-    - Testing
+    - test
+    - regression
