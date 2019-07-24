@@ -26,19 +26,19 @@ python:
 env:
     matrix:
         # Serial build and test
-        - CONFIGURE_COMMAND="meson.py build --optimization=2 --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false"
           TEST_SCRIPT=serial_regression.py
 
         # Parallel build and test
-        - CONFIGURE_COMMAND="meson.py build --optimization=2 --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true"
           TEST_SCRIPT=parallel_regression.py
 
         # Serial build and test for AD
-        - CONFIGURE_COMMAND="meson.py build --optimization=2 --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false -Denable-autodiff=true -Denable-directdiff=true"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false -Denable-autodiff=true -Denable-directdiff=true"
           TEST_SCRIPT=serial_regression_AD.py
 
         # Parallel build and test for AD:
-        - CONFIGURE_COMMAND="meson.py build --optimization=2 --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
           TEST_SCRIPT=parallel_regression_AD.py
 
 before_install:
@@ -47,7 +47,7 @@ before_install:
 
     # Install the necessary packages using apt-get with sudo
     - sudo apt-get update -qq
-    - sudo apt-get install -qq build-essential libopenmpi-dev
+    - sudo apt-get install -qq build-essential libopenmpi-dev openmpi-bin
  
     # Install Python dependencies
     # http://conda.pydata.org/docs/travis.html#the-travis-yml-file
