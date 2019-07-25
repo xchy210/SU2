@@ -77,6 +77,6 @@ subdir('SU2_SOL/src')
 # install python scripts
 subdir('SU2_PY')
 
-if get_option('enable-pywrapper')
-  subdir('SU2_PY/pySU2')
-endif
+#if get_option('enable-pywrapper')
+#  subdir('SU2_PY/pySU2')
+#endif
