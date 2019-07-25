@@ -6,7 +6,9 @@ sudo: required
 
 language: c++
 
-cache: ccache
+cache: 
+    - ccache
+    - pip
 
 compiler:
     - gcc
@@ -48,7 +50,11 @@ before_install:
     # Install the necessary packages using apt-get with sudo
     - sudo apt-get update -qq
     - sudo apt-get install -qq build-essential libopenmpi-dev openmpi-bin swig 
+    - pip install virtualenv
+    - virtualenv -p python3.7 ENV
+    - source ENV/bin/activate
     - pip install mpi4py numpy scipy
+
     # to avoid interference with MPI
     - test -n $CC  && unset CC
     - test -n $CXX && unset CXX
