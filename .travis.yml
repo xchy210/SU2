@@ -57,7 +57,8 @@ before_install:
     - hash -r
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q conda
-    - conda install -q -c anaconda python=$TRAVIS_PYTHON_VERSION numpy scipy  swig
+    - conda install -q -c anaconda python=$TRAVIS_PYTHON_VERSION numpy scipy swig
+    - conda install -q -c anaconda --no-deps mpi4py
 
     # to avoid interference with MPI
     - test -n $CC  && unset CC
