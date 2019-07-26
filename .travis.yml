@@ -1,7 +1,7 @@
 # Continous Integration setup for SU2.
 # Tests on the develop branch in both serial and parallel.
 
-dist: xenial
+dist: trusty
 sudo: required
 
 language: c++
@@ -21,10 +21,6 @@ notifications:
 branches:
     only:
         - meson_build
-
-python:
-    - 3.6
-
 env:
     matrix:
         # Serial build and test
@@ -45,12 +41,13 @@ env:
 
 before_install:
     # Temporarily fixes Travis CI issue with paths for Python packages
+    - pyenv versions
     - export PATH=/usr/bin:$PATH
 
     # Install the necessary packages using apt-get with sudo
     - sudo apt-get update -qq
-    - sudo apt-get install -qq build-essential libopenmpi-dev openmpi-bin swig 
-    - pip install mpi4py numpy scipy
+    - sudo apt-get install -qq python3-pip build-essential libopenmpi-dev openmpi-bin swig 
+    - pip3 install mpi4py numpy scipy
 
     # to avoid interference with MPI
     - test -n $CC  && unset CC
