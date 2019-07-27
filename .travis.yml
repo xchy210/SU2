@@ -16,7 +16,7 @@ compiler:
 notifications:
     email:
         recipients:
-            - su2code-dev@lists.stanford.edu 
+            - tim.albring@scicomp.uni-kl.de 
 python:
     - 3.6
 
