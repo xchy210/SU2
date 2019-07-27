@@ -17,7 +17,9 @@ notifications:
     email:
         recipients:
             - su2code-dev@lists.stanford.edu 
-  
+python:
+    - 3.6
+
 branches:
     only:
         - meson_build
