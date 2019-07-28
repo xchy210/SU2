@@ -52,7 +52,7 @@ before_install:
       #    - pyenv global 3.6.0
     - pip3 install wheel setuptools
     - pip3 install mpi4py numpy scipy
-
+    - pip3 show mpi4py
     # to avoid interference with MPI
     - test -n $CC  && unset CC
     - test -n $CXX && unset CXX
