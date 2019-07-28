@@ -47,13 +47,7 @@ before_install:
 
     # Install the necessary packages using apt-get with sudo
     - sudo apt-get update -qq
-    - sudo apt-get install -qq build-essential python3-pip libopenmpi-dev openmpi-bin swig 
-      #    - pyenv install 3.6.0
-      #    - pyenv global 3.6.0
-    - pip3 install --upgrade pip3
-    - pip3 install wheel setuptools
-    - pip3 install mpi4py numpy scipy
-    - pip3 show mpi4py
+    - sudo apt-get install -qq build-essential python3-pip libopenmpi-dev openmpi-bin swig python3-mpi4py python3-numpy python3-scipy 
     # to avoid interference with MPI
     - test -n $CC  && unset CC
     - test -n $CXX && unset CXX
