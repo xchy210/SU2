@@ -23,19 +23,19 @@ branches:
 env:
     matrix:
         # Serial build and test
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false"
+        - CONFIGURE_COMMAND="python meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false"
           TEST_SCRIPT=serial_regression.py
 
         # Parallel build and test
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true"
+        - CONFIGURE_COMMAND="python meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true"
           TEST_SCRIPT=parallel_regression.py
 
         # Serial build and test for AD
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false -Denable-autodiff=true -Denable-directdiff=true"
+        - CONFIGURE_COMMAND="python meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false -Denable-autodiff=true -Denable-directdiff=true"
           TEST_SCRIPT=serial_regression_AD.py
 
         # Parallel build and test for AD:
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
+        - CONFIGURE_COMMAND="python meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
           TEST_SCRIPT=parallel_regression_AD.py
 
 before_install:
@@ -65,7 +65,7 @@ install:
     - echo $TRAVIS_BUILD_DIR
     - echo $CONFIGURE_COMMAND
     - $CONFIGURE_COMMAND
-    - meson.py build --reconfigure --optimization=2
+    - python meson.py build --reconfigure --optimization=2
     - ninja -v -C build install
 
     # Add environmental variables according to the configure step
