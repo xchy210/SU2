@@ -50,7 +50,8 @@ before_install:
     - sudo apt-get install -qq build-essential python3-pip libopenmpi-dev openmpi-bin swig 
       #    - pyenv install 3.6.0
       #    - pyenv global 3.6.0
-    - pip3 install setuptools mpi4py numpy scipy
+    - pip3 install setuptools
+    - pip3 install mpi4py numpy scipy
 
     # to avoid interference with MPI
     - test -n $CC  && unset CC
