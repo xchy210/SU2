@@ -25,19 +25,19 @@ branches:
 env:
     matrix:
         # Serial build and test
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Dpython_path=$HOME/.local/lib/python3.5/site-packages -Denable-mpi=false"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false"
           TEST_SCRIPT=serial_regression.py
 
         # Parallel build and test
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Dpython_path=$HOME/.local/lib/python3.5/site-packages"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true"
           TEST_SCRIPT=parallel_regression.py
 
         # Serial build and test for AD
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Dpython_path=$HOME/.local/lib/python3.5/site-packages -Denable-mpi=false -Denable-autodiff=true -Denable-directdiff=true"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-mpi=false -Denable-autodiff=true -Denable-directdiff=true"
           TEST_SCRIPT=serial_regression_AD.py
 
         # Parallel build and test for AD:
-        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Dpython_path=$HOME/.local/lib/python3.5/site-packages-Denable-autodiff=true -Denable-directdiff=true"
+        - CONFIGURE_COMMAND="meson.py build --prefix=$TRAVIS_BUILD_DIR -Denable-pywrapper=true -Denable-autodiff=true -Denable-directdiff=true"
           TEST_SCRIPT=parallel_regression_AD.py
 
 before_install:
