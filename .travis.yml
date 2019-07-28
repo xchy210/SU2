@@ -68,7 +68,8 @@ install:
     - echo $TRAVIS_BUILD_DIR
     - echo $CONFIGURE_COMMAND
     - $CONFIGURE_COMMAND
-    - python externals/meson/meson.py build --reconfigure --optimization=2
+    - meson.py build --reconfigure --optimization=2
+    - meson.py build --reconfigure -Dpython_path=/home/travis/.local/lib/python3.5/site-packages
     - ninja -v -C build install
 
     # Add environmental variables according to the configure step
