@@ -48,7 +48,7 @@ before_install:
     # Temporarily fixes Travis CI issue with paths for Python packages
     - pyenv versions
     - export PATH=/usr/bin:$PATH
-
+    - alias python=python3
     # Install the necessary packages using apt-get with sudo
     - sudo apt-get update -qq
     - sudo apt-get install -qq build-essential python3-numpy python3-scipy libopenmpi-dev openmpi-bin swig python3-mpi4py  
@@ -59,7 +59,7 @@ before_install:
 install:
     # build ninja
     - cd externals/ninja
-    - python configure.py --bootstrap
+    - python3 configure.py --bootstrap
     - cd $TRAVIS_BUILD_DIR
     - export PATH=$TRAVIS_BUILD_DIR/externals/ninja:$TRAVIS_BUILD_DIR/externals/meson:$PATH
 
