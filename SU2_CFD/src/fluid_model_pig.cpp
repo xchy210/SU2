@@ -64,7 +64,7 @@ CIdealGas::CIdealGas(su2double gamma, su2double R, bool CompEntropy) : CFluidMod
   Cp = Gamma/Gamma_Minus_One*Gas_Constant;
   Cv = Cp - R;
 
-  ComputeEntropy = CompEntropy,egg;
+  ComputeEntropy = CompEntropy;
 }
 
 CIdealGas::~CIdealGas(void) {
